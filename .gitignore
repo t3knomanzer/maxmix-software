@@ -1,0 +1,12 @@
+# IDE
+.vs/
+.vscode/
+
+# Build
+bin/
+obj/
+packages/
+
+# Advanced Installer
+Desktop/Installer/*-cache/
+Desktop/Installer/Setup Files/

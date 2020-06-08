@@ -1,0 +1,59 @@
+﻿<Application x:Class="FirmwareInstaller.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:FirmwareInstaller"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:cnv="clr-namespace:FirmwareInstaller.Framework.Converters"
+             Startup="ApplicationStartup">
+    
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!--====================================================-->
+                <!-- Modern UI -->
+                <!--====================================================-->
+
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/FlatButton.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Colors.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseDark.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/Blue.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--====================================================-->
+            <!-- Static Resources -->
+            <!--====================================================-->
+            
+            <!--====================================================-->
+            <!-- Value Converters -->
+            <!--====================================================-->
+            <cnv:BoolNegateConverter x:Key="Cnv_BoolNegate" />
+
+            <!--====================================================-->
+            <!-- Fonts -->
+            <!--====================================================-->
+
+            <!--====================================================-->
+            <!-- Sizes -->
+            <!--====================================================-->
+
+            <!--====================================================-->
+            <!-- Colors -->
+            <!--====================================================-->
+
+            <!--====================================================-->
+            <!-- Brushes -->
+            <!--====================================================-->
+
+            <!--====================================================-->
+            <!-- Styles -->
+            <!--====================================================-->
+
+            <!--====================================================-->
+            <!-- Data Templates -->
+            <!--====================================================-->
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

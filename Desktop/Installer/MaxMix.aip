@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<DOCUMENT Type="Advanced Installer" CreateVersion="17.0" version="17.0" Modules="professional" RootPath="." Language="en" Id="{0D677D6B-7CFF-4572-80BF-937868275FC1}">
+  <COMPONENT cid="caphyon.advinst.msicomp.ProjectOptionsComponent">
+    <ROW Name="HiddenItems" Value="AppXProductDetailsComponent;AppXDependenciesComponent;AppXAppDetailsComponent;AppXVisualAssetsComponent;AppXCapabilitiesComponent;AppXAppDeclarationsComponent;AppXUriRulesComponent;MsiDriverPackagesComponent;UserAccountsComponent;ScheduledTasksComponent;SqlConnectionComponent;AutorunComponent;FirewallExceptionComponent;GameUxComponent;MsiDirectEditorComponent;SharePointSlnComponent;SilverlightSlnComponent;MultipleInstancesComponent;SccmComponent;ActSyncAppComponent;FixupComponent;MsiXDiffComponent;MsixManifestEditorComponent"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiPropsComponent">
+    <ROW Property="AI_BITMAP_DISPLAY_MODE" Value="0"/>
+    <ROW Property="AI_FINDEXE_TITLE" Value="Select the installation package for [|ProductName]" ValueLocId="AI.Property.FindExeTitle"/>
+    <ROW Property="AI_PREDEF_LCONDS_PROPS" Value="AI_DETECTED_DOTNET_VERSION;AI_DETECTED_INTERNET_CONNECTION"/>
+    <ROW Property="AI_REQUIRED_DOTNET_DISPLAY" MultiBuildValue="DefaultBuild:4.6" ValueLocId="-"/>
+    <ROW Property="AI_REQUIRED_DOTNET_VERSION" MultiBuildValue="DefaultBuild:4.6" ValueLocId="-"/>
+    <ROW Property="AI_ThemeStyle" Value="aero" MsiKey="AI_ThemeStyle"/>
+    <ROW Property="ALLUSERS" Value="1"/>
+    <ROW Property="ARPCONTACT" Value="rhenares0@gmail.com"/>
+    <ROW Property="ARPHELPLINK" Value="https://rubenhenares.github.io/maxmix/"/>
+    <ROW Property="ARPNOMODIFY" MultiBuildValue="DefaultBuild:1"/>
+    <ROW Property="ARPNOREPAIR" MultiBuildValue="DefaultBuild:1"/>
+    <ROW Property="ARPPRODUCTICON" Value="app_connected.exe" Type="8"/>
+    <ROW Property="ARPURLINFOABOUT" Value="https://rubenhenares.github.io/maxmix/"/>
+    <ROW Property="ARPURLUPDATEINFO" Value="https://rubenhenares.github.io/maxmix/"/>
+    <ROW Property="Manufacturer" Value="Ruben Henares"/>
+    <ROW Property="MsiLogging" MultiBuildValue="DefaultBuild:vp"/>
+    <ROW Property="ProductCode" Value="1033:{C5BADC47-3E6C-458F-9274-CBA24FE458DB} " Type="16"/>
+    <ROW Property="ProductLanguage" Value="1033"/>
+    <ROW Property="ProductName" Value="MaxMix"/>
+    <ROW Property="ProductVersion" Value="0.9.1" Type="32"/>
+    <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND;AI_SETUPEXEPATH;SETUPEXEDIR"/>
+    <ROW Property="UpgradeCode" Value="{2AB65B49-74E9-4DDB-B7C6-BEA795D0C069}"/>
+    <ROW Property="WindowsType9X" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
+    <ROW Property="WindowsType9XDisplay" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT" MultiBuildValue="DefaultBuild:Windows Vista x86, Windows Server 2008 x86, Windows 7 x86, Windows 8 x86, Windows 8.1 x86" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT40" MultiBuildValue="DefaultBuild:Windows NT 4.0" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT40Display" MultiBuildValue="DefaultBuild:Windows NT 4.0" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT50" MultiBuildValue="DefaultBuild:Windows 2000" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT50Display" MultiBuildValue="DefaultBuild:Windows 2000" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT5X" MultiBuildValue="DefaultBuild:Windows XP/2003" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT5XDisplay" MultiBuildValue="DefaultBuild:Windows XP/2003" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT64" MultiBuildValue="DefaultBuild:Windows Vista x64, Windows Server 2008 x64, Windows 7 x64, Windows Server 2008 R2 x64, Windows 8 x64, Windows Server 2012 x64, Windows 8.1 x64, Windows Server 2012 R2 x64, Windows Server x64" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNT64Display" MultiBuildValue="DefaultBuild:Windows Vista x64, Windows Server 2008 x64, Windows 7 x64, Windows Server 2008 R2 x64, Windows 8 x64, Windows Server 2012 x64, Windows 8.1 x64, Windows Server 2012 R2 x64, Windows Server x64" ValueLocId="-"/>
+    <ROW Property="WindowsTypeNTDisplay" MultiBuildValue="DefaultBuild:Windows Vista x86, Windows Server 2008 x86, Windows 7 x86, Windows 8 x86, Windows 8.1 x86" ValueLocId="-"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiDirsComponent">
+    <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1"/>
+    <ROW Directory="Application_Dir" Directory_Parent="APPDIR" DefaultDir="APPLIC~1|Application"/>
+    <ROW Directory="DesktopFolder" Directory_Parent="TARGETDIR" DefaultDir="DESKTO~1|DesktopFolder" IsPseudoRoot="1"/>
+    <ROW Directory="Driver_1_Dir" Directory_Parent="Driver_Dir" DefaultDir="Driver"/>
+    <ROW Directory="Driver_Dir" Directory_Parent="APPDIR" DefaultDir="DRIVER~1|DriverInstaller"/>
+    <ROW Directory="FirmwareInstaller_Dir" Directory_Parent="APPDIR" DefaultDir="FIRMWA~1|FirmwareInstaller"/>
+    <ROW Directory="Resources_1_Dir" Directory_Parent="FirmwareInstaller_Dir" DefaultDir="RESOUR~1|Resources"/>
+    <ROW Directory="SHORTCUTDIR" Directory_Parent="TARGETDIR" DefaultDir="SHORTC~1|SHORTCUTDIR" IsPseudoRoot="1"/>
+    <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
+    <ROW Directory="de_Dir" Directory_Parent="Application_Dir" DefaultDir="de"/>
+    <ROW Directory="es_Dir" Directory_Parent="Application_Dir" DefaultDir="es"/>
+    <ROW Directory="fr_Dir" Directory_Parent="Application_Dir" DefaultDir="fr"/>
+    <ROW Directory="hu_Dir" Directory_Parent="Application_Dir" DefaultDir="hu"/>
+    <ROW Directory="it_Dir" Directory_Parent="Application_Dir" DefaultDir="it"/>
+    <ROW Directory="ptBR_Dir" Directory_Parent="Application_Dir" DefaultDir="pt-BR"/>
+    <ROW Directory="ro_Dir" Directory_Parent="Application_Dir" DefaultDir="ro"/>
+    <ROW Directory="ru_Dir" Directory_Parent="Application_Dir" DefaultDir="ru"/>
+    <ROW Directory="sv_Dir" Directory_Parent="Application_Dir" DefaultDir="sv"/>
+    <ROW Directory="zhHans_Dir" Directory_Parent="Application_Dir" DefaultDir="zh-Hans"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
+    <ROW Component="AI_ExePath" ComponentId="{899A7E95-C5C7-4382-A11C-5D9F25A268F0}" Directory_="APPDIR" Attributes="4" KeyPath="AI_ExePath"/>
+    <ROW Component="APPDIR" ComponentId="{63AD61F0-D7A2-4865-8A8E-2E0BB3E035C9}" Directory_="APPDIR" Attributes="0"/>
+    <ROW Component="CH341PT.DLL_1" ComponentId="{FFF16246-5A5B-4776-ACC6-99AFD71FFF7A}" Directory_="Driver_1_Dir" Attributes="0" KeyPath="CH341PT.DLL_1"/>
+    <ROW Component="CH341S64.SYS_1" ComponentId="{387F9B3C-7D73-4BA8-A1EF-951AEE1190D8}" Directory_="Driver_1_Dir" Attributes="256" KeyPath="CH341S64.SYS_1" Type="0"/>
+    <ROW Component="CSCore.dll" ComponentId="{41866C2C-115F-4D58-801A-402EF58F69EF}" Directory_="Application_Dir" Attributes="0" KeyPath="CSCore.dll"/>
+    <ROW Component="CSCore.xml" ComponentId="{CDACA81F-47CA-4519-9535-82361A6F96D7}" Directory_="Application_Dir" Attributes="0" KeyPath="CSCore.xml" Type="0"/>
+    <ROW Component="ControlzEx.dll" ComponentId="{BAF2274D-7303-41CA-A7F4-9D84A1079319}" Directory_="Application_Dir" Attributes="0" KeyPath="ControlzEx.dll"/>
+    <ROW Component="ControlzEx.dll_1" ComponentId="{5B3A9E11-77E9-4E40-94B4-6FA8B156E9E7}" Directory_="FirmwareInstaller_Dir" Attributes="0" KeyPath="ControlzEx.dll_1"/>
+    <ROW Component="DriverInstaller.exe" ComponentId="{6361808F-C615-4CF1-811D-9260CEEB261A}" Directory_="Driver_Dir" Attributes="0" KeyPath="DriverInstaller.exe"/>
+    <ROW Component="DriverInstaller.exe.config" ComponentId="{405A3F1A-5188-433C-8B0E-E42D13630590}" Directory_="Driver_Dir" Attributes="0" KeyPath="DriverInstaller.exe.config" Type="0"/>
+    <ROW Component="FirmwareInstaller.exe" ComponentId="{AF704287-3B83-49B0-AB81-D9B1C8A37F9F}" Directory_="FirmwareInstaller_Dir" Attributes="0" KeyPath="FirmwareInstaller.exe"/>
+    <ROW Component="FirmwareInstaller.exe.config" ComponentId="{347D858C-763A-4D54-BF21-6E7064D60B78}" Directory_="FirmwareInstaller_Dir" Attributes="0" KeyPath="FirmwareInstaller.exe.config" Type="0"/>
+    <ROW Component="Hardcodet.Wpf.TaskbarNotification.dll" ComponentId="{56DFA7B3-02BA-4CA1-AAFF-49E109846155}" Directory_="Application_Dir" Attributes="0" KeyPath="Hardcodet.Wpf.TaskbarNotification.dll"/>
+    <ROW Component="MahApps.Metro.dll" ComponentId="{03AD597B-DC86-4203-BE75-40F0693F270E}" Directory_="Application_Dir" Attributes="0" KeyPath="MahApps.Metro.dll"/>
+    <ROW Component="MahApps.Metro.dll_1" ComponentId="{81274797-5758-404A-A084-8C78FB0E25AC}" Directory_="FirmwareInstaller_Dir" Attributes="0" KeyPath="MahApps.Metro.dll_1"/>
+    <ROW Component="MaxMix.exe" ComponentId="{83E09057-A888-4F05-BE52-A978C6682D87}" Directory_="Application_Dir" Attributes="0" KeyPath="MaxMix.exe"/>
+    <ROW Component="ProductInformation" ComponentId="{0CE05999-EDDF-42EB-B994-11D4D0DDC2CE}" Directory_="APPDIR" Attributes="4" KeyPath="Version"/>
+    <ROW Component="SHORTCUTDIR" ComponentId="{E1992E9E-1B78-4676-81C2-C08027A23BFA}" Directory_="SHORTCUTDIR" Attributes="0"/>
+    <ROW Component="System.Windows.Interactivity.dll" ComponentId="{F3FC2515-B9DC-4FF4-897F-24B8C8FF951C}" Directory_="Application_Dir" Attributes="0" KeyPath="System.Windows.Interactivity.dll"/>
+    <ROW Component="System.Windows.Interactivity.dll_1" ComponentId="{EC28AF3E-0356-46C0-8225-2B7F4C6FEEDC}" Directory_="FirmwareInstaller_Dir" Attributes="0" KeyPath="System.Windows.Interactivity.dll_1"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.Themes.Aero.dll" ComponentId="{D7E7AADB-E51B-49BB-A8D1-B4ED74014BD0}" Directory_="Application_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.Themes.Aero.dll"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.Themes.Metro.dll" ComponentId="{9FF01563-CF4A-4A5E-9DA5-1AC00F55D9CD}" Directory_="Application_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.Themes.Metro.dll"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.Themes.VS2010.dll" ComponentId="{BA530347-A2FF-430D-9924-91D290E717F4}" Directory_="Application_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.Themes.VS2010.dll"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.dll" ComponentId="{70A4F8B6-D523-4690-B103-73742565B2EB}" Directory_="Application_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.dll"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.resources.dll" ComponentId="{19C230AB-ACB4-4FB7-A63F-F8498E21B97C}" Directory_="de_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.resources.dll"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.resources.dll_28" ComponentId="{19515DDF-5190-4C6D-A2D2-94E6A3741B51}" Directory_="es_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.resources.dll_28"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.resources.dll_29" ComponentId="{F26F512D-A511-4FCC-9EEA-175472630DC6}" Directory_="fr_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.resources.dll_29"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.resources.dll_30" ComponentId="{16CE073D-1064-4A7A-907D-17ED00898770}" Directory_="hu_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.resources.dll_30"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.resources.dll_31" ComponentId="{C53B2057-2615-44AC-BF75-79B167B32AC6}" Directory_="it_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.resources.dll_31"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.resources.dll_32" ComponentId="{06CA9694-21A5-4E94-8764-91ADC04758FA}" Directory_="ptBR_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.resources.dll_32"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.resources.dll_33" ComponentId="{66CA83EB-4EFF-47BF-9B2C-31E5B4DC3404}" Directory_="ro_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.resources.dll_33"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.resources.dll_34" ComponentId="{89B96BDF-BA40-4C5F-8E64-9F4BFC8CAADB}" Directory_="ru_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.resources.dll_34"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.resources.dll_35" ComponentId="{D6B8B281-E907-4CBC-9429-F68123F498D8}" Directory_="sv_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.resources.dll_35"/>
+    <ROW Component="Xceed.Wpf.AvalonDock.resources.dll_36" ComponentId="{333CAFF8-C213-483D-931A-705038E124BD}" Directory_="zhHans_Dir" Attributes="0" KeyPath="Xceed.Wpf.AvalonDock.resources.dll_36"/>
+    <ROW Component="Xceed.Wpf.Toolkit.dll" ComponentId="{51D1276F-A53B-4FF1-9855-ABF6F4ABD45B}" Directory_="Application_Dir" Attributes="0" KeyPath="Xceed.Wpf.Toolkit.dll"/>
+    <ROW Component="avrdude.conf" ComponentId="{DBCA2D54-6F59-4AED-802E-64B79E34576B}" Directory_="Resources_1_Dir" Attributes="0" KeyPath="avrdude.conf" Type="0"/>
+    <ROW Component="avrdude.exe" ComponentId="{9D734000-9DDC-4219-BE06-42E994D1379F}" Directory_="Resources_1_Dir" Attributes="0" KeyPath="avrdude.exe"/>
+    <ROW Component="libusb0.dll" ComponentId="{26A759FB-B555-4C29-B459-5C5EFF184EF8}" Directory_="Resources_1_Dir" Attributes="0" KeyPath="libusb0.dll"/>
+    <ROW Component="updater.exe" ComponentId="{ECBF787E-4187-4781-B3CB-554B2E904308}" Directory_="APPDIR" Attributes="0" KeyPath="updater.exe"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
+    <ROW Feature="Application" Title="Application" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0"/>
+    <ROW Feature="DriverInstaller" Title="DriverInstaller" Description="Description" Display="3" Level="1" Directory_="APPDIR" Attributes="0"/>
+    <ROW Feature="FirmwareInstaller" Title="FirmwareInstaller" Description="Description" Display="5" Level="1" Directory_="APPDIR" Attributes="0"/>
+    <ATTRIBUTE name="CurrentFeature" value="Application"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
+    <ROW File="ControlzEx.dll" Component_="ControlzEx.dll" FileName="CONTRO~1.DLL|ControlzEx.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\ControlzEx.dll" SelfReg="false"/>
+    <ROW File="ControlzEx.pdb" Component_="ControlzEx.dll" FileName="CONTRO~1.PDB|ControlzEx.pdb" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\ControlzEx.pdb" SelfReg="false"/>
+    <ROW File="CSCore.dll" Component_="CSCore.dll" FileName="CSCore.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\CSCore.dll" SelfReg="false"/>
+    <ROW File="CSCore.xml" Component_="CSCore.xml" FileName="CSCore.xml" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\CSCore.xml" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.resources.dll" Component_="Xceed.Wpf.AvalonDock.resources.dll" FileName="XCEEDW~1.DLL|Xceed.Wpf.AvalonDock.resources.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\de\Xceed.Wpf.AvalonDock.resources.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.resources.dll_28" Component_="Xceed.Wpf.AvalonDock.resources.dll_28" FileName="XCEEDW~1.DLL|Xceed.Wpf.AvalonDock.resources.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\es\Xceed.Wpf.AvalonDock.resources.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.resources.dll_29" Component_="Xceed.Wpf.AvalonDock.resources.dll_29" FileName="XCEEDW~1.DLL|Xceed.Wpf.AvalonDock.resources.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\fr\Xceed.Wpf.AvalonDock.resources.dll" SelfReg="false"/>
+    <ROW File="Hardcodet.Wpf.TaskbarNotification.dll" Component_="Hardcodet.Wpf.TaskbarNotification.dll" FileName="HARDCO~1.DLL|Hardcodet.Wpf.TaskbarNotification.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\Hardcodet.Wpf.TaskbarNotification.dll" SelfReg="false"/>
+    <ROW File="Hardcodet.Wpf.TaskbarNotification.pdb" Component_="Hardcodet.Wpf.TaskbarNotification.dll" FileName="HARDCO~1.PDB|Hardcodet.Wpf.TaskbarNotification.pdb" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\Hardcodet.Wpf.TaskbarNotification.pdb" SelfReg="false"/>
+    <ROW File="Hardcodet.Wpf.TaskbarNotification.xml" Component_="CSCore.xml" FileName="HARDCO~1.XML|Hardcodet.Wpf.TaskbarNotification.xml" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\Hardcodet.Wpf.TaskbarNotification.xml" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.resources.dll_30" Component_="Xceed.Wpf.AvalonDock.resources.dll_30" FileName="XCEEDW~1.DLL|Xceed.Wpf.AvalonDock.resources.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\hu\Xceed.Wpf.AvalonDock.resources.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.resources.dll_31" Component_="Xceed.Wpf.AvalonDock.resources.dll_31" FileName="XCEEDW~1.DLL|Xceed.Wpf.AvalonDock.resources.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\it\Xceed.Wpf.AvalonDock.resources.dll" SelfReg="false"/>
+    <ROW File="MahApps.Metro.dll" Component_="MahApps.Metro.dll" FileName="MAHAPP~1.DLL|MahApps.Metro.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\MahApps.Metro.dll" SelfReg="false"/>
+    <ROW File="MahApps.Metro.pdb" Component_="MahApps.Metro.dll" FileName="MAHAPP~1.PDB|MahApps.Metro.pdb" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\MahApps.Metro.pdb" SelfReg="false"/>
+    <ROW File="MahApps.Metro.xml" Component_="CSCore.xml" FileName="MAHAPP~1.XML|MahApps.Metro.xml" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\MahApps.Metro.xml" SelfReg="false"/>
+    <ROW File="MaxMix.exe" Component_="MaxMix.exe" FileName="MaxMix.exe" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\MaxMix.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="MaxMix.exe.config" Component_="CSCore.xml" FileName="MAXMIX~1.CON|MaxMix.exe.config" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\MaxMix.exe.config" SelfReg="false"/>
+    <ROW File="MaxMix.pdb" Component_="MaxMix.exe" FileName="MaxMix.pdb" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\MaxMix.pdb" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.resources.dll_32" Component_="Xceed.Wpf.AvalonDock.resources.dll_32" FileName="XCEEDW~1.DLL|Xceed.Wpf.AvalonDock.resources.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\pt-BR\Xceed.Wpf.AvalonDock.resources.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.resources.dll_33" Component_="Xceed.Wpf.AvalonDock.resources.dll_33" FileName="XCEEDW~1.DLL|Xceed.Wpf.AvalonDock.resources.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\ro\Xceed.Wpf.AvalonDock.resources.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.resources.dll_34" Component_="Xceed.Wpf.AvalonDock.resources.dll_34" FileName="XCEEDW~1.DLL|Xceed.Wpf.AvalonDock.resources.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\ru\Xceed.Wpf.AvalonDock.resources.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.resources.dll_35" Component_="Xceed.Wpf.AvalonDock.resources.dll_35" FileName="XCEEDW~1.DLL|Xceed.Wpf.AvalonDock.resources.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\sv\Xceed.Wpf.AvalonDock.resources.dll" SelfReg="false"/>
+    <ROW File="System.Windows.Interactivity.dll" Component_="System.Windows.Interactivity.dll" FileName="SYSTEM~1.DLL|System.Windows.Interactivity.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\System.Windows.Interactivity.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.dll" Component_="Xceed.Wpf.AvalonDock.dll" FileName="XCEEDW~1.DLL|Xceed.Wpf.AvalonDock.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\Xceed.Wpf.AvalonDock.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.Themes.Aero.dll" Component_="Xceed.Wpf.AvalonDock.Themes.Aero.dll" FileName="XCEEDW~2.DLL|Xceed.Wpf.AvalonDock.Themes.Aero.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\Xceed.Wpf.AvalonDock.Themes.Aero.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.Themes.Metro.dll" Component_="Xceed.Wpf.AvalonDock.Themes.Metro.dll" FileName="XCEEDW~3.DLL|Xceed.Wpf.AvalonDock.Themes.Metro.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\Xceed.Wpf.AvalonDock.Themes.Metro.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.Themes.VS2010.dll" Component_="Xceed.Wpf.AvalonDock.Themes.VS2010.dll" FileName="XCEEDW~4.DLL|Xceed.Wpf.AvalonDock.Themes.VS2010.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\Xceed.Wpf.AvalonDock.Themes.VS2010.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.Toolkit.dll" Component_="Xceed.Wpf.Toolkit.dll" FileName="XCEEDW~5.DLL|Xceed.Wpf.Toolkit.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\Xceed.Wpf.Toolkit.dll" SelfReg="false"/>
+    <ROW File="Xceed.Wpf.AvalonDock.resources.dll_36" Component_="Xceed.Wpf.AvalonDock.resources.dll_36" FileName="XCEEDW~1.DLL|Xceed.Wpf.AvalonDock.resources.dll" Attributes="0" SourcePath="..\Application\MaxMix\bin\Debug\zh-Hans\Xceed.Wpf.AvalonDock.resources.dll" SelfReg="false"/>
+    <ROW File="DriverInstaller.exe" Component_="DriverInstaller.exe" FileName="DRIVER~1.EXE|DriverInstaller.exe" Attributes="0" SourcePath="..\DriverInstaller\DriverInstaller\bin\Debug\DriverInstaller.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="DriverInstaller.exe.config" Component_="DriverInstaller.exe.config" FileName="DRIVER~1.CON|DriverInstaller.exe.config" Attributes="0" SourcePath="..\DriverInstaller\DriverInstaller\bin\Debug\DriverInstaller.exe.config" SelfReg="false"/>
+    <ROW File="DriverInstaller.pdb" Component_="DriverInstaller.exe" FileName="DRIVER~1.PDB|DriverInstaller.pdb" Attributes="0" SourcePath="..\DriverInstaller\DriverInstaller\bin\Debug\DriverInstaller.pdb" SelfReg="false"/>
+    <ROW File="CH341PT.DLL_1" Component_="CH341PT.DLL_1" FileName="CH341PT.DLL" Attributes="0" SourcePath="..\DriverInstaller\DriverInstaller\bin\Debug\Driver\CH341PT.DLL" SelfReg="false"/>
+    <ROW File="CH341S64.SYS_1" Component_="CH341S64.SYS_1" FileName="CH341S64.SYS" Attributes="0" SourcePath="..\DriverInstaller\DriverInstaller\bin\Debug\Driver\CH341S64.SYS" SelfReg="false"/>
+    <ROW File="CH341S98.SYS_1" Component_="CH341S64.SYS_1" FileName="CH341S98.SYS" Attributes="0" SourcePath="..\DriverInstaller\DriverInstaller\bin\Debug\Driver\CH341S98.SYS" SelfReg="false"/>
+    <ROW File="ch341SER.CAT_1" Component_="CH341S64.SYS_1" FileName="ch341SER.CAT" Attributes="0" SourcePath="..\DriverInstaller\DriverInstaller\bin\Debug\Driver\ch341SER.CAT" SelfReg="false"/>
+    <ROW File="CH341SER.INF_1" Component_="CH341S64.SYS_1" FileName="CH341SER.INF" Attributes="0" SourcePath="..\DriverInstaller\DriverInstaller\bin\Debug\Driver\CH341SER.INF" SelfReg="false"/>
+    <ROW File="CH341SER.SYS_1" Component_="CH341S64.SYS_1" FileName="CH341SER.SYS" Attributes="0" SourcePath="..\DriverInstaller\DriverInstaller\bin\Debug\Driver\CH341SER.SYS" SelfReg="false"/>
+    <ROW File="CH341SER.VXD_1" Component_="CH341S64.SYS_1" FileName="CH341SER.VXD" Attributes="0" SourcePath="..\DriverInstaller\DriverInstaller\bin\Debug\Driver\CH341SER.VXD" SelfReg="false"/>
+    <ROW File="ControlzEx.dll_1" Component_="ControlzEx.dll_1" FileName="CONTRO~1.DLL|ControlzEx.dll" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\ControlzEx.dll" SelfReg="false"/>
+    <ROW File="ControlzEx.pdb_1" Component_="ControlzEx.dll_1" FileName="CONTRO~1.PDB|ControlzEx.pdb" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\ControlzEx.pdb" SelfReg="false"/>
+    <ROW File="FirmwareInstaller.exe" Component_="FirmwareInstaller.exe" FileName="FIRMWA~1.EXE|FirmwareInstaller.exe" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\FirmwareInstaller.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="FirmwareInstaller.exe.config" Component_="FirmwareInstaller.exe.config" FileName="FIRMWA~1.CON|FirmwareInstaller.exe.config" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\FirmwareInstaller.exe.config" SelfReg="false"/>
+    <ROW File="FirmwareInstaller.pdb" Component_="FirmwareInstaller.exe" FileName="FIRMWA~1.PDB|FirmwareInstaller.pdb" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\FirmwareInstaller.pdb" SelfReg="false"/>
+    <ROW File="MahApps.Metro.dll_1" Component_="MahApps.Metro.dll_1" FileName="MAHAPP~1.DLL|MahApps.Metro.dll" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\MahApps.Metro.dll" SelfReg="false"/>
+    <ROW File="MahApps.Metro.pdb_1" Component_="MahApps.Metro.dll_1" FileName="MAHAPP~1.PDB|MahApps.Metro.pdb" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\MahApps.Metro.pdb" SelfReg="false"/>
+    <ROW File="MahApps.Metro.xml_1" Component_="FirmwareInstaller.exe.config" FileName="MAHAPP~1.XML|MahApps.Metro.xml" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\MahApps.Metro.xml" SelfReg="false"/>
+    <ROW File="avrdude.conf" Component_="avrdude.conf" FileName="AVRDUD~1.CON|avrdude.conf" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\Resources\avrdude.conf" SelfReg="false"/>
+    <ROW File="avrdude.exe" Component_="avrdude.exe" FileName="avrdude.exe" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\Resources\avrdude.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="libusb0.dll" Component_="libusb0.dll" FileName="libusb0.dll" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\Resources\libusb0.dll" SelfReg="false"/>
+    <ROW File="System.Windows.Interactivity.dll_1" Component_="System.Windows.Interactivity.dll_1" FileName="SYSTEM~1.DLL|System.Windows.Interactivity.dll" Attributes="0" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug\System.Windows.Interactivity.dll" SelfReg="false"/>
+    <ROW File="updater.exe" Component_="updater.exe" FileName="updater.exe" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_STUBS&gt;updater.exe" SelfReg="false" DigSign="true"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.BootstrOptComponent">
+    <ROW BootstrOptKey="GlobalOptions" DownloadFolder="[AppDataFolder][|Manufacturer]\[|ProductName]\prerequisites" Options="2"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.BootstrapperUISequenceComponent">
+    <ROW Action="AI_DetectSoftware" Sequence="101"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.BuildComponent">
+    <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="1" PackageFolder="C:\Users\ruben\Documents\Advanced Installer\Projects\MaxMix\Installer\SetupFiles" Languages="en" InstallationType="4" CabsLocation="1" PackageType="1" FilesInsideExe="true" ExtractionFolder="[AppDataFolder][|Manufacturer]\[|ProductName] [|ProductVersion]\install" ExtUI="true" UseLargeSchema="true"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.DictionaryComponent">
+    <ROW Path="&lt;AI_DICTS&gt;ui.ail"/>
+    <ROW Path="&lt;AI_DICTS&gt;ui_en.ail"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.DigCertStoreComponent">
+    <ROW TimeStampUrl="http://timestamp.digicert.com" SignerDescription="[|ProductName]" SignOptions="0" SignTool="0" UseSha256="1"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.FragmentComponent">
+    <ROW Fragment="CommonUI.aip" Path="&lt;AI_FRAGS&gt;CommonUI.aip"/>
+    <ROW Fragment="MaintenanceTypeDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\MaintenanceTypeDlg.aip"/>
+    <ROW Fragment="MaintenanceWelcomeDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\MaintenanceWelcomeDlg.aip"/>
+    <ROW Fragment="PreparePrereqDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\PreparePrereqDlg.aip"/>
+    <ROW Fragment="PrerequisitesDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\PrerequisitesDlg.aip"/>
+    <ROW Fragment="ProgressPrereqDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\ProgressPrereqDlg.aip"/>
+    <ROW Fragment="SequenceDialogs.aip" Path="&lt;AI_THEMES&gt;classic\fragments\SequenceDialogs.aip"/>
+    <ROW Fragment="Sequences.aip" Path="&lt;AI_FRAGS&gt;Sequences.aip"/>
+    <ROW Fragment="StaticUIStrings.aip" Path="&lt;AI_FRAGS&gt;StaticUIStrings.aip"/>
+    <ROW Fragment="UI.aip" Path="&lt;AI_THEMES&gt;classic\fragments\UI.aip"/>
+    <ROW Fragment="Validation.aip" Path="&lt;AI_FRAGS&gt;Validation.aip"/>
+    <ROW Fragment="VerifyRemoveDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\VerifyRemoveDlg.aip"/>
+    <ROW Fragment="VerifyRepairDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\VerifyRepairDlg.aip"/>
+    <ROW Fragment="WelcomeDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\WelcomeDlg.aip"/>
+    <ROW Fragment="WelcomePrereqDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\WelcomePrereqDlg.aip"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiActionTextComponent">
+    <ROW Action="AI_DeleteLzma" Description="Deleting files extracted from archive" DescriptionLocId="ActionText.Description.AI_DeleteLzma" TemplateLocId="-"/>
+    <ROW Action="AI_DeleteRLzma" Description="Deleting files extracted from archive" DescriptionLocId="ActionText.Description.AI_DeleteLzma" TemplateLocId="-"/>
+    <ROW Action="AI_ExtractFiles" Description="Extracting files from archive" DescriptionLocId="ActionText.Description.AI_ExtractLzma" TemplateLocId="-"/>
+    <ROW Action="AI_ExtractLzma" Description="Extracting files from archive" DescriptionLocId="ActionText.Description.AI_ExtractLzma" TemplateLocId="-"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiAppSearchComponent">
+    <ROW Property="AI_SETUPEXEPATH" Signature_="AI_EXE_PATH_LM" Builds="DefaultBuild"/>
+    <ROW Property="AI_SETUPEXEPATH" Signature_="AI_EXE_PATH_CU" Builds="DefaultBuild"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiBinaryComponent">
+    <ROW Name="Prereq.dll" SourcePath="&lt;AI_CUSTACTS&gt;Prereq.dll"/>
+    <ROW Name="SoftwareDetector.dll" SourcePath="&lt;AI_CUSTACTS&gt;SoftwareDetector.dll"/>
+    <ROW Name="aicustact.dll" SourcePath="&lt;AI_CUSTACTS&gt;aicustact.dll"/>
+    <ROW Name="lzmaextractor.dll" SourcePath="&lt;AI_CUSTACTS&gt;lzmaextractor.dll"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiControlEventComponent">
+    <ROW Dialog_="WelcomeDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_INSTALL" Ordering="1"/>
+    <ROW Dialog_="MaintenanceWelcomeDlg" Control_="Next" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT" Ordering="99"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_MAINT" Ordering="198"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="CustomizeDlg" Condition="AI_MAINT" Ordering="203"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_INSTALL" Ordering="197"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="WelcomeDlg" Condition="AI_INSTALL" Ordering="201"/>
+    <ROW Dialog_="CustomizeDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_MAINT" Ordering="101"/>
+    <ROW Dialog_="CustomizeDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT" Ordering="1"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="ChangeButton" Event="NewDialog" Argument="CustomizeDlg" Condition="AI_MAINT" Ordering="501"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceWelcomeDlg" Condition="AI_MAINT" Ordering="1"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="RemoveButton" Event="NewDialog" Argument="VerifyRemoveDlg" Condition="AI_MAINT AND InstallMode=&quot;Remove&quot;" Ordering="601"/>
+    <ROW Dialog_="VerifyRemoveDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT AND InstallMode=&quot;Remove&quot;" Ordering="1"/>
+    <ROW Dialog_="MaintenanceTypeDlg" Control_="RepairButton" Event="NewDialog" Argument="VerifyRepairDlg" Condition="AI_MAINT AND InstallMode=&quot;Repair&quot;" Ordering="601"/>
+    <ROW Dialog_="VerifyRepairDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT AND InstallMode=&quot;Repair&quot;" Ordering="1"/>
+    <ROW Dialog_="VerifyRepairDlg" Control_="Repair" Event="EndDialog" Argument="Return" Condition="AI_MAINT AND InstallMode=&quot;Repair&quot;" Ordering="399" Options="1"/>
+    <ROW Dialog_="VerifyRemoveDlg" Control_="Remove" Event="EndDialog" Argument="Return" Condition="AI_MAINT AND InstallMode=&quot;Remove&quot;" Ordering="299" Options="1"/>
+    <ROW Dialog_="PatchWelcomeDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_PATCH" Ordering="201"/>
+    <ROW Dialog_="ResumeDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_RESUME" Ordering="299"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_PATCH" Ordering="199"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="PatchWelcomeDlg" Condition="AI_PATCH" Ordering="204"/>
+    <ROW Dialog_="WelcomePrereqDlg" Control_="Next" Event="NewDialog" Argument="PrerequisitesDlg" Condition="AI_BOOTSTRAPPER" Ordering="1"/>
+    <ROW Dialog_="PrerequisitesDlg" Control_="Next" Event="EndDialog" Argument="Return" Condition="AI_BOOTSTRAPPER" Ordering="1"/>
+    <ROW Dialog_="PrerequisitesDlg" Control_="Back" Event="NewDialog" Argument="WelcomePrereqDlg" Condition="AI_BOOTSTRAPPER" Ordering="1"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiCreateFolderComponent">
+    <ROW Directory_="APPDIR" Component_="APPDIR" ManualDelete="true"/>
+    <ROW Directory_="SHORTCUTDIR" Component_="SHORTCUTDIR" ManualDelete="false"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiCustActComponent">
+    <ROW Action="AI_AppSearchEx" Type="1" Source="Prereq.dll" Target="DoAppSearchEx"/>
+    <ROW Action="AI_BACKUP_AI_SETUPEXEPATH" Type="51" Source="AI_SETUPEXEPATH_ORIGINAL" Target="[AI_SETUPEXEPATH]"/>
+    <ROW Action="AI_DATA_SETTER" Type="51" Source="AI_ExtractFiles" Target="[AI_SETUPEXEPATH]"/>
+    <ROW Action="AI_DOWNGRADE" Type="19" Target="4010"/>
+    <ROW Action="AI_DeleteCadLzma" Type="51" Source="AI_DeleteLzma" Target="[AI_SETUPEXEPATH]"/>
+    <ROW Action="AI_DeleteLzma" Type="1025" Source="lzmaextractor.dll" Target="DeleteLZMAFiles"/>
+    <ROW Action="AI_DeleteRCadLzma" Type="51" Source="AI_DeleteRLzma" Target="[AI_SETUPEXEPATH]"/>
+    <ROW Action="AI_DeleteRLzma" Type="1281" Source="lzmaextractor.dll" Target="DeleteLZMAFiles"/>
+    <ROW Action="AI_DetectSoftware" Type="257" Source="SoftwareDetector.dll" Target="OnDetectSoftware"/>
+    <ROW Action="AI_DpiContentScale" Type="1" Source="aicustact.dll" Target="DpiContentScale"/>
+    <ROW Action="AI_EnableDebugLog" Type="321" Source="aicustact.dll" Target="EnableDebugLog"/>
+    <ROW Action="AI_EstimateExtractFiles" Type="1" Source="Prereq.dll" Target="EstimateExtractFiles"/>
+    <ROW Action="AI_ExtractCadLzma" Type="51" Source="AI_ExtractLzma" Target="[AI_SETUPEXEPATH]"/>
+    <ROW Action="AI_ExtractFiles" Type="1025" Source="Prereq.dll" Target="ExtractSourceFiles" AdditionalSeq="AI_DATA_SETTER"/>
+    <ROW Action="AI_ExtractLzma" Type="1025" Source="lzmaextractor.dll" Target="ExtractLZMAFiles"/>
+    <ROW Action="AI_FindExeLzma" Type="1" Source="lzmaextractor.dll" Target="FindEXE"/>
+    <ROW Action="AI_InstallModeCheck" Type="1" Source="aicustact.dll" Target="UpdateInstallMode" WithoutSeq="true"/>
+    <ROW Action="AI_PREPARE_UPGRADE" Type="65" Source="aicustact.dll" Target="PrepareUpgrade"/>
+    <ROW Action="AI_RESTORE_AI_SETUPEXEPATH" Type="51" Source="AI_SETUPEXEPATH" Target="[AI_SETUPEXEPATH_ORIGINAL]"/>
+    <ROW Action="AI_RESTORE_LOCATION" Type="65" Source="aicustact.dll" Target="RestoreLocation"/>
+    <ROW Action="AI_ResolveKnownFolders" Type="1" Source="aicustact.dll" Target="AI_ResolveKnownFolders"/>
+    <ROW Action="AI_SHOW_LOG" Type="65" Source="aicustact.dll" Target="LaunchLogFile" WithoutSeq="true"/>
+    <ROW Action="AI_STORE_LOCATION" Type="51" Source="ARPINSTALLLOCATION" Target="[APPDIR]"/>
+    <ROW Action="AI_UPDATER_UNINSTALL" Type="82" Source="updater.exe" Target="/clean silent"/>
+    <ROW Action="DriverInstaller.exe" Type="1042" Source="DriverInstaller.exe"/>
+    <ROW Action="SET_APPDIR" Type="307" Source="APPDIR" Target="[ProgramFilesFolder][Manufacturer]\[ProductName]" MultiBuildTarget="DefaultBuild:[AppDataFolder][Manufacturer]\[ProductName]"/>
+    <ROW Action="SET_SHORTCUTDIR" Type="307" Source="SHORTCUTDIR" Target="[ProgramMenuFolder][ProductName]" MultiBuildTarget="DefaultBuild:[ProgramMenuFolder][Manufacturer]\[ProductName]"/>
+    <ROW Action="SET_TARGETDIR_TO_APPDIR" Type="51" Source="TARGETDIR" Target="[APPDIR]"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatCompsComponent">
+    <ROW Feature_="Application" Component_="APPDIR"/>
+    <ROW Feature_="Application" Component_="ProductInformation"/>
+    <ROW Feature_="Application" Component_="AI_ExePath"/>
+    <ROW Feature_="Application" Component_="ControlzEx.dll"/>
+    <ROW Feature_="Application" Component_="CSCore.dll"/>
+    <ROW Feature_="Application" Component_="CSCore.xml"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.resources.dll"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.resources.dll_28"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.resources.dll_29"/>
+    <ROW Feature_="Application" Component_="Hardcodet.Wpf.TaskbarNotification.dll"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.resources.dll_30"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.resources.dll_31"/>
+    <ROW Feature_="Application" Component_="MahApps.Metro.dll"/>
+    <ROW Feature_="Application" Component_="MaxMix.exe"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.resources.dll_32"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.resources.dll_33"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.resources.dll_34"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.resources.dll_35"/>
+    <ROW Feature_="Application" Component_="System.Windows.Interactivity.dll"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.dll"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.Themes.Aero.dll"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.Themes.Metro.dll"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.Themes.VS2010.dll"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.Toolkit.dll"/>
+    <ROW Feature_="Application" Component_="Xceed.Wpf.AvalonDock.resources.dll_36"/>
+    <ROW Feature_="DriverInstaller" Component_="DriverInstaller.exe"/>
+    <ROW Feature_="DriverInstaller" Component_="DriverInstaller.exe.config"/>
+    <ROW Feature_="DriverInstaller" Component_="CH341PT.DLL_1"/>
+    <ROW Feature_="DriverInstaller" Component_="CH341S64.SYS_1"/>
+    <ROW Feature_="FirmwareInstaller" Component_="ControlzEx.dll_1"/>
+    <ROW Feature_="FirmwareInstaller" Component_="FirmwareInstaller.exe"/>
+    <ROW Feature_="FirmwareInstaller" Component_="FirmwareInstaller.exe.config"/>
+    <ROW Feature_="FirmwareInstaller" Component_="MahApps.Metro.dll_1"/>
+    <ROW Feature_="FirmwareInstaller" Component_="avrdude.conf"/>
+    <ROW Feature_="FirmwareInstaller" Component_="avrdude.exe"/>
+    <ROW Feature_="FirmwareInstaller" Component_="libusb0.dll"/>
+    <ROW Feature_="FirmwareInstaller" Component_="System.Windows.Interactivity.dll_1"/>
+    <ROW Feature_="Application" Component_="SHORTCUTDIR"/>
+    <ROW Feature_="Application" Component_="updater.exe"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
+    <ROW Name="FirmwareInstaller.exe" SourcePath="..\Resources\icons\firmware_installer.ico" Index="0"/>
+    <ROW Name="app_connected.exe" SourcePath="..\Resources\icons\app_connected.ico" Index="0"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiIniFileComponent">
+    <ROW IniFile="AppDir" FileName="updater.ini" DirProperty="APPDIR" Section="General" Key="AppDir" Value="[APPDIR]" Action="0" Component_="updater.exe"/>
+    <ROW IniFile="ApplicationName" FileName="updater.ini" DirProperty="APPDIR" Section="General" Key="ApplicationName" Value="[ProductName]" Action="0" Component_="updater.exe"/>
+    <ROW IniFile="ApplicationVersion" FileName="updater.ini" DirProperty="APPDIR" Section="General" Key="ApplicationVersion" Value="[ProductVersion]" Action="0" Component_="updater.exe"/>
+    <ROW IniFile="CheckFrequency" FileName="updater.ini" DirProperty="APPDIR" Section="General" Key="CheckFrequency" Value="2" Action="0" Component_="updater.exe"/>
+    <ROW IniFile="CompanyName" FileName="updater.ini" DirProperty="APPDIR" Section="General" Key="CompanyName" Value="[Manufacturer]" Action="0" Component_="updater.exe"/>
+    <ROW IniFile="DefaultCommandLine" FileName="updater.ini" DirProperty="APPDIR" Section="General" Key="DefaultCommandLine" Value="/checknow" Action="0" Component_="updater.exe"/>
+    <ROW IniFile="DownloadsFolder" FileName="updater.ini" DirProperty="APPDIR" Section="General" Key="DownloadsFolder" Value="[CommonAppDataFolder][Manufacturer]\[ProductName]\Updates\" Action="0" Component_="updater.exe"/>
+    <ROW IniFile="Flags" FileName="updater.ini" DirProperty="APPDIR" Section="General" Key="Flags" Value="PerMachine|ShowConfigOptionsButton" Action="0" Component_="updater.exe"/>
+    <ROW IniFile="ID" FileName="updater.ini" DirProperty="APPDIR" Section="General" Key="ID" Value="[UpgradeCode]" Action="0" Component_="updater.exe"/>
+    <ROW IniFile="URL" FileName="updater.ini" DirProperty="APPDIR" Section="General" Key="URL" Value="https://raw.githubusercontent.com/rubenhenares/maxmix-desktop/master/updates.txt" Action="0" Component_="updater.exe"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiInstExSeqComponent">
+    <ROW Action="AI_DOWNGRADE" Condition="AI_NEWERPRODUCTFOUND AND (UILevel &lt;&gt; 5)" Sequence="210"/>
+    <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="749"/>
+    <ROW Action="AI_STORE_LOCATION" Condition="(Not Installed) OR REINSTALL" Sequence="1501"/>
+    <ROW Action="AI_PREPARE_UPGRADE" Condition="AI_UPGRADE=&quot;No&quot; AND (Not Installed)" Sequence="1399"/>
+    <ROW Action="AI_ResolveKnownFolders" Sequence="52"/>
+    <ROW Action="AI_EnableDebugLog" Sequence="51"/>
+    <ROW Action="AI_DetectSoftware" Sequence="103"/>
+    <ROW Action="RemoveExistingProducts" Condition="AI_UPGRADE&lt;&gt;&quot;No&quot;" Sequence="1401" SeqType="0" MsiKey="RemoveExistingProducts"/>
+    <ROW Action="DriverInstaller.exe" Condition="( NOT Installed )" Sequence="6401"/>
+    <ROW Action="AI_BACKUP_AI_SETUPEXEPATH" Sequence="99" Builds="DefaultBuild"/>
+    <ROW Action="AI_RESTORE_AI_SETUPEXEPATH" Condition="AI_SETUPEXEPATH_ORIGINAL" Sequence="102" Builds="DefaultBuild"/>
+    <ROW Action="AI_DeleteCadLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="199" Builds="DefaultBuild"/>
+    <ROW Action="AI_DeleteRCadLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="198" Builds="DefaultBuild"/>
+    <ROW Action="AI_ExtractCadLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="197" Builds="DefaultBuild"/>
+    <ROW Action="AI_FindExeLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="196" Builds="DefaultBuild"/>
+    <ROW Action="AI_ExtractLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="1549" Builds="DefaultBuild"/>
+    <ROW Action="AI_DeleteRLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="1548" Builds="DefaultBuild"/>
+    <ROW Action="AI_DeleteLzma" Condition="SETUPEXEDIR=&quot;&quot; AND Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;) AND (NOT PATCH)" Sequence="6599" Builds="DefaultBuild"/>
+    <ROW Action="AI_ExtractFiles" Sequence="3998" Builds="DefaultBuild"/>
+    <ROW Action="AI_DATA_SETTER" Sequence="3997"/>
+    <ROW Action="AI_EstimateExtractFiles" Sequence="3999" Builds="DefaultBuild"/>
+    <ROW Action="AI_AppSearchEx" Sequence="101"/>
+    <ROW Action="AI_UPDATER_UNINSTALL" Condition="($updater.exe = 2) AND (?updater.exe = 3) AND NOT (UPGRADINGPRODUCTCODE)" Sequence="1551"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiInstallUISequenceComponent">
+    <ROW Action="AI_RESTORE_LOCATION" Condition="APPDIR=&quot;&quot;" Sequence="749"/>
+    <ROW Action="AI_ResolveKnownFolders" Sequence="53"/>
+    <ROW Action="AI_DpiContentScale" Sequence="52"/>
+    <ROW Action="AI_EnableDebugLog" Sequence="51"/>
+    <ROW Action="AI_BACKUP_AI_SETUPEXEPATH" Sequence="99"/>
+    <ROW Action="AI_RESTORE_AI_SETUPEXEPATH" Condition="AI_SETUPEXEPATH_ORIGINAL" Sequence="103"/>
+    <ROW Action="AI_DetectSoftware" Sequence="102"/>
+    <ROW Action="AI_AppSearchEx" Sequence="101"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiLaunchConditionsComponent">
+    <ROW Condition="( Version9X OR ( NOT VersionNT64 ) OR ( VersionNT64 AND ((VersionNT64 &lt;&gt; 600) OR (MsiNTProductType &lt;&gt; 1)) AND ((VersionNT64 &lt;&gt; 600) OR (MsiNTProductType = 1)) AND ((VersionNT64 &lt;&gt; 601) OR (MsiNTProductType &lt;&gt; 1)) AND ((VersionNT64 &lt;&gt; 601) OR (MsiNTProductType = 1)) AND ((VersionNT64 &lt;&gt; 602) OR (MsiNTProductType &lt;&gt; 1)) AND ((VersionNT64 &lt;&gt; 602) OR (MsiNTProductType = 1)) AND ((VersionNT64 &lt;&gt; 603) OR (MsiNTProductType &lt;&gt; 1)) AND ((VersionNT64 &lt;&gt; 603) OR (MsiNTProductType = 1)) AND ((VersionNT64 &lt;&gt; 1000) OR (MsiNTProductType = 1)) ) )" Description="[ProductName] cannot be installed on the following Windows versions: [WindowsTypeNT64Display]." DescriptionLocId="AI.LaunchCondition.NoSpecificNT64" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="( Version9X OR VersionNT64 OR ( VersionNT AND ((VersionNT &lt;&gt; 600) OR (MsiNTProductType &lt;&gt; 1)) AND ((VersionNT &lt;&gt; 600) OR (MsiNTProductType = 1)) AND (VersionNT &lt;&gt; 601) AND (VersionNT &lt;&gt; 602) AND (VersionNT &lt;&gt; 603) ) )" Description="[ProductName] cannot be installed on the following Windows versions: [WindowsTypeNTDisplay]." DescriptionLocId="AI.LaunchCondition.NoSpecificNT" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="((VersionNT &lt;&gt; 501) AND (VersionNT &lt;&gt; 502))" Description="[ProductName] cannot be installed on [WindowsTypeNT5XDisplay]." DescriptionLocId="AI.LaunchCondition.NoNT5X" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="(VersionNT &lt;&gt; 400)" Description="[ProductName] cannot be installed on [WindowsTypeNT40Display]." DescriptionLocId="AI.LaunchCondition.NoNT40" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="(VersionNT &lt;&gt; 500)" Description="[ProductName] cannot be installed on [WindowsTypeNT50Display]." DescriptionLocId="AI.LaunchCondition.NoNT50" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="AI_DETECTED_DOTNET_VERSION &gt;= AI_REQUIRED_DOTNET_VERSION" Description="[ProductName] cannot be installed on systems with .NET Framework version lower than [AI_REQUIRED_DOTNET_DISPLAY]." DescriptionLocId="AI.LaunchCondition.DotNET" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="AI_DETECTED_INTERNET_CONNECTION" Description="[ProductName] requires an active Internet connection for installation. Please check your network configuration and proxy settings." DescriptionLocId="AI.LaunchCondition.Internet" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="SETUPEXEDIR OR (REMOVE=&quot;ALL&quot;)" Description="This package can only be run from a bootstrapper." DescriptionLocId="AI.LaunchCondition.RequireBootstrapper" IsPredefined="true" Builds="DefaultBuild"/>
+    <ROW Condition="VersionNT" Description="[ProductName] cannot be installed on [WindowsType9XDisplay]." DescriptionLocId="AI.LaunchCondition.No9X" IsPredefined="true" Builds="DefaultBuild"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiRegLocatorComponent">
+    <ROW Signature_="AI_EXE_PATH_CU" Root="1" Key="Software\Caphyon\Advanced Installer\LZMA\[ProductCode]\[ProductVersion]" Name="AI_ExePath" Type="2"/>
+    <ROW Signature_="AI_EXE_PATH_LM" Root="2" Key="Software\Caphyon\Advanced Installer\LZMA\[ProductCode]\[ProductVersion]" Name="AI_ExePath" Type="2"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiRegsComponent">
+    <ROW Registry="AI_ExePath" Root="-1" Key="Software\Caphyon\Advanced Installer\LZMA\[ProductCode]\[ProductVersion]" Name="AI_ExePath" Value="[AI_SETUPEXEPATH]" Component_="AI_ExePath"/>
+    <ROW Registry="Path" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="Path" Value="[APPDIR]" Component_="ProductInformation"/>
+    <ROW Registry="Version" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="Version" Value="[ProductVersion]" Component_="ProductInformation"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiShortsComponent">
+    <ROW Shortcut="CheckforUpdates" Directory_="SHORTCUTDIR" Name="CHECKF~1|Check for Updates" Component_="updater.exe" Target="[#updater.exe]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
+    <ROW Shortcut="FirmwareInstaller" Directory_="SHORTCUTDIR" Name="FIRMWA~1|Firmware Installer" Component_="FirmwareInstaller.exe" Target="[#FirmwareInstaller.exe]" Hotkey="0" Icon_="FirmwareInstaller.exe" IconIndex="0" ShowCmd="1" WkDir="FirmwareInstaller_Dir"/>
+    <ROW Shortcut="FirmwareInstaller_1" Directory_="DesktopFolder" Name="FIRMWA~1|Firmware Installer" Component_="FirmwareInstaller.exe" Target="[#FirmwareInstaller.exe]" Hotkey="0" Icon_="FirmwareInstaller.exe" IconIndex="0" ShowCmd="1" WkDir="FirmwareInstaller_Dir"/>
+    <ROW Shortcut="Installdrivers" Directory_="SHORTCUTDIR" Name="DRIVER~1|Driver Installer" Component_="DriverInstaller.exe" Target="[#DriverInstaller.exe]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="Driver_Dir"/>
+    <ROW Shortcut="MaxMix" Directory_="DesktopFolder" Name="MaxMix" Component_="updater.exe" Target="[#updater.exe]" Arguments="/checknow -minuseractions -restartapp &quot;[#MaxMix.exe]&quot;" Hotkey="0" Icon_="app_connected.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
+    <ROW Shortcut="MaxMix_1" Directory_="SHORTCUTDIR" Name="MaxMix" Component_="updater.exe" Target="[#updater.exe]" Arguments="/checknow -minuseractions -restartapp &quot;[#MaxMix.exe]&quot;" Hotkey="0" Icon_="app_connected.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiThemeComponent">
+    <ATTRIBUTE name="UsedTheme" value="classic"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiUpgradeComponent">
+    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="0.0.1" VersionMax="[|ProductVersion]" Attributes="257" ActionProperty="OLDPRODUCTS"/>
+    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="[|ProductVersion]" Attributes="2" ActionProperty="AI_NEWERPRODUCTFOUND"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.PreReqComponent">
+    <ROW PrereqKey="B8AA522D638C46D9A84AE3AEFBE7A086" DisplayName=".NET Framework 4.7.1" SetupFileUrl="https://download.microsoft.com/download/9/E/6/9E63300C-0941-4B45-A0EC-0008F96DD480/NDP471-KB4033342-x86-x64-AllOS-ENU.exe" Location="1" ExactSize="68742112" WinNTVersions="Windows Vista x86, Windows Server 2008 x86, Windows 7 RTM x86, Windows 10 version 1507 x86, Windows 10 version 1511 x86, Windows 10 version 1709 x86, Windows 10 version 1803 x86, Windows 10 version 1809 x86, Windows 10 version 1903 x86, Windows 10 version 1909 x86" WinNT64Versions="Windows Vista x64, Windows Server 2008 x64, Windows 7 RTM x64, Windows Server 2008 R2 RTM x64, Windows 10 version 1507 x64, Windows 10 version 1511 x64, Windows 10 version 1709 x64, Windows 10 version 1803 x64, Windows 10 version 1809 x64, Windows 10 version 1903 x64, Windows 10 version 1909 x64, Windows Server 2019 x64" Operator="1" NoUiComLine="/q /norestart" Options="xy" MD5="660e1a104f209f3cdb55b6d4e9ffa475" TargetName=".NET Framework 4.7.1"/>
+    <ATTRIBUTE name="PrereqsOrder" value="B8AA522D638C46D9A84AE3AEFBE7A086"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.PreReqSearchComponent">
+    <ROW SearchKey="B8AA522D638C46D9A84AE3AEFBE7A086Rel" Prereq="B8AA522D638C46D9A84AE3AEFBE7A086" SearchType="9" SearchString="HKLM\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\Release" RefContent="G461309" Order="1" Property="PreReqSearch_B8AA522D638C46D9A84AE3"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.SynchronizedFolderComponent">
+    <ROW Directory_="Application_Dir" SourcePath="..\Application\MaxMix\bin\Debug" Feature="Application" ExcludePattern="*~|#*#|%*%|._|CVS|.cvsignore|SCCS|vssver.scc|mssccprj.scc|vssver2.scc|.svn|.DS_Store" ExcludeFlags="6"/>
+    <ROW Directory_="Driver_Dir" SourcePath="..\DriverInstaller\DriverInstaller\bin\Debug" Feature="DriverInstaller" ExcludePattern="*~|#*#|%*%|._|CVS|.cvsignore|SCCS|vssver.scc|mssccprj.scc|vssver2.scc|.svn|.DS_Store" ExcludeFlags="6"/>
+    <ROW Directory_="FirmwareInstaller_Dir" SourcePath="..\FirmwareInstaller\FirmwareInstaller\bin\Debug" Feature="FirmwareInstaller" ExcludePattern="*~|#*#|%*%|._|CVS|.cvsignore|SCCS|vssver.scc|mssccprj.scc|vssver2.scc|.svn|.DS_Store" ExcludeFlags="6"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.UpdaterComponent">
+    <ROW Updater="updater.exe" URL="URL" SearchFreq="CheckFrequency" DownloadsFolder="DownloadsFolder" ID="ID" TargetDir="AppDir" AppName="ApplicationName" AppVersion="ApplicationVersion" CompanyName="CompanyName" DefCommandLine="DefaultCommandLine" Flags="Flags" IconIndex="0" UnistallCASeq="AI_UPDATER_UNINSTALL" Description="[|UpdaterName] [|ProductVersion]"/>
+  </COMPONENT>
+</DOCUMENT>

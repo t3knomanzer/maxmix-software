@@ -1,0 +1,116 @@
+﻿<Application x:Class="MaxMix.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:local="clr-namespace:MaxMix"
+             xmlns:cnv="clr-namespace:MaxMix.Framework.Converters"
+             xmlns:vm="clr-namespace:MaxMix.ViewModels"
+             xmlns:v="clr-namespace:MaxMix.Views"
+             Startup="ApplicationStartup">
+    
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!--====================================================-->
+                <!-- Modern UI -->
+                <!--====================================================-->
+                
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/FlatButton.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Colors.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseDark.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/Blue.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--====================================================-->
+            <!-- Static Resources -->
+            <!--====================================================-->
+            <x:Array x:Key="Tray_Icons" Type="{x:Type sys:String}">
+                <sys:String>/Resources/app_connected.ico</sys:String>
+                <sys:String>/Resources/app_disconnected.ico</sys:String>
+            </x:Array>
+
+            <x:Array x:Key="Tray_Status_Messages" Type="{x:Type sys:String}">
+                <sys:String>MaxMix Device Connected</sys:String>
+                <sys:String>MaxMix Device Disconnected</sys:String>
+            </x:Array>
+
+            <!--====================================================-->
+            <!-- Fonts -->
+            <!--====================================================-->
+            <FontFamily x:Key="FontFamily_Default">./Resources/#Alien League</FontFamily>
+            <FontWeight x:Key="FontWeight_Default">Regular</FontWeight>
+
+            <!--====================================================-->
+            <!-- Sizes -->
+            <!--====================================================-->
+            <sys:Double x:Key="Double_Title">32</sys:Double>
+            <sys:Double x:Key="Double_H1">24</sys:Double>
+            <sys:Double x:Key="Double_H2">18</sys:Double>
+            <sys:Double x:Key="Double_H3">12</sys:Double>
+            <sys:Double x:Key="Double_Text">10</sys:Double>
+
+            <!--====================================================-->
+            <!-- Colors -->
+            <!--====================================================-->
+            <Color x:Key="Color_Black">#FF000000</Color>
+            <Color x:Key="Color_White">#FFFFFFFF</Color>
+            <Color x:Key="Color_Gray">#FFCCCCCC</Color>
+            <Color x:Key="Color_Gray1">#FFAAAAAA</Color>
+            <Color x:Key="Color_Gray2">#FF888888</Color>
+            <Color x:Key="Color_Accent">#FF00A2FF</Color>
+            <Color x:Key="Color_Accent1">#FF87D3FF</Color>
+
+            <!--====================================================-->
+            <!-- Brushes -->
+            <!--====================================================-->
+            <SolidColorBrush x:Key="Brush_Black" Color="{StaticResource Color_Black}" />
+            <SolidColorBrush x:Key="Brush_White" Color="{StaticResource Color_White}" />
+            <SolidColorBrush x:Key="Brush_Gray" Color="{StaticResource Color_Gray}" />
+            <SolidColorBrush x:Key="Brush_Gray1" Color="{StaticResource Color_Gray1}" />
+            <SolidColorBrush x:Key="Brush_Gray2" Color="{StaticResource Color_Gray2}" />
+            <SolidColorBrush x:Key="Brush_Accent" Color="{StaticResource Color_Accent}" />
+            <SolidColorBrush x:Key="Brush_Accent1" Color="{StaticResource Color_Accent1}" />
+
+            <SolidColorBrush x:Key="Brush_WindowBackground" Color="{StaticResource Color_White}" />
+
+            <!-- Value Converters -->
+            <cnv:BoolToVisibilityConverter x:Key="Cnv_BoolToVisibility" />
+            <cnv:BoolToStringConverter x:Key="Cnv_BoolToString" />
+
+            <!--====================================================-->
+            <!-- Styles -->
+            <!--====================================================-->
+            <!-- ** Separator ** -->
+            <Style x:Key="STL_Rectangle_Separator" TargetType="Rectangle">
+                <Setter Property="Height" Value="1" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="Fill" Value="{StaticResource Brush_Gray}" />
+            </Style>
+
+            <!-- ** Label ** -->
+            <Style TargetType="{x:Type Label}">
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="Padding" Value="0" />
+            </Style>
+
+            <Style x:Key="STL_Label_Title" TargetType="Label" BasedOn="{StaticResource {x:Type Label}}">
+                <Setter Property="FontSize" Value="{StaticResource Double_Title}" />
+            </Style>
+
+            <Style x:Key="STL_Label_H1" TargetType="Label" BasedOn="{StaticResource {x:Type Label}}">
+                <Setter Property="FontSize" Value="{StaticResource Double_H1}" />
+            </Style>
+
+            <!--====================================================-->
+            <!-- Data Templates -->
+            <!--====================================================-->
+            <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+                <v:SettingsView />
+            </DataTemplate>
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,42 @@
+﻿<UserControl x:Class="MaxMix.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MaxMix.Views"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="300">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- DisplayNewSession -->
+        <Label Grid.Column="0" Grid.Row="0"
+               Content="Switch to new application" />
+        <CheckBox Grid.Column="1" Grid.Row="0"
+                  IsChecked="{Binding DisplayNewSession}" />
+
+        <!-- SleepWhenInactive -->
+        <Label Grid.Column="0" Grid.Row="1"
+               Content="Sleep when inactive" />
+        <CheckBox Grid.Column="1" Grid.Row="1"
+                  IsChecked="{Binding SleepWhenInactive}" />
+
+        <!-- SleepAfterSeconds -->
+        <Label Grid.Column="0" Grid.Row="2"
+               Content="Sleep after (seconds)" />
+        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="2"
+                            Foreground="{StaticResource Brush_White}"
+                            Minimum="0" Maximum="60"
+                            Value="{Binding SleepAfterSeconds}" />
+    </Grid>
+</UserControl>
