@@ -16,7 +16,7 @@ The desktop directory contains the application, driver installer and firmware in
 
 Development is done using [Visual Studio 2019 Communitty Edition](https://visualstudio.microsoft.com/downloads/).
 
-The application installer is made with [Advanced Installer] (https://www.advancedinstaller.com/).
+The application installer is made with [Advanced Installer](https://www.advancedinstaller.com/).
 
 ## Embedded
 The embedded directory contains the firmware for the device which uses an Arduino Nano.
