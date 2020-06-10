@@ -1,20 +1,30 @@
-# Max Mix
+# Maxmix
 
 [![Build Status](https://travis-ci.org/MAIF/your-project.svg?branch=master)](https://travis-ci.org/MAIF/your-project) [ ![Download](https://img.shields.io/github/release/MAIF/your-project.svg) ](https://dl.bintray.com/maif/binaries/your-project.jar/1.0.0/your-project.jar)
 
-**Max Mix** is an open sound mixer that allows you to control the volume of any application from an external device.  
-This repository contains the Windows Desktop Application, written in C# and WPF and the Windows Installer project.
+**Maxmix** is an open-source volume mixer that allows you to control the volume of any application on your Windows PC by using an external device.  
 
-## Reference Documentation
+This repository contains the code for all of the software needed for the system.
 
-The reference documentation is available at [https://rubenhenares.github.io/projects/maxmix/](https://rubenhenares.github.io/projects/maxmix/)
+## Desktop
+The desktop directory contains the application , driver installer and firmware installer which are all written in C# and WPF.
+
+Development is done using [Visual Studio 2019 Communitty Edition](https://visualstudio.microsoft.com/downloads/).
+
+The application installer is made with [Advanced Installer] (https://www.advancedinstaller.com/).
+
+## Embedded
+The embedded directory contains the firmware for the device which uses an Arduino Nano.
+You can use your IDE of choice as long as it compiles for that particular chip.
 
 ## Community
 You can join these groups and chats to discuss and ask your-project related questions:
 
-- Issue tracker: [![github: MAIF/your-project/issues](https://img.shields.io/github/issues/MAIF/your-project.svg)](https://github.com/MAIF/your-project/issues)
-- Pull request: [![github: MAIF/your-project/pulls](https://img.shields.io/github/issues-pr/MAIF/your-project.svg)](https://github.com/MAIF/your-project/pulls)
-- Chat room: [![Join the chat at https://gitter.im/MAIF/your-project](https://badges.gitter.im/MAIF/your-project.svg)](https://gitter.im/MAIF/your-project?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+- Issue tracker: [![github: t3knomanzer/maxmix-software/issues](https://img.shields.io/github/issues/t3knomanzer/maxmix-software.svg)](https://github.com/t3knomanzer/maxmix-software/issues)
+- Pull request: [![github: t3knomanzer/maxmix-software/pulls](https://img.shields.io/github/issues-pr/t3knomanzer/maxmix-software.svg)](https://github.com/t3knomanzer/maxmix-software/pulls)
+
+- Twitter: https://twitter.com/maxmixproject/
+- Reddit: https://www.reddit.com/r/maxmix/
 
 ## Contributing
 
