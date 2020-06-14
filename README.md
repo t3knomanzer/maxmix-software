@@ -4,6 +4,9 @@
 ![GitHub commits since latest release (by date)](https://img.shields.io/github/commits-since/t3knomanzer/maxmix-software/latest)
 
 # Maxmix
+
+[![Join the chat at https://gitter.im/maxmixproject/developers](https://badges.gitter.im/maxmixproject/developers.svg)](https://gitter.im/maxmixproject/developers?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 **Maxmix** is an open-source volume mixer that allows you to control the volume of any application running on your Windows PC from an external custom device.  
 
 This repository contains the code for all of the software needed for the system.
