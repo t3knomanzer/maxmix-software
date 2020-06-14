@@ -2,6 +2,9 @@
 ![GitHub issues](https://img.shields.io/github/issues/t3knomanzer/maxmix-software)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/t3knomanzer/maxmix-software)
 ![GitHub commits since latest release (by date)](https://img.shields.io/github/commits-since/t3knomanzer/maxmix-software/latest)
+[![Gitter](https://img.shields.io/gitter/room/t3knomanzer/maxmix-software)](https://gitter.im/maxmixproject/developers)
+[![Paypal donate](https://img.shields.io/badge/paypal-donate-blue?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=SQS6XJZBCBZA8&currency_code=USD&source=url)
+[![Github sponsor](https://img.shields.io/badge/github-sponsor-blue?logo=github)](https://github.com/sponsors/t3knomanzer)
 
 # Maxmix
 **Maxmix** is an open-source volume mixer that allows you to control the volume of any application running on your Windows PC from an external custom device.  
@@ -33,7 +36,7 @@ and general hints on how to prepare your pull request. You can also ask for clar
 You can join these groups and chats to discuss your-project related questions:
 
 - Twitter: https://twitter.com/maxmixproject/
-- Reddit: https://www.reddit.com/r/maxmix/
+- Reddit: https://www.reddit.com/r/maxmixproject/
 
 ## License
 Your project is Open Source and available under the Apache 2 License.
