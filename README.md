@@ -3,6 +3,8 @@
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/t3knomanzer/maxmix-software)
 ![GitHub commits since latest release (by date)](https://img.shields.io/github/commits-since/t3knomanzer/maxmix-software/latest)
 [![Gitter](https://img.shields.io/gitter/room/t3knomanzer/maxmix-software)](https://gitter.im/maxmixproject/developers)
+
+
 [![Paypal donate](https://img.shields.io/badge/paypal-donate-blue?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=SQS6XJZBCBZA8&currency_code=USD&source=url)
 [![Github sponsor](https://img.shields.io/badge/github-sponsor-blue?logo=github)](https://github.com/sponsors/t3knomanzer)
 
