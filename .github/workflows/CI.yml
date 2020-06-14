@@ -16,7 +16,8 @@ jobs:
       uses: NuGet/setup-nuget@v1.0.2
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v1
-
+    - name: Setup Advanced Installer
+      run: choco --yes install advanced-installer
       
     - name: Restore Application packages
       run: nuget restore Desktop\Application\MaxMix.sln
