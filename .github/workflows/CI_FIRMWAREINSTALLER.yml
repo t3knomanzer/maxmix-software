@@ -5,10 +5,12 @@ on:
     branches: [ master ]
     paths:
     - 'Desktop/FirmwareInstaller/**'
+    - '.github/workflows/**'
   pull_request:
     branches: [ master ]
     paths:
     - 'Desktop/FirmwareInstaller/**'
+    - '.github/workflows/**'
 
 jobs:
   build:

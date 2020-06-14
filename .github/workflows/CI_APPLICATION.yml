@@ -5,10 +5,12 @@ on:
     branches: [ master ]
     paths:
     - 'Desktop/Application/**'
+    - '.github/workflows/**'
   pull_request:
     branches: [ master ]
     paths:
     - 'Desktop/Application/**'
+    - '.github/workflows/**'
 
 jobs:
   build:
