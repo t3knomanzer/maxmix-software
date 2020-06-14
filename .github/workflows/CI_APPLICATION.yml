@@ -3,8 +3,12 @@ name: CI_APPLICATION
 on:
   push:
     branches: [ master ]
+    paths:
+    - 'Desktop/Application/**'
   pull_request:
     branches: [ master ]
+    paths:
+    - 'Desktop/Application/**'
 
 jobs:
   build:

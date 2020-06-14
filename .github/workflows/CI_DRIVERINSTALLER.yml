@@ -3,8 +3,12 @@ name: CI_DRIVERINSTALLER
 on:
   push:
     branches: [ master ]
+    paths:
+    - 'Desktop/DriverInstaller/**'
   pull_request:
     branches: [ master ]
+    paths:
+    - 'Desktop/DriverInstaller/**'
 
 jobs:
   build:

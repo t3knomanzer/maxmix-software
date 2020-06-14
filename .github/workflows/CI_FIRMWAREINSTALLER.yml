@@ -3,8 +3,12 @@ name: CI_FIRMWAREINSTALLER
 on:
   push:
     branches: [ master ]
+    paths:
+    - 'Desktop/FirmwareInstaller/**'
   pull_request:
     branches: [ master ]
+    paths:
+    - 'Desktop/FirmwareInstaller/**'
 
 jobs:
   build:
