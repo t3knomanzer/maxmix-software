@@ -1,8 +1,9 @@
-name: Test-DriverInstaller
+name: Test_DriverInstaller
 
 on:
   pull_request:
-    branches: [ * ]
+    branches:
+      - '*'
     paths:
     - 'Desktop/DriverInstaller/**'
 

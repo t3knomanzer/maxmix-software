@@ -1,8 +1,9 @@
-name: Test-Application
+name: Test_Application
 
 on:
   pull_request:
-    branches: [ * ]
+    branches:
+      - '*'
     paths:
     - 'Desktop/Application/**'
     - '.github/workflows/**'

@@ -1,8 +1,9 @@
-name: Test-FirmwareInstaller
+name: Test_FirmwareInstaller
 
 on:
   pull_request:
-    branches: [ * ]
+    branches:
+      - '*'
     paths:
     - 'Desktop/FirmwareInstaller/**'
 
