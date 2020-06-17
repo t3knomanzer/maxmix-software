@@ -37,32 +37,9 @@ jobs:
     - name: Build Installer
       run: AdvancedInstaller.com /build Desktop\Installer\Maxmix.aip
 
-    - name: Get tag version
-      id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-      shell: bash
-    
-    - name: Create Release
-      id: create-release
-      uses: actions/create-release@v1.1.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Save artifacts
+      uses: actions/upload-artifact@v2
       with:
-        tag_name: ${{ steps.get_version.outputs.VERSION }}
-        release_name: ${{ steps.get_version.outputs.VERSION }}
-        body: ''
-        draft: true
-        prerelease: true
-
-    - name: Upload Release Assets
-      id: upload-release-assets 
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create-release.outputs.upload_url }}
-        asset_path: Desktop\Installer\Builds\Maxmix.exe
-        asset_name: Maxmix.${{ steps.get_version.outputs.VERSION }}.exe
-        asset_content_type: application/zip
+        path: Desktop\Installer\Builds\
 
     
