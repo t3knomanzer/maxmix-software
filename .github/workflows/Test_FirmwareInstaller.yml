@@ -1,16 +1,10 @@
-name: CI_FIRMWAREINSTALLER
+name: Test FirmwareInstaller
 
 on:
-  push:
-    branches: [ master ]
-    paths:
-    - 'Desktop/FirmwareInstaller/**'
-    - '.github/workflows/**'
   pull_request:
-    branches: [ master ]
+    branches: [ * ]
     paths:
     - 'Desktop/FirmwareInstaller/**'
-    - '.github/workflows/**'
 
 jobs:
   build:
