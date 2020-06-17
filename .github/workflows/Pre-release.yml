@@ -1,4 +1,4 @@
-name: 'Create Pre-release'
+name: 'pre-release'
 
 on:
   push:
@@ -45,6 +45,6 @@ jobs:
     - name: Save artifacts
       uses: actions/upload-artifact@v2
       with:
-        path: ./Desktop/Installer/Builds/
+        path: Desktop\Installer\Builds\
 
     
