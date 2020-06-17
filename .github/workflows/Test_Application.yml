@@ -13,7 +13,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout Repo
+      uses: actions/checkout@v2
     - name: Setup NuGet.exe
       uses: NuGet/setup-nuget@v1.0.2
     - name: Setup MSBuild.exe
@@ -29,7 +30,9 @@ jobs:
       run: nuget restore Desktop\Application\MaxMix.sln
     - name: Build Application
       run: msbuild Desktop\Application\MaxMix.sln -p:Configuration=Debug
-    
+
+    - name: Build Installer
+      run: AdvancedInstaller.com /build Desktop\Installer\MaxMix.aip 
     
     - name: Create Release
       id: create-release
@@ -53,8 +56,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create-release.outputs.upload_url }}
-        asset_path: Desktop\Application\MaxMix\bin\Debug\MaxMix.exe
-        asset_name: MaxMix.exe
+        asset_path: Desktop\Installer\Builds\MaxMix.0.9.1.exe
+        asset_name: MaxMix.0.9.1.exe
         asset_content_type: application/zip
 
     
