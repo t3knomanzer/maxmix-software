@@ -2,8 +2,6 @@ name: '[All] Create Release'
 
 on:
   push:
-    branches: 
-      - 'setup-ci'
     tags:
       - '*.*.*'
 
