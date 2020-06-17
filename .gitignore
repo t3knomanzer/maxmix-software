@@ -10,6 +10,8 @@ packages/
 # Advanced Installer
 Desktop/Installer/*-cache/
 Desktop/Installer/Setup Files/
+Desktop/Installer/Builds/
+Desktop/Installer/*.back.aip
 
 # Excludes
 !Desktop/Resources/bin/
