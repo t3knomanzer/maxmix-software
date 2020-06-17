@@ -1,0 +1,68 @@
+name: 'Create Release'
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup NuGet.exe
+      uses: NuGet/setup-nuget@v1.0.2
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1
+      
+      
+    - name: Restore Application packages
+      run: nuget restore Desktop\Application\MaxMix.sln
+    - name: Build Application
+      run: msbuild Desktop\Application\MaxMix.sln -p:Configuration=Debug
+
+    - name: Restore DriverInstaller packages
+      run: nuget restore Desktop\DriverInstaller\DriverInstaller.sln
+    - name: Build DriverInstaller
+      run: msbuild Desktop\DriverInstaller\DriverInstaller.sln -p:Configuration=Debug
+
+    - name: Setup Advanced Installer
+      run: choco install advanced-installer --version=17.1.1 -y
+    - name: Add Advanced Installer to path
+      run: echo ::add-path::"C:/Program Files (x86)/Caphyon/Advanced Installer 17.1.1/bin/x86"
+    - name: Register Advanced Installer
+      run: AdvancedInstaller.com /register ${{secrets.ADVANCEDINSTALLER_LICENSE}}
+      
+    - name: Build Installer
+      run: AdvancedInstaller.com /build Desktop\Installer\Maxmix.aip
+
+    - name: Get tag version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      shell: bash
+    
+    - name: Create Release
+      id: create-release
+      uses: actions/create-release@v1.1.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: ${{ steps.get_version.outputs.VERSION }}
+        body: ''
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Assets
+      id: upload-release-assets 
+      uses: actions/upload-release-asset@v1.0.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: Desktop\Installer\Builds\Maxmix.exe
+        asset_name: Maxmix.${{ steps.get_version.outputs.VERSION }}.exe
+        asset_content_type: application/zip
+
+    
