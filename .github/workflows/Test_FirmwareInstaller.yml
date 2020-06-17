@@ -1,4 +1,4 @@
-name: Test_Application
+name: [FirmwareInstaller] Run tests
 
 on:
     pull_request:

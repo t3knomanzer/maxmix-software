@@ -1,4 +1,4 @@
-name: Test_Application
+name: [Application] Run tests
 
 on:
     pull_request:
