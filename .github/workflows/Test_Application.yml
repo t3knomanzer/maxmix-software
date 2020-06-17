@@ -31,6 +31,11 @@ jobs:
     - name: Build Application
       run: msbuild Desktop\Application\MaxMix.sln -p:Configuration=Debug
 
+    - name: Restore Driver Installer packages
+      run: nuget restore Desktop\DriverInstaller\DriverInstaller.sln
+    - name: Build Driver Installer
+      run: msbuild Desktop\DriverInstaller\DriverInstaller.sln -p:Configuration=Debug      
+
     - name: Build Installer
       run: AdvancedInstaller.com /build Desktop\Installer\MaxMix.aip 
     
