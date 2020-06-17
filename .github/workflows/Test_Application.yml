@@ -23,7 +23,7 @@ jobs:
     - name: Add Advanced Installer to paths
       run: echo "::add-path::C:/Program Files (x86)/Caphyon/Advanced Installer 17.1.1/bin/x86"
     - name: Register Advanced Installer
-      run: AdvancedInstaller.com /register {secrets.ADVANCEDINSTALLER_LICENSE}
+      run: AdvancedInstaller.com /register ${{secrets.ADVANCEDINSTALLER_LICENSE}}
       
     - name: Restore Application packages
       run: nuget restore Desktop\Application\MaxMix.sln
