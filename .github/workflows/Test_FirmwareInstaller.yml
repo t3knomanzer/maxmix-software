@@ -1,4 +1,4 @@
-name: Test FirmwareInstaller
+name: Test-FirmwareInstaller
 
 on:
   pull_request:

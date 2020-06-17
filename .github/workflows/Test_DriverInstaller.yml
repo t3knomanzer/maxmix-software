@@ -1,13 +1,8 @@
-name: CI_DRIVERINSTALLER
+name: Test-DriverInstaller
 
 on:
-  push:
-    branches: [ master ]
-    paths:
-    - 'Desktop/DriverInstaller/**'
-    - '.github/workflows/**'
   pull_request:
-    branches: [ master ]
+    branches: [ * ]
     paths:
     - 'Desktop/DriverInstaller/**'
 
