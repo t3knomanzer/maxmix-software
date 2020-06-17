@@ -1,9 +1,9 @@
-name: '[All] Create Release'
+name: '[All] Create Pre-release'
 
 on:
   push:
-    tags:
-      - '*.*.*'
+    branches:
+      - master
 
 jobs:
   build:
@@ -51,8 +51,8 @@ jobs:
         tag_name: ${{ steps.get_version.outputs.VERSION }}
         release_name: ${{ steps.get_version.outputs.VERSION }}
         body: ''
-        draft: false
-        prerelease: false
+        draft: true
+        prerelease: true
 
     - name: Upload Release Assets
       id: upload-release-assets 
