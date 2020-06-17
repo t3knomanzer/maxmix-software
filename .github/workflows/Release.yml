@@ -3,7 +3,7 @@ name: '[All] Create Release'
 on:
   push:
     branches: 
-      - 'master'
+      - 'setup-ci'
     tags:
       - '*'
 
