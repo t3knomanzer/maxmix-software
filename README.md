@@ -1,4 +1,6 @@
-![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/t3knomanzer/maxmix-software/build/master)
+![release](https://github.com/t3knomanzer/maxmix-software/workflows/Create%20Release/badge.svg)
+![pre-release](https://github.com/t3knomanzer/maxmix-software/workflows/Create%20Pre-release/badge.svg)
+
 ![GitHub issues](https://img.shields.io/github/issues/t3knomanzer/maxmix-software)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/t3knomanzer/maxmix-software)
 ![GitHub commits since latest release (by date)](https://img.shields.io/github/commits-since/t3knomanzer/maxmix-software/latest)
