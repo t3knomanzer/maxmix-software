@@ -5,10 +5,7 @@ on:
     branches: 
       - 'master'
     tags:
-      - 'v*'
-    paths:
-    - 'Desktop/Application/**'
-    - '.github/workflows/**'
+      - '*'
 
 jobs:
   build:
@@ -39,11 +36,11 @@ jobs:
       run: AdvancedInstaller.com /register ${{secrets.ADVANCEDINSTALLER_LICENSE}}
       
     - name: Build Installer
-      run: AdvancedInstaller.com /build Desktop\Installer\MaxMix.aip
+      run: AdvancedInstaller.com /build Desktop\Installer\Maxmix.aip
 
     - name: Get tag version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}-
       shell: bash
     
     - name: Create Release

@@ -1,0 +1,28 @@
+name: Test_Application
+
+on:
+    pull_request:
+    push:        
+        branches:
+        - 'master'
+        paths:
+        - 'Desktop/DriverInstaller/**'
+        - '.github/workflows/**'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+    - name: Setup NuGet.exe
+      uses: NuGet/setup-nuget@v1.0.2
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1
+     
+    - name: Restore DriverInstaller packages
+      run: nuget restore Desktop\DriverInstaller\DriverInstaller.sln
+    - name: Build DriverInstaller
+      run: msbuild Desktop\DriverInstaller\DriverInstaller.sln -p:Configuration=Debug
+    
