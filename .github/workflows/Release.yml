@@ -1,0 +1,54 @@
+name: Create Release
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - 'v*'
+    paths:
+    - 'Desktop/Application/**'
+    - '.github/workflows/**'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup NuGet.exe
+      uses: NuGet/setup-nuget@v1.0.2
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1
+      
+    - name: Restore Application packages
+      run: nuget restore Desktop\Application\MaxMix.sln
+    - name: Build Application
+      run: msbuild Desktop\Application\MaxMix.sln -p:Configuration=Debug
+
+    - name: Create Release
+      id: create-release
+      uses: actions/create-release@1.1.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        body: |
+          Changes in this Release
+          - First Change
+          - Second Change
+        draft: false
+        prerelease: true
+
+    - name: Upload Release Assets
+      id: upload-release-assets 
+      uses: actions/upload-release-asset@v1.0.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: ./Desktop/Application/MaxMix/bin/Debug/MaxMix.exe
+        asset_name: MaxMix.exe
+        asset_content_type: application/zip
+
+    
