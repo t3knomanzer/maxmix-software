@@ -1,0 +1,45 @@
+name: 'Create Pre-release'
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup NuGet.exe
+      uses: NuGet/setup-nuget@v1.0.2
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1
+      
+      
+    - name: Restore Application packages
+      run: nuget restore Desktop\Application\MaxMix.sln
+    - name: Build Application
+      run: msbuild Desktop\Application\MaxMix.sln -p:Configuration=Debug
+
+    - name: Restore DriverInstaller packages
+      run: nuget restore Desktop\DriverInstaller\DriverInstaller.sln
+    - name: Build DriverInstaller
+      run: msbuild Desktop\DriverInstaller\DriverInstaller.sln -p:Configuration=Debug
+
+    - name: Setup Advanced Installer
+      run: choco install advanced-installer --version=17.1.1 -y
+    - name: Add Advanced Installer to path
+      run: echo ::add-path::"C:/Program Files (x86)/Caphyon/Advanced Installer 17.1.1/bin/x86"
+    - name: Register Advanced Installer
+      run: AdvancedInstaller.com /register ${{secrets.ADVANCEDINSTALLER_LICENSE}}
+      
+    - name: Build Installer
+      run: AdvancedInstaller.com /build Desktop\Installer\Maxmix.aip
+
+    - name: Save artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        path: Desktop\Installer\Builds\
+
+    
