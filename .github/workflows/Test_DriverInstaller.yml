@@ -1,4 +1,4 @@
-name: [DriverInstaller] Run tests
+name: '[DriverInstaller] Run tests'
 
 on:
     pull_request:

@@ -1,4 +1,4 @@
-name: [All] Create Release
+name: '[All] Create Release'
 
 on:
   push:
