@@ -1,48 +1,15 @@
-﻿<Project DefaultTargets="Compile" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!-- Shared -->
   <PropertyGroup>
-    <ProjectType />
-    <Environment />
-    <ApplicationName />
-    <ApplicationDescription />
-    <PublisherSettings />
-    <ApplicationVersion />
-    <InformationalVersion />
-    <SolutionFolder />
-    <InstallURL />
-    <PublishUrl />
+    <SolutionDir />
+    <Version />
   </PropertyGroup>
     
-  <!-- Information properties -->
-  <PropertyGroup Condition=" '$(PublisherSettings)|$(Environment)' == 'RATS|Testing' ">
-    <ProductName>RATS $(ApplicationName) Env:$(Environment)</ProductName>
-    <PublisherName>RATS - Redstorm Art Tools Env:$(Environment)</PublisherName>
-    <ApplicationCopyright>Redstorm Entertainment Env:$(Environment)</ApplicationCopyright>
-    <ApplicationSupportUrl>http://rse-rats/</ApplicationSupportUrl>
-  </PropertyGroup>
-
-  <!-- Information properties -->
-  <PropertyGroup Condition=" '$(PublisherSettings)|$(Environment)' == 'RATS|Public' ">
-    <ProductName>RATS $(ApplicationName)</ProductName>
-    <PublisherName>RATS - Redstorm Art Tools</PublisherName>
-    <ApplicationCopyright>Redstorm Entertainment</ApplicationCopyright>
-    <ApplicationSupportUrl>http://rse-rats/</ApplicationSupportUrl>
-  </PropertyGroup>
-
-  <!-- Compile properties -->
-  <PropertyGroup Condition=" '$(Environment)' == 'Testing' ">
-    <Configuration>Debug</Configuration>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Environment)' == 'Public' ">
-    <Configuration>Release</Configuration>
-  </PropertyGroup>
-  
   <!-- Items Compile Specific -->
   <ItemGroup>
-    <SolutionFile Include="$(SolutionFolder)\*.sln" />
-    <AssemblyInfoFile Include="$(SolutionFolder)\**\AssemblyInfo.cs" />
+    <SolutionFile Include="$(SolutionDir)\*.sln" />
+    <AssemblyInfoFile Include="$(SolutionDir)\**\AssemblyInfo.cs" />
   </ItemGroup>
   
   <!-- Import the MSBuild Extension Pack -->
@@ -52,88 +19,21 @@
   <Target Name="SetVersion">
     <Message Text="*** SetVersionNumber Target Called" />
     <Message Text="*** AssemblyInfoFile: @(AssemblyInfoFile)" />
-    <Message Text="*** AssemblyCopyright: $(ApplicationCopyright)" />
-    <Message Text="*** AssemblyCompany: $(PublisherName)" />
-    <Message Text="*** AssemblyDescription: $(ApplicationDescription)" />
-    <Message Text="*** AssemblyProduct: $(ProductName)" />
-    <Message Text="*** AssemblyVersion: $(ApplicationVersion)" />
-    <Message Text="*** AssemblyFileVersion: $(ApplicationVersion)" />
+    <Message Text="*** AssemblyVersion: $(Version)" />
+    <Message Text="*** AssemblyFileVersion: $(Version)" />
     
     <MSBuild.ExtensionPack.Framework.AssemblyInfo
       AssemblyInfoFiles="@(AssemblyInfoFile)"
-      AssemblyCopyright="$(ApplicationCopyright)"
-      AssemblyCompany="$(PublisherName)"
-      AssemblyDescription="$(ApplicationDescription)"
-      AssemblyProduct="$(ProductName)"
-      AssemblyVersion="$(ApplicationVersion)"
-      AssemblyFileVersion="$(ApplicationVersion)"/>
-
-    <MSBuild.ExtensionPack.Framework.AssemblyInfo
-      Condition=" '$(Environment)' == 'Testing' "
-      AssemblyInfoFiles="@(AssemblyInfoFile)"/>   
+      AssemblyVersion="$(Version)"
+      AssemblyFileVersion="$(Version)"/>
   </Target>
    
-  <Target Name="DeployClickOnce" DependsOnTargets="SetVersion">
-    <Message Text="*** DeployClickOnce Target Called" />
-    <Message Text="*** Configuration=$(Configuration)" />
-    <Message Text="*** GenerateManifests=$(GenerateManifests)" />
-    <Message Text="*** TargetZone=$(TargetZone)" />
-    <Message Text="*** PublisherName=$(PublisherName)" />
-    <Message Text="*** ProductName=$(ProductName)" />
-    <Message Text="*** InstallURL=$(InstallURL)" />
-    <Message Text="*** PublishUrl=$(PublishUrl)" />
-    <Message Text="*** Install=$(Install)" />
-    <Message Text="*** ApplicationVersion=$(ApplicationVersion)" />
-    <Message Text="*** UpdateEnabled=$(UpdateEnabled)" />
-    <Message Text="*** UpdateRequired=$(UpdateRequired)" />
-    <Message Text="*** UpdateMode=$(UpdateMode)" />
-    <Message Text="*** UpdateInterval=$(UpdateInterval)" />
-    <Message Text="*** UpdateIntervalUnits=$(UpdateIntervalUnits)" />
-    <Message Text="*** UpdatePeriodically=$(UpdatePeriodically)" />
-    <Message Text="*** UpdateRequired=$(UpdateRequired)" />
-    <Message Text="*** MapFileExtensions=$(MapFileExtensions)" />
-    <Message Text="*** UpdateUrlEnabled=$(UpdateUrlEnabled)" />
-    <Message Text="*** IsWebBootstrapper=$(IsWebBootstrapper)" />
-    <Message Text="*** UseApplicationTrust=$(UseApplicationTrust)" />
-    <Message Text="*** BootstrapperEnabled=$(BootstrapperEnabled)" />
-    <Message Text="*** BootstrapperComponentsLocation=$(BootstrapperComponentsLocation)" />
-    
-    <MSBuild Projects="@(SolutionFile)" Properties="Configuration=$(Configuration);
-                                          GenerateManifests=$(GenerateManifests);
-                                          TargetZone=$(TargetZone); 
-                                          PublisherName=$(PublisherName);
-                                          ProductName=$(ProductName);
-                                          InstallURL=$(InstallURL);
-                                          PublishUrl=$(PublishUrl);
-                                          Install=$(Install);
-                                          ApplicationVersion=$(ApplicationVersion);
-                                          UpdateEnabled=$(UpdateEnabled);
-                                          UpdateRequired=$(UpdateRequired);
-                                          UpdateMode=$(UpdateMode);
-                                          UpdateInterval=$(UpdateInterval);
-                                          UpdateIntervalUnits=$(UpdateIntervalUnits);
-                                          UpdatePeriodically=$(UpdatePeriodically);
-                                          UpdateRequired=$(UpdateRequired);
-                                          MapFileExtensions=$(MapFileExtensions);
-                                          UpdateUrlEnabled=$(UpdateUrlEnabled);
-                                          IsWebBootstrapper=$(IsWebBootstrapper);
-                                          UseApplicationTrust=$(UseApplicationTrust);
-                                          BootstrapperEnabled=$(BootstrapperEnabled);
-                                          BootstrapperComponentsLocation=$(BootstrapperComponentsLocation)"
-                                          Targets="Publish" />
-  </Target>
-  
-  <Target Name="Publish">
-    <Message Text="*** Publish Target Called" />
-    <CallTarget Condition=" '$(ProjectType)' == 'ClickOnce' " Targets="DeployClickOnce" />
-    <CallTarget Condition=" '$(ProjectType)' == 'Dll' " Targets="Build" />
-  </Target>
-
   <Target Name="Build" DependsOnTargets="SetVersion">
     <Message Text="*** Build Target Called" />
-    <Message Text="*** SolutionFolder: $(SolutionFolder)" />
+    <Message Text="*** SolutionDir: $(SolutionDir)" />
     <Message Text="*** SolutionFile: @(SolutionFile)" />
     <Message Text="*** Configuration: $(Configuration)" />
+
     <MSBuild Projects="@(SolutionFile)" Properties="Configuration=$(Configuration)" Targets="Clean;Build" />
   </Target>
 </Project>
