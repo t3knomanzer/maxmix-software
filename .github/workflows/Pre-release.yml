@@ -26,12 +26,12 @@ jobs:
     - name: Restore DriverInstaller packages
       run: nuget restore Desktop\DriverInstaller\DriverInstaller.sln
     - name: Build DriverInstaller
-      run: msbuild "Desktop\Build.msbuild" /p:SolutionDir="DriverInstaller";Version="0.0.0.0";Configuration="Debug";Platform="Any CPU"
+      run: msbuild Desktop\Build.msbuild -p:SolutionDir=DriverInstaller -p:Version=0.0.0.0 -p:Configuration=Debug -p:Platform="Any CPU"
 
     - name: Restore FirmwareInstaller packages
       run: nuget restore Desktop\FirmwareInstaller\FirmwareInstaller.sln
     - name: Build FirmwareInstaller
-      run: msbuild "Desktop\Build.msbuild" /p:SolutionDir="FirmwareInstaller";Version="0.0.0.0";Configuration="Debug";Platform="Any CPU"
+      run: msbuild Desktop\Build.msbuild -p:SolutionDir=FirmwareInstaller -p:Version=0.0.0.0 -p:Configuration=Debug -p:Platform="Any CPU"
 
     - name: Setup Advanced Installer
       run: choco install advanced-installer --version=17.1.1 -y
