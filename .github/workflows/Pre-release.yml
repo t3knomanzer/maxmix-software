@@ -20,17 +20,17 @@ jobs:
     - name: Restore Application packages
       run: nuget restore Desktop\Application\MaxMix.sln
     - name: Build Application
-      run: msbuild Desktop\Application\MaxMix.sln -p:Configuration=Debug
+      run: msbuild Desktop\Build.msbuild /p:SolutionDir=Desktop\Application\;Version=0.0.0.0;Configuration=Debug
 
     - name: Restore DriverInstaller packages
       run: nuget restore Desktop\DriverInstaller\DriverInstaller.sln
     - name: Build DriverInstaller
-      run: msbuild Desktop\DriverInstaller\DriverInstaller.sln -p:Configuration=Debug
+      run: msbuild Desktop\Build.msbuild /p:SolutionDir=Desktop\DriverInstaller\;Version=0.0.0.0;Configuration=Debug
 
     - name: Restore FirmwareInstaller packages
       run: nuget restore Desktop\FirmwareInstaller\FirmwareInstaller.sln
     - name: Build FirmwareInstaller
-      run: msbuild Desktop\FirmwareInstaller\FirmwareInstaller.sln -p:Configuration=Debug
+      run: msbuild Desktop\Build.msbuild /p:SolutionDir=Desktop\FirmwareInstaller\;Version=0.0.0.0;Configuration=Debug
 
     - name: Setup Advanced Installer
       run: choco install advanced-installer --version=17.1.1 -y
