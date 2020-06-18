@@ -1,5 +1,5 @@
 ![release](https://github.com/t3knomanzer/maxmix-software/workflows/release/badge.svg)
-![pre-release](https://github.com/t3knomanzer/maxmix-software/workflows/pre-release/badge.svg)
+![tests](https://github.com/t3knomanzer/maxmix-software/workflows/tests/badge.svg?branch=master)
 ![GitHub issues](https://img.shields.io/github/issues/t3knomanzer/maxmix-software)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/t3knomanzer/maxmix-software)
 ![GitHub commits since latest release (by date)](https://img.shields.io/github/commits-since/t3knomanzer/maxmix-software/latest)
