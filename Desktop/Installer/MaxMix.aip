@@ -8,13 +8,14 @@
     <ROW Property="AI_REQUIRED_DOTNET_VERSION" MultiBuildValue="DefaultBuild:4.6" ValueLocId="-"/>
     <ROW Property="AI_ThemeStyle" Value="aero" MsiKey="AI_ThemeStyle"/>
     <ROW Property="ALLUSERS" Value="1"/>
-    <ROW Property="ARPCONTACT" Value="rhenares0@gmail.com"/>
-    <ROW Property="ARPHELPLINK" Value="https://rubenhenares.github.io/maxmix/"/>
+    <ROW Property="ARPCOMMENTS" Value="https://github.com/t3knomanzer/maxmix-software/issues" ValueLocId="*"/>
+    <ROW Property="ARPCONTACT" Value="maxmix@gmail.com"/>
+    <ROW Property="ARPHELPLINK" Value="https://www.maxmixproject.com"/>
     <ROW Property="ARPNOMODIFY" MultiBuildValue="DefaultBuild:1"/>
     <ROW Property="ARPNOREPAIR" MultiBuildValue="DefaultBuild:1"/>
     <ROW Property="ARPPRODUCTICON" Value="app_connected.exe" Type="8"/>
-    <ROW Property="ARPURLINFOABOUT" Value="https://rubenhenares.github.io/maxmix/"/>
-    <ROW Property="ARPURLUPDATEINFO" Value="https://rubenhenares.github.io/maxmix/"/>
+    <ROW Property="ARPURLINFOABOUT" Value="https://www.maxmixproject.com"/>
+    <ROW Property="ARPURLUPDATEINFO" Value="https://github.com/t3knomanzer/maxmix-software/releases"/>
     <ROW Property="Manufacturer" Value="Ruben Henares"/>
     <ROW Property="MsiLogging" MultiBuildValue="DefaultBuild:vp"/>
     <ROW Property="ProductCode" Value="1033:{9959F389-3DE2-42F2-9CE5-A9294F663DEB} " Type="16"/>
