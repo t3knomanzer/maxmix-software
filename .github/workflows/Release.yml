@@ -15,6 +15,8 @@ jobs:
       uses: NuGet/setup-nuget@v1.0.2
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v1
+    - name: Setup MSBuild ExtensionPack
+      run: choco install msbuild.extensionpack --version=4.0.15.0 -y
       
     - name: Get tag version
       id: get_version
