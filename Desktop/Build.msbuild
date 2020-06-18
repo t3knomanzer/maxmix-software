@@ -34,6 +34,6 @@
     <Message Text="*** SolutionFile: @(SolutionFile)" />
     <Message Text="*** Configuration: $(Configuration)" />
 
-    <MSBuild Projects="@(SolutionFile)" Properties="Configuration=$(Configuration)" Targets="Clean;Build" />
+    <MSBuild Projects="@(SolutionFile)" Properties="Configuration=$(Configuration);Platform=$(Platform)" Targets="Clean;Build" />
   </Target>
 </Project>
