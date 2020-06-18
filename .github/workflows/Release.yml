@@ -61,7 +61,7 @@ jobs:
         release_name: ${{ steps.get_version.outputs.VERSION }}
         body: ''
         draft: false
-        prerelease: false
+        prerelease: true
 
     - name: Upload Release Assets
       id: upload-release-assets 
@@ -70,8 +70,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create-release.outputs.upload_url }}
-        asset_path: Desktop\Installer\Builds\Maxmix.exe
-        asset_name: Maxmix.${{ steps.get_version.outputs.VERSION }}.exe
+        asset_path: Desktop\Installer\Builds\setup.exe
+        asset_name: setup.${{ steps.get_version.outputs.VERSION }}.exe
         asset_content_type: application/zip
 
     
