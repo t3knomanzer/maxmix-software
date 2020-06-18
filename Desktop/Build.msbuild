@@ -4,6 +4,8 @@
   <PropertyGroup>
     <SolutionDir />
     <Version />
+    <Configuration />
+    <Platform />
   </PropertyGroup>
     
   <!-- Items Compile Specific -->
