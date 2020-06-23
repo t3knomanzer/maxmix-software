@@ -11,6 +11,11 @@ namespace DriverInstaller
 {
     class Program
     {
+        /// <summary>
+        /// Gets the path to the given system executable depending on OS architecture.
+        /// </summary>
+        /// <param name="executable">Name of the system executable.</param>
+        /// <returns>The OS architecture independent path to the given executable.</returns>
         static string GetArchitectureExePath(string executable)
         {
             var result = string.Empty;
@@ -25,18 +30,27 @@ namespace DriverInstaller
             return result;
         }
 
+        /// <summary>
+        /// Gets the path to the current running executable.
+        /// </summary>
+        /// <returns>Current running exe path.</returns>
         static string CurrentPath()
         {
             return Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
         }
 
+        /// <summary>
+        /// Installs the driver to the system using pnputil.
+        /// </summary>
         static void Install()
         {
+            // TODO: Move this to a constant field.
             var driverFilename = "ch341ser.inf";
             var driverFilePath = Path.Combine(CurrentPath(), "Driver", driverFilename);
             if (!File.Exists(driverFilePath))
                 throw new FileNotFoundException($"Can't find driver at:\n {driverFilePath}");
 
+            // TODO: Move exe filename to a constant field.
             var executable = GetArchitectureExePath("pnputil.exe");
             if (string.IsNullOrEmpty(executable))
                 throw new FileNotFoundException("Can't find pnputil.exe. Please install driver manually.");
@@ -54,7 +68,7 @@ namespace DriverInstaller
             output = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
 
-            // Check if the driver is already installed
+            // Skip if the driver is already installed
             if (output.ToLowerInvariant().Contains(driverFilename))
                 return;
 
@@ -73,6 +87,11 @@ namespace DriverInstaller
                 throw new InvalidOperationException("Error installing driver");
         }
 
+        /// <summary>
+        /// Application entry point.
+        /// </summary>
+        /// <param name="args">Not used.</param>
+        /// <returns>Standard DOS exit code.</returns>
         static int Main(string[] args)
         {
             Console.WriteLine("Installing driver...");
