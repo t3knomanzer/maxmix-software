@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace FirmwareInstaller.Services
 {
+    /// <summary>
+    /// Manages installing firmware to a maxmix device using avrdude.
+    /// </summary>
     internal class InstallService : BaseService
     {
         #region Constructor
@@ -37,6 +40,13 @@ namespace FirmwareInstaller.Services
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Installs the firmware file to the given port. The port should have a maxmix
+        /// device plugged in and not be in use by other applications.
+        /// </summary>
+        /// <param name="filePath">The absolute local file path to the .hex firmware file.</param>
+        /// <param name="port">The COM port where the maxmix device is plugged in.</param>
+        /// <returns></returns>
         public Task InstallAsync(string filePath, string port)
         {
             return Task.Run(() =>

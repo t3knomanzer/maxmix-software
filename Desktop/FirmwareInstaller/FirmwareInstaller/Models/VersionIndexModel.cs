@@ -7,6 +7,9 @@ using System.Xml.Serialization;
 
 namespace FirmwareInstaller.Models
 {
+    /// <summary>
+    /// Keeps an index of versions available to download. Can be serialized to xml.
+    /// </summary>
     [Serializable]
     [XmlRoot(ElementName = "VersionIndex")]
     public class VersionIndexModel
@@ -24,6 +27,9 @@ namespace FirmwareInstaller.Models
         #endregion
 
         #region Properties
+        /// <summary>
+        /// List of available versions.
+        /// </summary>
         [XmlArray(ElementName = "Versions")]
         [XmlArrayItem(ElementName = "Version")]
         public List<VersionModel> Versions

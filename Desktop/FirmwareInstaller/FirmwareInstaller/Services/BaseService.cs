@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace FirmwareInstaller.Services
 {
-    class BaseService : IService
+    /// <summary>
+    /// Base class for all services used in this application.
+    /// </summary>
+    internal class BaseService : IService
     {
         #region IService
         public event EventHandler<string> Error;
