@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Models
 {
+    // TODO: Delete, not in use.
     internal class VolumeItemModel : IEquatable<VolumeItemModel>
     {
         #region Constructor

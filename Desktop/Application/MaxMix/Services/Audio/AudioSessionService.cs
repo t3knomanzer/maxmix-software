@@ -11,6 +11,9 @@ using System.Windows.Threading;
 
 namespace MaxMix.Services.Audio
 {
+    /// <summary>
+    /// Provides functionality to interact with windows audio sessions.
+    /// </summary>
     internal class AudioSessionService : IAudioSessionService
     {
         #region Constructor
@@ -27,18 +30,35 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Events
+        /// <summary>
+        /// Raised when a new audio session has been created.
+        /// </summary>
         public event AudioSessionDelegate SessionCreated;
+
+        /// <summary>
+        /// Raised when a previously active audio session has been removed.
+        /// </summary>
         public event EventHandler<int> SessionRemoved;
+
+        /// <summary>
+        /// Raised when the volume for an active session has changed.
+        /// </summary>
         public event AudioSessionVolumeDelegate SessionVolumeChanged;
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Deferred initialization of dependencies.
+        /// </summary>
         public void Start()
         {
             _wrappers = new Dictionary<int, AudioSessionWrapper>();
             new Thread(() => InitializeEvents()).Start();
         }
 
+        /// <summary>
+        /// Deferred disposal of dependencies used by this instance.
+        /// </summary>
         public void Stop()
         {
             if (_sessionManager != null)
@@ -56,6 +76,11 @@ namespace MaxMix.Services.Audio
             }
         }
 
+        /// <summary>
+        /// Sets the volume of an audio session.
+        /// </summary>
+        /// <param name="pid">The process Id of the target session.</param>
+        /// <param name="volume">The desired volume.</param>
         public void SetVolume(int pid, int volume)
         {
             if (!_wrappers.ContainsKey(pid))
@@ -64,6 +89,11 @@ namespace MaxMix.Services.Audio
             _wrappers[pid].Volume = volume;
         }
 
+        /// <summary>
+        /// Sets the mute state of an audio session.
+        /// </summary>
+        /// <param name="pid">The process Id of the target session.</param>
+        /// <param name="isMuted">The mute state.</param>
         public void SetMute(int pid, bool isMuted)
         {
             if (!_wrappers.ContainsKey(pid))

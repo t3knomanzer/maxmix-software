@@ -26,14 +26,13 @@ namespace FirmwareInstaller.Models
         }
         #endregion
 
-
         #region Properties
         [XmlIgnore]
         public Version Version { get; set; }
 
         /// <summary>
-        /// This property is only used for serialization since the Version
-        /// type is not supported.
+        /// This is a string representation of the Version property only 
+        /// used for serialization since the Version type is not supported.
         /// </summary>
         [XmlAttribute(AttributeName = "version")]
         public string SerializableVersion 
@@ -42,6 +41,9 @@ namespace FirmwareInstaller.Models
             set => Version = new Version(value);
         }
 
+        /// <summary>
+        /// URL of the file to download for this version.
+        /// </summary>
         [XmlAttribute(AttributeName = "url")]
         public string Url { get; set; }
         #endregion

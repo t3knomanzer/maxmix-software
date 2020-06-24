@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Audio
 {
+    /// <summary>
+    /// Provides a facade with a simpler interface over the AudioSessionControl
+    /// CSCore class.
+    /// </summary>
     public class AudioSessionWrapper : IDisposable
     {
         #region Constructor
@@ -28,7 +32,14 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Events
+        /// <summary>
+        /// Raised when the volume of this session has changed.
+        /// </summary>
         public event EventHandler<AudioSessionSimpleVolumeChangedEventArgs> SimpleVolumeChanged;
+
+        /// <summary>
+        /// Raised when this session has been disconnected and can be destroyed.
+        /// </summary>
         public event EventHandler<AudioSessionDisconnectedEventArgs> SessionDisconnected;
         #endregion
 
@@ -41,12 +52,34 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Properties
+        /// <summary>
+        /// The process ID of this session.
+        /// </summary>
         public int ProcessID => _session2.ProcessID;
+
+        /// <summary>
+        /// The path to the icon used for this session.
+        /// </summary>
         public string IconPath => _session2.IconPath;
+
+        /// <summary>
+        /// ???
+        /// </summary>
         public bool IsSingleProcessSessionession => _session2.IsSingleProcessSession;
+
+        /// <summary>
+        /// Indicates if this is the session responsible for windows system sounds.
+        /// </summary>
         public bool IsSystemSoundSession => _session2.IsSystemSoundSession;
+
+        /// <summary>
+        /// A reference to the process that created this session.
+        /// </summary>
         public Process Process => _session2.Process;
 
+        /// <summary>
+        /// The display name of the process that created this session.
+        /// </summary>
         public string DisplayName
         {
             get
@@ -63,6 +96,9 @@ namespace MaxMix.Services.Audio
             }
         }
 
+        /// <summary>
+        /// Current volume of this session (0-100).
+        /// </summary>
         public int Volume
         {
             get => (int)(_simpleAudio.MasterVolume * 100);
@@ -73,6 +109,9 @@ namespace MaxMix.Services.Audio
             }
         }
 
+        /// <summary>
+        /// Current mute state of this session.
+        /// </summary>
         public bool IsMuted
         {
             get => _simpleAudio.IsMuted;

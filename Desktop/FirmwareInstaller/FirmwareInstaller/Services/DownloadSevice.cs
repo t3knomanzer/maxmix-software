@@ -13,6 +13,10 @@ using System.Xml.Serialization;
 
 namespace FirmwareInstaller.Services.Update
 {
+    /// <summary>
+    /// Allows to interface with a remotely stored version index and handles
+    /// downloading and caching of versions.
+    /// </summary>
     internal class DownloadService : BaseService
     {
         #region Constructor
@@ -28,6 +32,7 @@ namespace FirmwareInstaller.Services.Update
         #endregion
 
         #region Consts
+        // TODO: Move this to the application settings.
         private const string _indexUrl = "https://raw.githubusercontent.com/rubenhenares/maxmix-embedded/master/versions.xml";
         #endregion
 
@@ -48,7 +53,12 @@ namespace FirmwareInstaller.Services.Update
         #endregion
 
         #region Public Methods
-        public void InitIndexFile(string filename)
+        // TODO: Make this a static method.
+        /// <summary>
+        /// Creates and serializes a placeholder VersionIndexModel file.
+        /// </summary>
+        /// <param name="filepath">Path where to save the output file.</param>
+        public void InitIndexFile(string filepath)
         {
             XmlSerializer serializer = new XmlSerializer(_indexType, _indexExtraTypes);
             var version = new VersionModel("0.0.1.0", "http://www.sample.com/file.zip");
@@ -56,10 +66,14 @@ namespace FirmwareInstaller.Services.Update
             var collection = new VersionIndexModel();
             collection.Versions.Add(version);
 
-            using (TextWriter writer = new StreamWriter(filename))
+            using (TextWriter writer = new StreamWriter(filepath))
                 serializer.Serialize(writer, collection);
         }
 
+        /// <summary>
+        /// Retrieves a list of available versions found in the VersionIndexModel.
+        /// </summary>
+        /// <returns>List of versions available to download or an empty list if an error occurs.</returns>
         public IEnumerable<Version> RetrieveVersions()
         {
             IEnumerable<Version> result = new List<Version>();
@@ -79,6 +93,13 @@ namespace FirmwareInstaller.Services.Update
             return result;
         }
 
+        /// <summary>
+        /// Downloads the url for the given version in the VersionIndexModel.
+        /// The version should have been returned by calling RetrieveVersions to make sure
+        /// that it exists.
+        /// </summary>
+        /// <param name="version">The version to download.</param>
+        /// <returns>The local absolute path to the downloaded file or an empty string if an error occurs.</returns>
         public Task<string> DownloadVersionAsync(Version version)
         {
 

@@ -17,6 +17,9 @@ using System.Runtime.CompilerServices;
 
 namespace MaxMix.ViewModels
 {
+    /// <summary>
+    /// Manages interfacing between user and application settings system.
+    /// </summary>
     internal class SettingsViewModel : BaseViewModel
     {
         #region Constructor
@@ -37,6 +40,10 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region Properties
+        /// <summary>
+        /// When a new session is created, notify the device to make it
+        /// the current displayed item.
+        /// </summary>
         public bool DisplayNewSession
         {
             get => _settings.DisplayNewSession;
@@ -47,6 +54,10 @@ namespace MaxMix.ViewModels
             }
         }
 
+        /// <summary>
+        /// Wether the device should be put to sleep (power savings) or not 
+        /// after it's been inactive by the time defined by SleepAfterSeconds.
+        /// </summary>
         public bool SleepWhenInactive
         {
             get => _settings.SleepWhenInactive;
@@ -57,6 +68,9 @@ namespace MaxMix.ViewModels
             }
         }
 
+        /// <summary>
+        /// Time for the device to be inactive before is put to sleep.
+        /// </summary>
         public int SleepAfterSeconds
         {
             get => _settings.SleepAfterSeconds;
@@ -66,6 +80,8 @@ namespace MaxMix.ViewModels
                 RaisePropertyChanged();
             }
         }
+
+        // TODO: Delete, updates are checked automatically at application launch.
         public bool CheckForUpdates
         {
             get => _settings.CheckForUpdates;
@@ -80,7 +96,7 @@ namespace MaxMix.ViewModels
         #region Commands
         #endregion
 
-        #region Public Methods
+        #region Overrides
         public override void Start() { }
 
         public override void Stop()

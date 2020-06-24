@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication
 {
+    /// <summary>
+    /// Manages sending and receiving messages between application and device.
+    /// It is protocol agnostic, it uses the provided message ISerializationService.
+    /// </summary>
     internal class CommunicationService : ICommunicationService
     {
         #region Constructor
@@ -41,11 +45,23 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Events
+        /// <summary>
+        /// Raised when a message has been received and deserialized.
+        /// </summary>
         public event EventHandler<IMessage> MessageReceived;
+
+        /// <summary>
+        /// Raised when an error has happend.
+        /// </summary>
         public event EventHandler<string> Error;
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Establishes a connection and begins the communication process.
+        /// </summary>
+        /// <param name="portName">Name of the COM port to connect to.</param>
+        /// <param name="baudRate">Baudrate of the connection.</param>
         public void Start(string portName, int baudRate = 115200)
         {
             _portName = portName;
@@ -58,6 +74,9 @@ namespace MaxMix.Services.Communication
             _portStateThread.Start();
         }
 
+        /// <summary>
+        /// Properly ends the connection.
+        /// </summary>
         public void Stop()
         {
             _isCheckPortState = false;
@@ -66,6 +85,10 @@ namespace MaxMix.Services.Communication
             Disconnect();
         }
 
+        /// <summary>
+        /// Sends the message using the ISerializationService provided.
+        /// </summary>
+        /// <param name="message">The message object to send.</param>
         public void Send(IMessage message)
         {
             try

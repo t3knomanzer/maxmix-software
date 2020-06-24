@@ -17,7 +17,6 @@ using System.Runtime.CompilerServices;
 
 namespace FirmwareInstaller.ViewModels
 {
-
     internal class MainViewModel : BaseViewModel
     {
         #region Constructor
@@ -61,6 +60,10 @@ namespace FirmwareInstaller.ViewModels
         #endregion
 
         #region Properties
+        /// <summary>
+        /// Indicates that sensitive operations are taking place and user 
+        /// input should be blocked.
+        /// </summary>
         public bool IsBusy 
         { 
             get => _isBusy;
@@ -72,6 +75,9 @@ namespace FirmwareInstaller.ViewModels
             }
         }
 
+        /// <summary>
+        /// Selected COM port.
+        /// </summary>
         public string SelectedPort
         {
             get => _selectedPort;
@@ -82,6 +88,9 @@ namespace FirmwareInstaller.ViewModels
             }
         }
 
+        /// <summary>
+        /// Selected version to download.
+        /// </summary>
         public Version SelectedVersion
         {
             get => _selectedVersion;
@@ -92,8 +101,19 @@ namespace FirmwareInstaller.ViewModels
             }
         }
 
+        /// <summary>
+        /// List of available COM ports.
+        /// </summary>
         public ObservableCollection<string> Ports { get; private set; }
+
+        /// <summary>
+        /// List of available versions to download.
+        /// </summary>
         public ObservableCollection<Version> Versions { get; private set; }
+
+        /// <summary>
+        /// Plain text operations log.
+        /// </summary>
         public string Log
         {
             get => _log;
@@ -107,6 +127,10 @@ namespace FirmwareInstaller.ViewModels
         #endregion
 
         #region Commands
+        /// <summary>
+        /// Starts the installation process using the selected COM
+        /// port and version.
+        /// </summary>
         public DelegateCommand InstallCommand
         {
             get
@@ -117,6 +141,9 @@ namespace FirmwareInstaller.ViewModels
             }
         }
 
+        /// <summary>
+        /// Raises the exitRequested event to start the process to shutdown the application.
+        /// </summary>
         public DelegateCommand RequestExitCommand
         {
             get

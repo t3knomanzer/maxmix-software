@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication
 {
+    /// <summary>
+    /// Finds the port where a particular device is connected.
+    /// Sends a handshake message to all available COM ports until it receives the
+    /// expected response from one of them.
+    /// </summary>
     internal class DiscoveryService : IDiscoveryService
     {
         #region Constructor
@@ -17,7 +22,14 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Events
+        /// <summary>
+        /// Raised when a succesful handshake has been established.
+        /// </summary>
         public event EventHandler<string> DeviceDiscovered;
+
+        /// <summary>
+        /// Raise when an error has been encountered.
+        /// </summary>
         public event EventHandler<string> Error;
         #endregion
 
@@ -34,6 +46,10 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Begins the scanning process.
+        /// </summary>
+        /// <param name="baudRate">Expected baudrate for the communication.</param>
         public async void Start(int baudRate = 115200)
         {
             _baudRate = baudRate;
@@ -49,6 +65,9 @@ namespace MaxMix.Services.Communication
             RaiseDeviceDiscovered(portName);
         }
 
+        /// <summary>
+        /// Stops the discovery process appropiately. 
+        /// </summary>
         public void Stop() => _isRunning = false;
         #endregion
 
