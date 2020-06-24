@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication
 {
+    // TODO: Delete, not in use.
     internal class SerializationService : ISerializationService
     {
         #region Constructor

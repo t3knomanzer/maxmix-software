@@ -19,7 +19,9 @@ using MaxMix.Services.Audio;
 
 namespace MaxMix.ViewModels
 {
-
+    /// <summary>
+    /// Main application view model class to be used as data context.
+    /// </summary>
     internal class MainViewModel : BaseViewModel
     {
         #region Constructor
@@ -51,6 +53,9 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region Events
+        /// <summary>
+        /// Raised to indicate the the shutdown of the application has been requested.
+        /// </summary>
         public event EventHandler ExitRequested;
         #endregion
 
@@ -72,18 +77,27 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region Properties
+        /// <summary>
+        /// Holds the current state of the application.
+        /// </summary>
         public bool IsActive
         {
             get => _isActive;
             set => SetProperty(ref _isActive, value);
         }
 
+        /// <summary>
+        /// Status of the connection to a maxmix device.
+        /// </summary>
         public bool IsConnected
         {
             get => _isConnected;
             set => SetProperty(ref _isConnected, value);
         }
 
+        /// <summary>
+        /// Holds a reference to an instance of a settings view model.
+        /// </summary>
         public SettingsViewModel SettingsViewModel
         {
             get => _settingsViewModel;
@@ -92,6 +106,9 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region Commands
+        /// <summary>
+        /// Sets the active state of the application to true.
+        /// </summary>
         public ICommand ActivateCommand
         {
             get
@@ -102,6 +119,9 @@ namespace MaxMix.ViewModels
             }
         }
 
+        /// <summary>
+        /// Sets the active state of the application to false.
+        /// </summary>
         public ICommand DeactivateCommand
         {
             get
@@ -112,6 +132,9 @@ namespace MaxMix.ViewModels
             }
         }
 
+        /// <summary>
+        /// Requests the shutdown process and notifies others by raising the ExitRequested event.
+        /// </summary>
         public ICommand RequestExitCommand
         {
             get
@@ -123,7 +146,8 @@ namespace MaxMix.ViewModels
         }
         #endregion
 
-        #region Public Methods
+        #region Overrides
+
         public override void Start()
         {
             _discoveryService.Start(_baudRate);

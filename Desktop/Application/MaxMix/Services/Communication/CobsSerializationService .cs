@@ -6,6 +6,23 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication
 {
+    /// <summary>
+    /// Implements the COBS serialization protocol for efficient communication
+    /// over serial connection.
+    /// 
+    /// It uses the following packet structyure:
+    /// 
+    /// ------------ MESSAGE ----------------
+    /// CHUNK        TYPE        SIZE (BYTES)
+    /// ---------------------------------------
+    /// START        BYTE        1
+    /// COMMAND      BYTE        1
+    /// PAYLOAD      BYTE        ///
+    /// LENGTH       BYTE        1
+    /// END          BYTE        1
+    /// ---------------------------------------
+    ///
+    /// </summary>
     internal class CobsSerializationService : ISerializationService
     {
         #region Constructor
@@ -120,17 +137,12 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Public Methods
-        /*
-         * ------------ MESSAGE ----------------
-         * CHUNK        TYPE        SIZE (BYTES)
-         * START        BYTE        1
-         * COMMAND      BYTE        1
-         * PAYLOAD      BYTE        *
-         * LENGTH       BYTE        1
-         * END          BYTE        1
-         * ---------------------------------------
-         */
-
+        /// <summary>
+        /// Encodes the message using the COBS algorithm using the packet structure
+        /// defined by this class.
+        /// </summary>
+        /// <param name="message">The message to encode.</param>
+        /// <returns>The message encoded as a byte array.</returns>
         public byte[] Serialize(IMessage message)
         {
             if (!_registeredTypes.ContainsValue(message.GetType()))
@@ -158,6 +170,13 @@ namespace MaxMix.Services.Communication
             return result.ToArray();
         }
 
+        /// <summary>
+        /// Decodes the COBS encoded package into one of the registered
+        /// IMessage messages.
+        /// </summary>
+        /// <param name="bytes">A byte array containing the COBS encoded message and
+        /// following the packet structure established by this class.</param>
+        /// <returns>The extracted IMessage.</returns>
         public IMessage Deserialize(byte[] bytes)
         {
             if (bytes.Count() > 255)
@@ -189,6 +208,11 @@ namespace MaxMix.Services.Communication
             return message;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
         public void RegisterType<T>(int id) where T : IMessage
         {
             if (_registeredTypes.ContainsKey(id))

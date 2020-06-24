@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Update
 {
+    // TODO: Delete, not in use.
     internal class UpdateService
     {
         #region Constructor
