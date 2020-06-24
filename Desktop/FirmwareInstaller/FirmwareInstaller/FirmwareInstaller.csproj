@@ -144,8 +144,8 @@
       <Link>Resources\libusb0.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Resource Include="..\..\Resources\icons\firmware_installer.ico">
-      <Link>Resources\firmware_installer.ico</Link>
+    <Resource Include="..\..\Resources\icons\fwinstaller.ico">
+      <Link>Resources\fwinstaller.ico</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

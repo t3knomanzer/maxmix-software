@@ -12,7 +12,7 @@
                  ShowMaxRestoreButton="False"
                  ShowMinButton="False"
                  ShowCloseButton="True"
-                 Icon="/Resources/app_connected.ico"
+                 Icon="/Resources/app.ico"
                  Visibility="{Binding IsActive, Converter={StaticResource Cnv_BoolToVisibility}}"
                  local:MainWindow.CloseCommand="{Binding DeactivateCommand}">
 

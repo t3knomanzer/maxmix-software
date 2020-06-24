@@ -7,7 +7,7 @@
                  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
                  mc:Ignorable="d"
                  Height="400" Width="600"
-                 Icon="/Resources/firmware_installer.ico">   
+                 Icon="/Resources/fwinstaller.ico">
 
     <Grid Margin="10">
         <Grid.RowDefinitions>
