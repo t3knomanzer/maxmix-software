@@ -27,8 +27,8 @@
             <!-- Static Resources -->
             <!--====================================================-->
             <x:Array x:Key="Tray_Icons" Type="{x:Type sys:String}">
-                <sys:String>/Resources/app_connected.ico</sys:String>
-                <sys:String>/Resources/app_disconnected.ico</sys:String>
+                <sys:String>/Resources/device_connected.ico</sys:String>
+                <sys:String>/Resources/device_disconnected.ico</sys:String>
             </x:Array>
 
             <x:Array x:Key="Tray_Status_Messages" Type="{x:Type sys:String}">

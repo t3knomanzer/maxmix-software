@@ -160,14 +160,19 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
-    <Resource Include="..\..\Resources\icons\app_connected.ico">
-      <Link>Resources\app_connected.ico</Link>
+    <Resource Include="..\..\Resources\icons\device_connected.ico">
+      <Link>Resources\device_connected.ico</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="..\..\Resources\icons\app_disconnected.ico">
-      <Link>Resources\app_disconnected.ico</Link>
+    <Resource Include="..\..\Resources\icons\device_disconnected.ico">
+      <Link>Resources\device_disconnected.ico</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="..\..\Resources\icons\app.ico">
+      <Link>Resources\app.ico</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
