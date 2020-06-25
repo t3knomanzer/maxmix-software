@@ -70,8 +70,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create-release.outputs.upload_url }}
-        asset_path: Desktop\Installer\Builds\setup.exe
-        asset_name: setup.${{ steps.get_version.outputs.VERSION }}.exe
+        asset_path: Desktop\Installer\Builds\
         asset_content_type: application/zip
 
     
