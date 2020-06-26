@@ -50,6 +50,20 @@ jobs:
     
     - name: Build Installer
       run: AdvancedInstaller.com /build Desktop\Installer\Maxmix.aip
+
+    - name: Update AUTHORS
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        git fetch --all
+        git shortlog -se -n --all --no-merges > AUTHORS
+        
+        git add AUTHORS
+        git commit -m "Updating authors"
+        git push origin
+        exit 0
+      shell: bash
     
     - name: Create Release
       id: create-release
