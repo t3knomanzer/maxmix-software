@@ -11,17 +11,32 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Get tag version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      shell: bash
+
+    - name: Update AUTHORS
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        git fetch --all
+        git shortlog -se -n --all --no-merges > AUTHORS
+        
+        git add AUTHORS
+        git commit -m "Updating authors"
+        git push origin HEAD:master
+        exit 0
+      shell: bash
+
     - name: Setup NuGet.exe
       uses: NuGet/setup-nuget@v1.0.2
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v1
     - name: Setup MSBuild ExtensionPack
-      run: choco install msbuild.extensionpack --version=4.0.15.0 -y
-      
-    - name: Get tag version
-      id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-      shell: bash
+      run: choco install msbuild.extensionpack --version=4.0.15.0 -y    
       
     - name: Restore Application packages
       run: nuget restore Desktop\Application\MaxMix.sln
@@ -50,21 +65,7 @@ jobs:
     
     - name: Build Installer
       run: AdvancedInstaller.com /build Desktop\Installer\Maxmix.aip
-
-    - name: Update AUTHORS
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        
-        git fetch --all
-        git shortlog -se -n --all --no-merges > AUTHORS
-        
-        git add AUTHORS
-        git commit -m "Updating authors"
-        git push origin
-        exit 0
-      shell: bash
-    
+   
     - name: Create Release
       id: create-release
       uses: actions/create-release@v1.1.1
