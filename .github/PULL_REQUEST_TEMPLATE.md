@@ -5,11 +5,9 @@
  - Closes #
 
 ## Description
-
 Please explain the changes you made here.
 
 ## Types of changes
-
 _Put an `x` in the boxes that apply_
 
 - [ ] Bugfix (non-breaking change which fixes an issue)
@@ -23,7 +21,6 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 
 - [ ] Compiled and tested requested changes
 - [ ] Updated the documentation, if necessary
-- [ ] Added myself to the copyright holder to the AUTHORS file
 - [ ] Reviewed the [guidelines for contributing](../CONTRIBUTING.md) to this repository.
 - [ ] I am requesting to **pull a topic/feature/bugfix branch**.
 
