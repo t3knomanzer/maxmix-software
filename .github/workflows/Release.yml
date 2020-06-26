@@ -11,6 +11,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Get tag version
       id: get_version
@@ -22,7 +24,6 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         
-        git fetch --all
         git shortlog -se -n --all --no-merges > AUTHORS
         
         git add AUTHORS
