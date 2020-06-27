@@ -15,7 +15,16 @@
 // Button configuration (values for 1ms timer service calls)
 //
 #define ENC_BUTTONINTERVAL    10  // check button every x milliseconds, also debouce time
-#define ENC_DOUBLECLICKTIME  600  // second click within 600ms
+
+// @t3knomanzer
+// This library will not detect the single click until after the max time 
+// for double click has passed. 
+// There is a method to disable double-click but doesn't work.
+// For now, set the define below to a low number to fix the issue until we implement 
+// our own encoder lib.
+#define ENC_DOUBLECLICKTIME  100   // second click within 600ms
+
+
 #define ENC_HOLDTIME        1200  // report held button after 1.2s
 
 // ----------------------------------------------------------------------------

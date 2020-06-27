@@ -21,10 +21,11 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_NeoPixel.h>
-#include <ClickEncoder.h>
 #include <TimerOne.h>
 
+#include "src/ClickEncoder/ClickEncoder.h"
 #include "Logo.h"
+
 
 
 //********************************************************
@@ -122,7 +123,7 @@ uint8_t screenState = STATE_SCREEN_AWAKE;
 uint32_t lastActivityTime = 0;
 
 //********************************************************
-// *** 
+// *** MAIN
 //********************************************************
 void setup()
 {
@@ -135,7 +136,6 @@ void setup()
   // Address 0x3C for 128x32
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) 
   { 
-    Serial.println(F("SSD1306 allocation failed"));
     for(;;);
   }
   
@@ -239,7 +239,7 @@ void ProcessData()
     return;
   }
 
-    // Extract command
+  // Extract command
   uint8_t command = decodeBuffer[0];
 
   // --- Execute commands
