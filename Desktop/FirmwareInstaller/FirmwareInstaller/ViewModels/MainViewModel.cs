@@ -255,7 +255,9 @@ namespace FirmwareInstaller.ViewModels
         protected override void RaisePropertyChanged([CallerMemberName] string name = null)
         {
             base.RaisePropertyChanged(name);
-            InstallCommand.RaiseCanExecuteChanged();
+
+            if (name == nameof(SelectedPort) || name == nameof(SelectedVersion) || name == nameof(IsBusy))
+                InstallCommand.RaiseCanExecuteChanged();
         }
         #endregion
     }
