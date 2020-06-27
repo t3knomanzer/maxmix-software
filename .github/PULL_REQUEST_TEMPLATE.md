@@ -21,8 +21,9 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 
 - [ ] Compiled and tested requested changes
 - [ ] Updated the documentation, if necessary
-- [ ] Reviewed the [guidelines for contributing](../CONTRIBUTING.md) to this repository.
-- [ ] I am requesting to **pull a topic/feature/bugfix branch**.
+- [ ] Updated the LICENSES file, if necessary
+- [ ] Reviewed the [guidelines for contributing](../CONTRIBUTING.md) to this repository
+- [ ] Requesting to **pull a topic/feature/bugfix branch**
 
 
 ## Further comments
