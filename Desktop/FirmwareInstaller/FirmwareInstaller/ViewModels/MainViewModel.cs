@@ -14,6 +14,7 @@ using System.Windows;
 using FirmwareInstaller.Framework.Mvvm;
 using FirmwareInstaller.Services.Update;
 using System.Runtime.CompilerServices;
+using Octokit;
 
 namespace FirmwareInstaller.ViewModels
 {
@@ -31,9 +32,11 @@ namespace FirmwareInstaller.ViewModels
             _installService = new InstallService();
             _installService.Error += OnServiceError;
 
+            IsBusy = true;
             InitLog();
             InitPorts();
             InitVersions();
+            IsBusy = false;
         }
         #endregion
 
@@ -53,10 +56,10 @@ namespace FirmwareInstaller.ViewModels
         private DelegateCommand _requestExitCommand;
 
         private string _selectedPort;
-        private Version _selectedVersion;
+        private string _selectedVersion;
         private IList<string> _logList;
         private string _log;
-        private bool _isBusy;
+        private bool _isBusy = false;
         #endregion
 
         #region Properties
@@ -91,7 +94,7 @@ namespace FirmwareInstaller.ViewModels
         /// <summary>
         /// Selected version to download.
         /// </summary>
-        public Version SelectedVersion
+        public string SelectedVersion
         {
             get => _selectedVersion;
             set
@@ -109,7 +112,7 @@ namespace FirmwareInstaller.ViewModels
         /// <summary>
         /// List of available versions to download.
         /// </summary>
-        public ObservableCollection<Version> Versions { get; private set; }
+        public ObservableCollection<string> Versions { get; private set; }
 
         /// <summary>
         /// Plain text operations log.
@@ -175,11 +178,14 @@ namespace FirmwareInstaller.ViewModels
             SelectedPort = Ports.FirstOrDefault();
         }
 
-        private void InitVersions()
+        private async void InitVersions()
         {
             SendLog("Retrieving available versions...");
-            var versions = _downloadService.RetrieveVersions();
-            Versions = new ObservableCollection<Version>(versions);
+            Versions = new ObservableCollection<string>();
+
+            var versions = await _downloadService.RetrieveVersions();
+            foreach (var version in versions)
+                Versions.Add(version);
 
             SelectedVersion = Versions.FirstOrDefault();
         }
@@ -209,7 +215,7 @@ namespace FirmwareInstaller.ViewModels
         private bool CanInstall()
         {
             return !string.IsNullOrEmpty(SelectedPort) &&
-                   SelectedVersion != null &&
+                   !string.IsNullOrEmpty(SelectedVersion) &&
                    !IsBusy;
         }
 
@@ -246,6 +252,11 @@ namespace FirmwareInstaller.ViewModels
         #endregion
 
         #region Overrides
+        protected override void RaisePropertyChanged([CallerMemberName] string name = null)
+        {
+            base.RaisePropertyChanged(name);
+            InstallCommand.RaiseCanExecuteChanged();
+        }
         #endregion
     }
 }
