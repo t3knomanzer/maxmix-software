@@ -1,4 +1,5 @@
 ﻿using FirmwareInstaller.Models;
+using Octokit;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -22,9 +24,10 @@ namespace FirmwareInstaller.Services.Update
         #region Constructor
         public DownloadService()
         {
-            _indexType = typeof(VersionIndexModel);
-            _indexExtraTypes = new Type[] { typeof(VersionModel) };
+            _appName = Assembly.GetExecutingAssembly().GetName().Name;
+            _appVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             _downloadPath = Path.GetTempPath();
+            _downloadUrls = new Dictionary<string, string>();
         }
         #endregion
 
@@ -32,18 +35,19 @@ namespace FirmwareInstaller.Services.Update
         #endregion
 
         #region Consts
-        // TODO: Move this to the application settings.
-        private const string _indexUrl = "https://raw.githubusercontent.com/rubenhenares/maxmix-embedded/master/versions.xml";
+        private const string _githubUser = "t3knomanzer";
+        private const string _githuRepo = "maxmix-software";
+        private const string _targetExtension = ".hex";
         #endregion
 
         #region Read Only
-        private readonly Type _indexType;
-        private readonly Type[] _indexExtraTypes;
+        private readonly string _appName;
+        private readonly string _appVersion;
         private readonly string _downloadPath;
+        private readonly Dictionary<string, string> _downloadUrls;
         #endregion
 
         #region Fields
-        private VersionIndexModel _versionIndexModel;
         #endregion
 
         #region Properties
@@ -53,44 +57,31 @@ namespace FirmwareInstaller.Services.Update
         #endregion
 
         #region Public Methods
-        // TODO: Make this a static method.
-        /// <summary>
-        /// Creates and serializes a placeholder VersionIndexModel file.
-        /// </summary>
-        /// <param name="filepath">Path where to save the output file.</param>
-        public void InitIndexFile(string filepath)
-        {
-            XmlSerializer serializer = new XmlSerializer(_indexType, _indexExtraTypes);
-            var version = new VersionModel("0.0.1.0", "http://www.sample.com/file.zip");
-
-            var collection = new VersionIndexModel();
-            collection.Versions.Add(version);
-
-            using (TextWriter writer = new StreamWriter(filepath))
-                serializer.Serialize(writer, collection);
-        }
-
         /// <summary>
         /// Retrieves a list of available versions found in the VersionIndexModel.
         /// </summary>
         /// <returns>List of versions available to download or an empty list if an error occurs.</returns>
-        public IEnumerable<Version> RetrieveVersions()
+        public async Task<IEnumerable<string>> RetrieveVersions()
         {
-            IEnumerable<Version> result = new List<Version>();
-            var serializer = new XmlSerializer(_indexType, _indexExtraTypes);
-            var reader = new XmlTextReader(_indexUrl);
-            try
-            {
-                _versionIndexModel = (VersionIndexModel)serializer.Deserialize(reader);
-                result = _versionIndexModel.Versions.Select(o => o.Version);
+            var client = new GitHubClient(new ProductHeaderValue(_appName, _appVersion));
+            var releases = await client.Repository.Release.GetAll(_githubUser, _githuRepo);
 
-            }
-            catch
+            foreach (var release in releases)
             {
-                RaiseError($"Error reading version index {_indexUrl}");
+                // Skip if it's a pre-release.
+                if (release.Prerelease)
+                    continue;
+
+                // Skip if there aren't any assets matching the target file extension.
+                if (!release.Assets.Any(o => o.Name.EndsWith(_targetExtension)))
+                    continue;
+
+                var version = release.TagName;
+                var url = release.Assets.First(o => o.Name.EndsWith(_targetExtension)).BrowserDownloadUrl;
+                _downloadUrls.Add(version, url);
             }
 
-            return result;
+            return _downloadUrls.Keys.ToList();
         }
 
         /// <summary>
@@ -100,35 +91,36 @@ namespace FirmwareInstaller.Services.Update
         /// </summary>
         /// <param name="version">The version to download.</param>
         /// <returns>The local absolute path to the downloaded file or an empty string if an error occurs.</returns>
-        public Task<string> DownloadVersionAsync(Version version)
+        public Task<string> DownloadVersionAsync(string version)
         {
 
             return Task.Run<string>(() =>
             {
-                var versionModel = _versionIndexModel.Versions.FirstOrDefault(o => o.Version == version);
-                if (versionModel == null)
+                if (!_downloadUrls.ContainsKey(version))
                 {
                     RaiseError($"Version {version} does not exist.");
                     return string.Empty;
                 }
 
-                var versionFileName = versionModel.Url.Split('/').LastOrDefault();
-                if (string.IsNullOrEmpty(versionFileName))
+                var url = _downloadUrls[version];
+                
+                var fileName = url.Split('/').LastOrDefault();
+                var downloadFilePath = Path.Combine(_downloadPath, fileName);
+
+                if (string.IsNullOrEmpty(fileName))
                 {
-                    RaiseError($"Error parsing url {versionModel.Url}.");
+                    RaiseError($"Error parsing url {url}.");
                     return string.Empty;
                 }
 
-                var downloadFilePath = Path.Combine(_downloadPath, versionFileName);
                 var webClient = new WebClient();
-
                 try
                 {
-                    webClient.DownloadFile(versionModel.Url, downloadFilePath);
+                    webClient.DownloadFile(url, downloadFilePath);
                 }
                 catch
                 {
-                    RaiseError($"Error downloading file {versionModel.Url} to {downloadFilePath}");
+                    RaiseError($"Error downloading file {url} to {downloadFilePath}");
                     return string.Empty;
                 }
 

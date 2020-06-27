@@ -19,8 +19,9 @@ namespace FirmwareInstaller
         {
             var window = new MainWindow();
 
+            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            window.Title = string.Format("{0} {1}", "MaxMix Firmware Installer", assemblyVersion);
+            window.Title = string.Format("{0} {1}", assemblyName, assemblyVersion);
 
             var dataContext = new MainViewModel();
             dataContext.ExitRequested += OnExitRequested;
