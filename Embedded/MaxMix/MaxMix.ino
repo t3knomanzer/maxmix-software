@@ -82,7 +82,7 @@ struct Item
 {
   uint32_t id;                          // 4 Bytes (32 bit)
   char name[ITEM_BUFFER_NAME_SIZE];  // 36 Bytes (1 Bytes * 36 Chars)
-  uint8_t volume;                       // 1 Byte
+  int8_t volume;                        // 1 Byte
   uint8_t isMuted;                      // 1 Byte
                                         // 82 Bytes TOTAL
 };
