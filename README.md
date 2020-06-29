@@ -11,6 +11,7 @@
 
 # Maxmix
 **Maxmix** is an open-source volume mixer that allows you to control the volume of any application running on your Windows PC from an external custom device.  
+It was made to allow to quickly adjust the volume of the game and an external chat application like Discord, without having to bring up the windows volume mixer. But it can do so much more...  
 You can find out more about the system in the [project website](https://www.maxmixproject.com).
 
 This repository contains the code for all of the software.
