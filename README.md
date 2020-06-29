@@ -29,9 +29,7 @@ You can use your IDE of choice as long as it compiles for that particular chip.
 ## Contributing
 Contributions are *very* welcome!
 
-If you see an issue that you'd like to fix or implement, fork the repository, create a branch and submit a pull request.
-
-Refer to the [CONTRIBUTING.md](https://github.com/rubenhenares/maxmix-software/blob/master/.github/CONTRIBUTING.md) file for more details about the workflow,
+Refer to the [CONTRIBUTING.md](https://github.com/t3knomanzer/.github/blob/master/CONTRIBUTING.md) file for more details about the workflow,
 and general hints on how to prepare your pull request. You can also ask for clarifications or guidance in GitHub issues directly.
 
 ## Community
