@@ -15,7 +15,7 @@
 This repository contains the code for all of the software needed for the system.
 
 ## Desktop
-The desktop directory contains the application, driver installer and firmware installer which are all written in C# and WPF.
+The desktop directory contains the desktop application, driver installer and firmware installer which are all written in C# and WPF.
 
 Development is done using [Visual Studio 2019 Communitty Edition](https://visualstudio.microsoft.com/downloads/).
 
@@ -28,9 +28,7 @@ You can use your IDE of choice as long as it compiles for that particular chip.
 ## Contributing
 Contributions are *very* welcome!
 
-Feel free to submit bug reports and feature requests.
-
-If you see an issue that you'd like to see fixed, the best way to make it happen is to help out by submitting a pull request implementing it.
+If you see an issue that you'd like to fix or implemented, fork the repository, create a branch and submit a pull request.
 
 Refer to the [CONTRIBUTING.md](https://github.com/rubenhenares/maxmix-software/blob/master/.github/CONTRIBUTING.md) file for more details about the workflow,
 and general hints on how to prepare your pull request. You can also ask for clarifications or guidance in GitHub issues directly.
@@ -40,6 +38,3 @@ You can join these groups and chats to discuss your-project related questions:
 
 - Twitter: https://twitter.com/maxmixproject/
 - Reddit: https://www.reddit.com/r/maxmixproject/
-
-## License
-Your project is Open Source and available under the Apache 2 License.
