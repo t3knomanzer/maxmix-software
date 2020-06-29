@@ -11,24 +11,25 @@
 
 # Maxmix
 **Maxmix** is an open-source volume mixer that allows you to control the volume of any application running on your Windows PC from an external custom device.  
+You can find out more about the system in the [project website](https://www.maxmixproject.com).
 
-This repository contains the code for all of the software needed for the system.
+This repository contains the code for all of the software.
 
 ## Desktop
-The desktop directory contains the desktop application, driver installer and firmware installer which are all written in C# and WPF.
+The desktop directory contains the **desktop application**, **driver installer** and **firmware installer** which are all written in C# and WPF.
 
 Development is done using [Visual Studio 2019 Communitty Edition](https://visualstudio.microsoft.com/downloads/).
 
 The application installer is made with [Advanced Installer](https://www.advancedinstaller.com/).
 
 ## Embedded
-The embedded directory contains the firmware for the device which uses an Arduino Nano.
+The embedded directory contains the **device firmware** which uses an Arduino Nano.
 You can use your IDE of choice as long as it compiles for that particular chip.
 
 ## Contributing
 Contributions are *very* welcome!
 
-If you see an issue that you'd like to fix or implemented, fork the repository, create a branch and submit a pull request.
+If you see an issue that you'd like to fix or implement, fork the repository, create a branch and submit a pull request.
 
 Refer to the [CONTRIBUTING.md](https://github.com/rubenhenares/maxmix-software/blob/master/.github/CONTRIBUTING.md) file for more details about the workflow,
 and general hints on how to prepare your pull request. You can also ask for clarifications or guidance in GitHub issues directly.
