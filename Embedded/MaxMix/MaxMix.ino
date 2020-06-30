@@ -288,14 +288,14 @@ void ProcessEncoderRotation()
   {
     menuIndex += encoderPosDelta;
     menuIndex = constrain(menuIndex, 0, itemsCount - 1);
-    DisplayMenuItem();
   }
 
   else if(menuState == STATE_MENU_EDIT)
   {
     UpdateItemVolume(menuIndex, encoderPosDelta * encoderVolumeStep);
-    DisplayMenuItem();
   }
+
+  DisplayMenuItem();
 }
 
 //---------------------------------------------------------
@@ -307,6 +307,7 @@ bool ProcessEncoderButton()
   if(button == ClickEncoder::Clicked)
   {
       SwitchMode();
+      DisplayMenuItem();
       return true;
   }
 
@@ -578,14 +579,34 @@ void DisplaySplash()
 //---------------------------------------------------------
 void DisplayMenuItem()
 {
+
+  // Update Display
   display.clearDisplay();
 
+  if(menuState == STATE_MENU_NAVIGATE)
+  {
+    DisplayNavigateScreen();
+  }
+  else if(menuState == STATE_MENU_EDIT)
+  {
+    DisplayEditScreen();
+  }
+
+  display.display();
+
+  // Update Pixels
+  int volumeColor = round(items[menuIndex].volume * 2.55f);
+  SetPixels(volumeColor, 255 - volumeColor, volumeColor);
+}
+
+void DisplayNavigateScreen()
+{
   // Left Arrow
   if(menuIndex > 0)
   {
     // X0, Y0, X1, Y1, X2, Y2
     // Height of text is 6.
-    display.fillTriangle(0, 3, 3, 0, 3, 6, WHITE);
+    display.fillTriangle(0, 10, 3, 7, 3, 13, WHITE);
   }
 
   // Right Arrow
@@ -594,14 +615,42 @@ void DisplayMenuItem()
     // X0, Y0, X1, Y1, X2, Y2
     // We start at the right of the screen and draw the triangle backwards.
     // We leave 1 pixel of margin on the right, otherwise looks fuzzy.
-    display.fillTriangle(127, 3, 124, 0, 124, 6, WHITE);
+    display.fillTriangle(127, 10, 124, 7, 124, 13, WHITE);
   }
 
   // Item Name
   // Width of the left triangle is 3, we leave 4 pixels of margin.
+  display.setTextSize(2);             
+  display.setTextColor(WHITE);      
+  display.setCursor(11, 4);             
+
+  // We can fit up to 9 characters in the line.
+  // Truncate the name and draw 1 char at a time.
+  int nameLength = min(9, strlen(items[menuIndex].name));  
+  for(size_t i = 0; i < nameLength; i++)
+    display.print(items[menuIndex].name[i]);
+
+  // Bottom Line
+  // The height of size 2 font is 16 and the screen is 32 pixels high.
+  // So we start at 16 down.
+
+  // Volume Bar Margins
+  display.drawLine(7, 28, 7, 32, WHITE);
+  display.drawLine(121, 28, 121, 32, WHITE);
+
+  // Volume Bar
+  // The width of the bar is the area between the 2 margins - 4 pixels margin on each side. 
+  int barWidth = max(1, items[menuIndex].volume) * 1.07;
+  display.fillRect(11, 28, barWidth, 32, WHITE);
+}
+
+void DisplayEditScreen()
+{
+  // Item Name
+  // Width of the left triangle is 3, we leave 4 pixels of margin.
   display.setTextSize(1);             
   display.setTextColor(WHITE);      
-  display.setCursor(7, 0);             
+  display.setCursor(7, 4);             
 
   // We can fit up to 18 characters in the line.
   // Truncate the name and draw 1 char at a time.
@@ -614,25 +663,19 @@ void DisplayMenuItem()
   // The height of size 2 font is 16 and the screen is 32 pixels high.
   // So we start at 16 down.
 
-  // Volume Bar Margins
-  display.drawLine(7, 16, 7, 32, WHITE);
-  display.drawLine(88, 16, 88, 32, WHITE);
+  // Volume Bar limits
+  display.drawLine(7, 18, 7, 32, WHITE); // Left
+  display.drawLine(86, 18, 86, 32, WHITE); // Right
 
   // Volume Bar
   // The width of the bar is the area between the 2 margins - 4 pixels margin on each side. 
-  int barWidth = max(1, items[menuIndex].volume) * 0.73 + 11;
-  int barHeight = max(1, 100 - items[menuIndex].volume) * 0.16 + 16; 
-  display.fillTriangle(11, 32, barWidth, barHeight, barWidth, 32, WHITE);
+  int barWidth = max(1, items[menuIndex].volume) * 0.72;
+  display.fillRect(11, 18, barWidth, 32, WHITE);
 
   // Volume Digits
   display.setTextSize(2);
-  display.setCursor(92, 16);
+  display.setCursor(92, 18);
   display.print(items[menuIndex].volume);
-  display.display();
-
-  // Pixels Color
-  int volumeColor = round(items[menuIndex].volume * 2.55f);
-  SetPixels(volumeColor, 255 - volumeColor, volumeColor);
 }
 
 void SetPixels(uint8_t r, uint8_t g, uint8_t b)
