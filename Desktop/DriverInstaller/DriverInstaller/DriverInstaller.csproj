@@ -47,29 +47,35 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\..\Resources\Bin\Driver\CH341S64.SYS">
+      <Link>Driver\CH341S64.SYS</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Resources\Bin\Driver\CH341S98.SYS">
+      <Link>Driver\CH341S98.SYS</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Resources\Bin\Driver\ch341SER.CAT">
+      <Link>Driver\ch341SER.CAT</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Resources\Bin\Driver\CH341SER.SYS">
+      <Link>Driver\CH341SER.SYS</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Resources\Bin\Driver\CH341SER.VXD">
+      <Link>Driver\CH341SER.VXD</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="App.config" />
-    <Content Include="Driver\CH341S64.SYS">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Driver\CH341S98.SYS">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Driver\ch341SER.CAT">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Driver\CH341SER.SYS">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Driver\CH341SER.VXD">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
-    <Content Include="Driver\CH341PT.DLL">
+    <Content Include="..\..\Resources\Bin\Driver\CH341PT.DLL">
+      <Link>Driver\CH341PT.DLL</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Driver\CH341SER.INF">
+    <Content Include="..\..\Resources\Bin\Driver\CH341SER.INF">
+      <Link>Driver\CH341SER.INF</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
