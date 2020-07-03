@@ -164,17 +164,7 @@ void loop()
   }
 
   // --- Encoder
-  encoderCurrent += encoder->getValue();
-  if (encoderCurrent != encoderLast)
-  { 
-    if(itemsCount > 0)
-      ProcessEncoderRotation();
-
-    ResetEncoder();
-    UpdateActivityTime();
-  }
-
-  if(ProcessEncoderButton())
+  if(ProcessEncoderRotation() || ProcessEncoderButton())
     UpdateActivityTime();
 
   ProcessSleep();
@@ -280,9 +270,18 @@ void SendHandshake()
 //---------------------------------------------------------
 // Process Rotary Encoder Rotation
 //---------------------------------------------------------
-void ProcessEncoderRotation()
+bool ProcessEncoderRotation()
 {
+  encoderCurrent += encoder->getValue();
+ 
+  if (encoderCurrent == encoderLast)
+    return false;
+
   int8_t encoderPosDelta = encoderCurrent - encoderLast;
+  encoderCurrent = encoderLast;
+
+  if(itemsCount == 0)
+    return true;
 
   if(menuState == STATE_MENU_NAVIGATE)
   {
@@ -294,8 +293,9 @@ void ProcessEncoderRotation()
   {
     UpdateItemVolume(menuIndex, encoderPosDelta * encoderVolumeStep);
   }
-
+  
   DisplayMenuItem();
+  return true;
 }
 
 //---------------------------------------------------------
@@ -306,17 +306,15 @@ bool ProcessEncoderButton()
   ClickEncoder::Button button = encoder->getButton();
   if(button == ClickEncoder::Clicked)
   {
-      SwitchMode();
-      DisplayMenuItem();
+    if(itemsCount == 0)
       return true;
+
+    SwitchMode();
+    DisplayMenuItem();
+    return true;
   }
 
   return false;
-}
-
-void ResetEncoder()
-{
-  encoderCurrent = encoderLast;
 }
 
 //---------------------------------------------------------
@@ -433,7 +431,6 @@ void RemoveItem()
   // If there are no items left, display the splash screen.
   if(itemsCount == 0)
     DisplaySplash();
-  // Otherwise, if there are any items left.
   else
   {
     // If the item removed was the displayed item.
