@@ -133,8 +133,7 @@ namespace MaxMix.Services.Audio
 
         private void OnStateChanged(object sender, AudioSessionStateChangedEventArgs e)
         {
-            if(e.NewState == AudioSessionState.AudioSessionStateInactive ||
-                e.NewState == AudioSessionState.AudioSessionStateExpired )
+            if(e.NewState == AudioSessionState.AudioSessionStateExpired)
             {
                 SessionDisconnected?.Invoke(this, new AudioSessionDisconnectedEventArgs(AudioSessionDisconnectReason.DisconnectReasonSessionDisconnected));
             }

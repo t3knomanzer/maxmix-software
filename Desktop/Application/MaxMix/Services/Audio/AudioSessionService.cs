@@ -134,6 +134,8 @@ namespace MaxMix.Services.Audio
 
         private void UnregisterSession(AudioSessionWrapper wrapper)
         {
+            _wrappers.Remove(wrapper.ProcessID);
+
             wrapper.SimpleVolumeChanged -= OnSimpleVolumeChanged;
             wrapper.SessionDisconnected -= OnSessionRemoved;
             wrapper.Dispose();
@@ -155,7 +157,6 @@ namespace MaxMix.Services.Audio
         {
             var session = e.NewSession;
             var wrapper = RegisterSession(session);
-
             RaiseSessionCreated(wrapper.ProcessID, wrapper.DisplayName, wrapper.Volume, wrapper.IsMuted);
         }
 
