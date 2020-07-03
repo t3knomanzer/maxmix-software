@@ -90,7 +90,7 @@ struct Item
 struct Settings
 {
   uint8_t displayNewSession = 1;
-  uint8_t sleepWhenInactive = 0;
+  uint8_t sleepWhenInactive = 1;
   uint8_t sleepAfterSeconds = 30;
 } settings;
 
@@ -403,6 +403,12 @@ void AddItem()
   items[itemsCount].isMuted = (uint8_t)decodeBuffer[42];
 
   itemsCount++;
+
+  if(settings.displayNewSession)
+  {
+    menuIndex = itemsCount - 1;
+    DisplayMenuItem();
+  }
 }
 
 //---------------------------------------------------------
