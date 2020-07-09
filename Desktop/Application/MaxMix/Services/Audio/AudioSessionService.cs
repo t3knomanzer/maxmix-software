@@ -116,6 +116,9 @@ namespace MaxMix.Services.Audio
                     if (session2.IsSystemSoundSession)
                         continue;
 
+                    if (session2.Process == null)
+                        continue;
+
                     var wrapper = RegisterSession(session);
                     RaiseSessionCreated(wrapper.ProcessID, wrapper.DisplayName, wrapper.Volume, wrapper.IsMuted);
                 }
