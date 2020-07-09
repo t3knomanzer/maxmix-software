@@ -84,15 +84,14 @@ namespace MaxMix.Services.Audio
         {
             get
             {
-                var displayName = _session2.DisplayName;
+                // Fallback chain to get a valid name for this session.
+                var displayName = _session2.Process.MainModule.FileVersionInfo.ProductName;
+                if (string.IsNullOrEmpty(displayName)) { displayName = _session2.DisplayName; }
                 if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
                 if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.MainWindowTitle; }
                 if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
 
-                // Capitalize first letter
-                displayName = char.ToUpper(displayName[0]) + displayName.Substring(1);
-
-                return displayName;
+                return Capitalize(displayName);
             }
         }
 
@@ -117,7 +116,21 @@ namespace MaxMix.Services.Audio
             get => _simpleAudio.IsMuted;
             set => _simpleAudio.IsMuted = value;
         }
-        #endregion                  
+        #endregion
+
+        #region Private Methods
+        // Capitalize the first letter of each word in the input string.
+        private string Capitalize(string arg)
+        {
+            var result = string.Empty;
+            var tokens = arg.Split(' ');
+            foreach (var token in tokens)
+                result += char.ToUpper(token[0]) + token.Substring(1) + " ";
+
+            result = result.Trim();
+            return result;
+        }
+        #endregion
 
         #region Event Handlers
         private void OnSimpleVolumeChanged(object sender, AudioSessionSimpleVolumeChangedEventArgs e)
