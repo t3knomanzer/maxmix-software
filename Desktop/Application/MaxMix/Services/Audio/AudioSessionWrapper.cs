@@ -85,7 +85,7 @@ namespace MaxMix.Services.Audio
             get
             {
                 // Fallback chain to get a valid name for this session.
-                var displayName = _session2.Process.MainModule.FileVersionInfo.ProductName;
+                var displayName = _session2.Process.MainModule.FileVersionInfo.FileDescription;
                 if (string.IsNullOrEmpty(displayName)) { displayName = _session2.DisplayName; }
                 if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
                 if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.MainWindowTitle; }
