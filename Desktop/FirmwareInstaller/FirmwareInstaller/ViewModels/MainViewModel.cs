@@ -23,6 +23,8 @@ namespace FirmwareInstaller.ViewModels
         #region Constructor
         public MainViewModel()
         {
+            _logLock = new object();
+
             _discoveryService = new DiscoveryService();
             _discoveryService.Error += OnServiceError;
 
@@ -45,8 +47,9 @@ namespace FirmwareInstaller.ViewModels
         #endregion
 
         #region Consts
+        private readonly object _logLock;
         #endregion
-         
+
         #region Fields
         private DiscoveryService _discoveryService;
         private DownloadService _downloadService;
@@ -60,6 +63,7 @@ namespace FirmwareInstaller.ViewModels
         private IList<string> _logList;
         private string _log;
         private bool _isBusy = false;
+        private bool _useOldBootloader = true;
         #endregion
 
         #region Properties
@@ -100,6 +104,21 @@ namespace FirmwareInstaller.ViewModels
             set
             {
                 _selectedVersion = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Indicates wether if the connected board is using
+        /// the new or old bootloader. This is determines the baudrate
+        /// used to upload the sketch.
+        /// </summary>
+        public bool UseOldBootloader
+        {
+            get => _useOldBootloader;
+            set
+            {
+                _useOldBootloader = value;
                 RaisePropertyChanged();
             }
         }
@@ -192,22 +211,28 @@ namespace FirmwareInstaller.ViewModels
 
         private void InitLog()
         {
-            _logList = new List<string>();
+            lock(_logLock)
+                _logList = new List<string>();
         }
 
         private void ClearLog()
         {
-            _logList.Clear();
+            lock (_logLock)
+                _logList.Clear();
+
             Log = string.Empty;
         }
 
         private void SendLog(string message)
         {
-            _logList.Add(message);
+            lock (_logLock)
+                _logList.Add(message);
+
             var logString = string.Empty;
 
-            foreach (var item in _logList)
-                logString += $"{item}\n";
+            lock (_logLock)
+                foreach (var item in _logList)
+                    logString += $"{item}\n";
 
             Log = logString;
         }
@@ -233,7 +258,7 @@ namespace FirmwareInstaller.ViewModels
             }
 
             SendLog($"Installing file {versionFilePath} to {_selectedPort}");
-            await _installService.InstallAsync(versionFilePath, _selectedPort);
+            await _installService.InstallAsync(versionFilePath, _selectedPort, _useOldBootloader);
 
             IsBusy = false;
         }

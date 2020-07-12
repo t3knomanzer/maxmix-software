@@ -47,14 +47,16 @@ namespace FirmwareInstaller.Services
         /// <param name="filePath">The absolute local file path to the .hex firmware file.</param>
         /// <param name="port">The COM port where the maxmix device is plugged in.</param>
         /// <returns></returns>
-        public Task InstallAsync(string filePath, string port)
+        public Task InstallAsync(string filePath, string port, bool useOldBootloader)
         {
             return Task.Run(() =>
             {
+                var baudRate = useOldBootloader ? "57600" : "115200";
+
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = _exeFilePath,
-                    Arguments = $"-C\"{_configFilePath}\" -v -patmega328p -carduino -P{port} -b57600 -D -U\"flash:w:{filePath}:i\"",
+                    Arguments = $"-C\"{_configFilePath}\" -v -patmega328p -carduino -P{port} -b{baudRate} -D -U\"flash:w:{filePath}:i\"",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
