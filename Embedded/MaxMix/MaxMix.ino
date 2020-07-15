@@ -1,7 +1,8 @@
 //********************************************************
-// *** MAX MIX
+// PROJECT: MAXMIX
 // AUTHOR: Ruben Henares
-// EMAIL: ruben@404fs.com
+// EMAIL: rhenares0@gmail.com
+//
 // DECRIPTION:
 // 
 //
@@ -9,71 +10,26 @@
 // The AVR 328P chip has 2kB of SRAM. 
 // Program uses 819 bytes, leaving 1229 bytes for items.
 // Therefore we can store a maximum of 14 items (2048 / 84 bytes)
-// We limit this to 12 maximum items for safety.,
+// We limit this to 12 maximum items for safety.
 //********************************************************
 
 
 //********************************************************
 // *** INCLUDES
 //********************************************************
+// Third-party
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_NeoPixel.h>
-#include <TimerOne.h>
+#include <ButtonEvents.h>
 
-#include "src/ClickEncoder/ClickEncoder.h"
-#include "Logo.h"
+#define HALF_STEP
+#include <Rotary.h>
 
-
-
-//********************************************************
-// *** CONSTS
-//********************************************************
-// Serial
-#define BAUD_RATE 115200
-
-// Pins
-static const uint8_t  PIN_PIXELS = 12; //D12
-static const uint8_t  PIN_ROTARY_OUTA = 15; //A1
-static const uint8_t  PIN_ROTARY_OUTB = 16; //A2
-static const uint8_t  PIN_ROTARY_SWITCH = 17; //A3
-
-// States
-static const uint8_t  STATE_MENU_NAVIGATE = 1;
-static const uint8_t  STATE_MENU_EDIT = 2;
-
-static const uint8_t  STATE_SCREEN_AWAKE = 0;
-static const uint8_t  STATE_SCREEN_SLEEP = 1;
-
-// Display
-static const uint8_t  SCREEN_WIDTH = 128; // OLED display width, in pixels
-static const uint8_t  SCREEN_HEIGHT = 32; // OLED display height, in pixels
-static const uint8_t  SCREEN_RESET =   4; // Reset pin # (or -1 if sharing Arduino reset pin)
-
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, SCREEN_RESET);
-
-// Lighting
-static const uint8_t  PIXELS_NUM = 8; // Number of pixels in ring
-Adafruit_NeoPixel pixels(PIXELS_NUM, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
-
-// Messages
-static const uint8_t ITEM_BUFFER_SIZE = 10;
-static const uint8_t ITEM_BUFFER_NAME_SIZE = 36;
-static const uint8_t RECEIVE_BUFFER_SIZE = 128;
-static const uint8_t SEND_BUFFER_SIZE = 8;
-
-// These values match exactly the ones in the C# application.
-static const uint8_t MSG_COMMAND_HS_REQUEST =  0;
-static const uint8_t MSG_COMMAND_HS_RESPONSE =  1;
-static const uint8_t MSG_COMMAND_ADD =  2;
-static const uint8_t MSG_COMMAND_REMOVE =  3;
-static const uint8_t MSG_COMMAND_UPDATE_VOLUME =  4;
-static const uint8_t MSG_COMMAND_SETTINGS =  5;
-
-static const uint8_t MSG_PACKET_DELIMITER = 0;
+// Custom
+#include "Config.h"
 
 //********************************************************
 // *** STRUCTS
@@ -81,7 +37,7 @@ static const uint8_t MSG_PACKET_DELIMITER = 0;
 struct Item
 {
   uint32_t id;                          // 4 Bytes (32 bit)
-  char name[ITEM_BUFFER_NAME_SIZE];  // 36 Bytes (1 Bytes * 36 Chars)
+  char name[ITEM_BUFFER_NAME_SIZE];     // 36 Bytes (1 Bytes * 36 Chars)
   int8_t volume;                        // 1 Byte
   uint8_t isMuted;                      // 1 Byte
                                         // 82 Bytes TOTAL
@@ -92,11 +48,11 @@ struct Settings
   uint8_t displayNewSession = 1;
   uint8_t sleepWhenInactive = 1;
   uint8_t sleepAfterSeconds = 30;
-} settings;
+};
 
 //********************************************************
 // *** VARIABLES
-//********************************************************
+//*******************************************************
 // Serial Communication
 uint8_t receiveIndex = 0;
 uint8_t sendIndex = 0;
@@ -105,225 +61,252 @@ uint8_t decodeBuffer[RECEIVE_BUFFER_SIZE];
 uint8_t sendBuffer[SEND_BUFFER_SIZE];
 uint8_t encodeBuffer[SEND_BUFFER_SIZE];
 
-// Menu
-uint8_t menuState = STATE_MENU_NAVIGATE;
-int8_t menuIndex = -1;
+// State
+uint8_t state = STATE_APPLICATION_NAVIGATE;
+uint8_t isDirty = true;
 
 struct Item items[ITEM_BUFFER_SIZE];
-uint8_t itemsCount = 0;
+int8_t itemIndex = -1;
+uint8_t itemCount = 0;
+
+// Settings
+struct Settings settings;
 
 // Rotary Encoder
-ClickEncoder *encoder;
-int16_t encoderLast = -1;
-int16_t encoderCurrent = -1;
+ButtonEvents encoderButton;
+Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
 int8_t encoderVolumeStep = 5;
+
 
 // Sleep
 uint8_t screenState = STATE_SCREEN_AWAKE;
 uint32_t lastActivityTime = 0;
 
+// Lighting
+Adafruit_NeoPixel* pixels;
+
+// Display
+Adafruit_SSD1306* display;
+
 //********************************************************
 // *** MAIN
 //********************************************************
+//---------------------------------------------------------
+//---------------------------------------------------------
 void setup()
 {
+  // --- Comms
   Serial.begin(BAUD_RATE);
 
   //--- Pixels
-  pixels.begin();
+  pixels = new Adafruit_NeoPixel(PIXELS_NUM, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
+  pixels->begin();
 
   // --- Display
-  // Address 0x3C for 128x32
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) 
-  { 
+  display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, SCREEN_RESET);
+  if(!display->begin(SSD1306_SWITCHCAPVCC, 0x3C)) 
     for(;;);
-  }
-  
-  // Rotate display 180 degrees
-  display.setRotation(2);
 
-  // Show splash screen
-  DisplaySplash();
+  display->setRotation(2);
+  DisplaySplash(display);
 
   // --- Encoder
-  // Setup encoder
-  encoder = new ClickEncoder(PIN_ROTARY_OUTB, PIN_ROTARY_OUTA, PIN_ROTARY_SWITCH, 4, false);
-
-  Timer1.initialize(100);
-  Timer1.attachInterrupt(timerIsr);
+  encoderButton.attach(PIN_ENCODER_SWITCH);
+  encoderRotary.begin(true);
 }
 
+//---------------------------------------------------------
+//---------------------------------------------------------
 void loop()
 {
-  // --- Comms
-  // Process incoming data
-  if(ReceiveData())
+  if(ReceivePackage(receiveBuffer, &receiveIndex, MSG_PACKET_DELIMITER, RECEIVE_BUFFER_SIZE))
   {
-    ProcessData();
+    if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
+      ProcessPackage();
+
+    ClearReceive();
     UpdateActivityTime();
+    isDirty = true;
   }
 
-  // --- Encoder
   if(ProcessEncoderRotation() || ProcessEncoderButton())
+  {
     UpdateActivityTime();
+    isDirty = true;
+  }
 
-  ProcessSleep();
-}
+  if(ProcessSleep())
+  {
+    isDirty = true;
+  }
 
-//********************************************************
-// *** INTERRUPTS
-//********************************************************
-void timerIsr() 
-{
-  encoder->service();
+  // Check for buffer overflow
+  if(receiveIndex == RECEIVE_BUFFER_SIZE)
+    ClearReceive();
+
+  ClearSend();
+  encoderButton.update();
+
+  if(isDirty)
+  {
+    UpdateDisplay();
+    UpdateLighting();  
+    isDirty = false;
+  }  
 }
 
 //********************************************************
 // *** FUNCTIONS
 //********************************************************
 //---------------------------------------------------------
-// Reads the data from the serial receive buffer.
 //---------------------------------------------------------
-bool ReceiveData()
+void ClearReceive()
 {
-  if(Serial.available() == 0)
-    return false;
-
-  while(Serial.available() > 0)
-  {
-    uint8_t received = (uint8_t)Serial.read();
-    
-    if(received == MSG_PACKET_DELIMITER)
-      return true;
-    
-    // Otherwise continue filling the buffer    
-    receiveBuffer[receiveIndex] = received;
-    receiveIndex++;
-
-    // Check for buffer overlow
-    if(receiveIndex == RECEIVE_BUFFER_SIZE)
-    {
-        ResetReceive();
-        return false;
-    }
-  }
-
-  return false;
+  receiveIndex = 0;
+  ClearBuffer(receiveBuffer, RECEIVE_BUFFER_SIZE);
+  ClearBuffer(decodeBuffer, RECEIVE_BUFFER_SIZE);
 }
 
 //---------------------------------------------------------
-// Parses the data in the parseBuffer. 
-// Splits the message into the necessary chunks and
-// executes the appropiate command.
 //---------------------------------------------------------
-void ProcessData()
+void ClearSend()
 {
-  // Decode received message
-  uint8_t decodedSize = decode(receiveBuffer, receiveIndex, decodeBuffer);
+  sendIndex = 0;
+  ClearBuffer(sendBuffer, SEND_BUFFER_SIZE);
+  ClearBuffer(encodeBuffer, SEND_BUFFER_SIZE);
+}
 
-  // Verify message
-  uint8_t checksum = decodeBuffer[decodedSize - 1];
-  if(checksum != decodedSize)
-  {
-    ResetReceive();
-    return;
-  }
+//---------------------------------------------------------
+//---------------------------------------------------------
+void ProcessPackage()
+{
+  uint8_t command = GetCommandFromPackage(decodeBuffer);
 
-  // Extract command
-  uint8_t command = decodeBuffer[0];
-
-  // --- Execute commands
-  // Handshake Request
   if(command == MSG_COMMAND_HS_REQUEST)
-    SendHandshake();
-
-  // Session Add
+  {
+    SendHandshakeCommand(sendBuffer, encodeBuffer);
+  }
   else if(command == MSG_COMMAND_ADD)
-    AddItem();
+  {
+    // Check for buffer overflow first.
+    if(itemCount == ITEM_BUFFER_SIZE)
+      return;
 
+    // Check if item exists, add or update accordingly.
+    uint32_t id = GetIdFromPackage(decodeBuffer);
+    int8_t index = FindItem(id);
+    if(index == -1)
+    {
+      AddItemCommand(decodeBuffer, items, &itemCount);
+      index = itemCount - 1;
+    }
+    else
+    {
+      UpdateItemCommand(decodeBuffer, items, index);
+    }
+
+    // Switch to newly added item.
+    if(settings.displayNewSession)
+      itemIndex = index;
+  }
   else if(command == MSG_COMMAND_REMOVE)
-    RemoveItem();
+  {
+    // Check if there are any existing items first.
+    if(itemCount == 0)  
+      return;
 
+    // Check if item to be removed exists.
+    uint32_t id = GetIdFromPackage(decodeBuffer);
+    int8_t index = FindItem(id);
+    if(index == -1)
+      return;
+      
+    RemoveItemCommand(decodeBuffer, items, &itemCount, index);
+
+    // Make sure current menu index is not out of bounds after removing item.
+    itemIndex = constrain(itemIndex, 0, itemCount - 1);
+  }
   else if(command == MSG_COMMAND_UPDATE_VOLUME)
-    UpdateItemVolume();
+  {
+    // Check that the item exists.
+    uint32_t id = GetIdFromPackage(decodeBuffer);  
+    int8_t index = FindItem(id);
+    if(index == -1)
+      return;
 
+    UpdateItemVolumeCommand(decodeBuffer, items, index);
+  }
   else if(command == MSG_COMMAND_SETTINGS)
-    UpdateSettings();
-
-  // Reset
-  ResetReceive();
+  {
+    UpdateSettingsCommand(decodeBuffer, &settings);
+  }
 }
 
 //---------------------------------------------------------
-// Send Handshake
-//---------------------------------------------------------
-void SendHandshake()
-{
-  sendBuffer[sendIndex++] = MSG_COMMAND_HS_RESPONSE;
-
-  uint8_t encodeSize =  Serialize(sendBuffer, sendIndex, encodeBuffer);
-  Serial.write(encodeBuffer, encodeSize);
-
-  ResetSend();
-}
-
-//---------------------------------------------------------
-// Process Rotary Encoder Rotation
 //---------------------------------------------------------
 bool ProcessEncoderRotation()
 {
-  encoderCurrent += encoder->getValue();
- 
-  if (encoderCurrent == encoderLast)
+  uint8_t encoderDir = encoderRotary.process();  
+  int8_t encoderDelta = 0;
+
+  if(encoderDir == DIR_NONE)
     return false;
+  else if(encoderDir == DIR_CW)
+    encoderDelta = 1;
+  else if(encoderDir == DIR_CCW)
+    encoderDelta = -1;
 
-  int8_t encoderPosDelta = encoderCurrent - encoderLast;
-  encoderCurrent = encoderLast;
-
-  if(itemsCount == 0)
+  if(itemCount == 0)
     return true;
 
-  if(menuState == STATE_MENU_NAVIGATE)
+  if(state == STATE_APPLICATION_NAVIGATE)
   {
-    menuIndex += encoderPosDelta;
-    menuIndex = constrain(menuIndex, 0, itemsCount - 1);
+    itemIndex += encoderDelta;
+    itemIndex = constrain(itemIndex, 0, itemCount - 1);
   }
 
-  else if(menuState == STATE_MENU_EDIT)
+  else if(state == STATE_APPLICATION_EDIT)
   {
-    UpdateItemVolume(menuIndex, encoderPosDelta * encoderVolumeStep);
+    items[itemIndex].volume += encoderDelta * encoderVolumeStep;
+    items[itemIndex].volume = constrain(items[itemIndex].volume, 0, 100);
+
+    SendItemVolumeCommand(&items[itemIndex], sendBuffer, encodeBuffer);
   }
   
-  DisplayMenuItem();
   return true;
 }
 
 //---------------------------------------------------------
-// Process Rotary Encoder Button
 //---------------------------------------------------------
 bool ProcessEncoderButton()
 {
-  ClickEncoder::Button button = encoder->getButton();
-  if(button == ClickEncoder::Clicked)
+  if(encoderButton.tapped())
   {
-    if(itemsCount == 0)
-      return true;
-
-    SwitchMode();
-    DisplayMenuItem();
+    if(itemCount > 0)
+      SwitchMode();
+      
     return true;
+  }
+  
+  if(encoderButton.doubleTapped())
+  {
+
+  }
+
+  if(encoderButton.held())
+  {
+
   }
 
   return false;
 }
 
 //---------------------------------------------------------
-// Sleep
 //---------------------------------------------------------
-void ProcessSleep()
+bool ProcessSleep()
 {
   if(settings.sleepWhenInactive == 0)
-    return;
+    return false;
 
   uint32_t activityTimeDelta = millis() - lastActivityTime;
 
@@ -331,159 +314,86 @@ void ProcessSleep()
   {
     if(activityTimeDelta > settings.sleepAfterSeconds * 1000)
     {
-      display.clearDisplay();
-      display.display();
       screenState = STATE_SCREEN_SLEEP;
-      SetPixels(0, 0, 0);
+      return true;
     }
   }
   else if(screenState == STATE_SCREEN_SLEEP)
   {
     if(activityTimeDelta < settings.sleepAfterSeconds * 1000)
     {
-      if(itemsCount > 0 && menuIndex > -1)
-        DisplayMenuItem();
-      else
-        DisplaySplash();
-
       screenState = STATE_SCREEN_AWAKE;
+      return true;
     }
   }
+
+  return false;
 }
 
+//---------------------------------------------------------
+//---------------------------------------------------------
 void UpdateActivityTime()
 {
   lastActivityTime = millis();
 }
 
 //---------------------------------------------------------
-// Sets the volume of the item with the given index
 //---------------------------------------------------------
-void UpdateItemVolume(uint8_t index, int8_t delta)
+void UpdateDisplay()
 {
-  items[index].volume += delta;
-  items[index].volume = constrain(items[index].volume, 0, 100);
-
-  sendBuffer[sendIndex++] = MSG_COMMAND_UPDATE_VOLUME;
-  
-  sendBuffer[sendIndex++] = (uint8_t)(items[index].id >> 24) & 0xFF;
-  sendBuffer[sendIndex++] = (uint8_t)(items[index].id >> 16) & 0xFF;
-  sendBuffer[sendIndex++] = (uint8_t)(items[index].id >> 8) & 0xFF;
-  sendBuffer[sendIndex++] = (uint8_t)items[index].id & 0xFF;
-
-  sendBuffer[sendIndex++] = items[index].volume;
-  sendBuffer[sendIndex++] = items[index].isMuted;
-  
-  uint8_t encodeSize =  Serialize(sendBuffer, sendIndex, encodeBuffer);
-  Serial.write(encodeBuffer, encodeSize);
-
-  ResetSend();
-}
-
-//---------------------------------------------------------
-// Adds a new item to the items array.
-//---------------------------------------------------------
-void AddItem()
-{
-  if(itemsCount == ITEM_BUFFER_SIZE)  
-    return;
-
-  uint32_t id = ((uint32_t)decodeBuffer[1]) |
-                ((uint32_t)decodeBuffer[2] << 8)  |
-                ((uint32_t)decodeBuffer[3] << 16) |
-                ((uint32_t)decodeBuffer[4] << 24);
-
-  // Check if the item already exists
-  if(FindItem(id) > -1)
-    return;
-
-  items[itemsCount].id = id;
-  memcpy(items[itemsCount].name, &decodeBuffer[5], ITEM_BUFFER_NAME_SIZE);
-  items[itemsCount].volume = (uint8_t)decodeBuffer[41];
-  items[itemsCount].isMuted = (uint8_t)decodeBuffer[42];
-
-  itemsCount++;
-
-  if(settings.displayNewSession)
+  if(screenState == STATE_SCREEN_SLEEP)
   {
-    menuIndex = itemsCount - 1;
-    DisplayMenuItem();
+    display->clearDisplay();
+    display->display();
+    return;
   }
-}
 
-//---------------------------------------------------------
-// Removes the item with the given id from the items array.
-//---------------------------------------------------------
-void RemoveItem()
-{
-  if(itemsCount == 0)  
-    return;
-
-  uint32_t id = ((uint32_t)decodeBuffer[1]) |
-                ((uint32_t)decodeBuffer[2] << 8)  |
-                ((uint32_t)decodeBuffer[3] << 16) |
-                ((uint32_t)decodeBuffer[4] << 24);
-
-  int8_t index = FindItem(id);
-  if(index == -1)
-    return;
-  
-  // Re-order items array.
-  for(uint8_t i = index; i < itemsCount - 1; i++)
-   items[i] = items[i + 1];
-
-  itemsCount--;
-
-  // If there are no items left, display the splash screen.
-  if(itemsCount == 0)
-    DisplaySplash();
-  else
+  if(itemCount == 0)
   {
-    // If the item removed was the displayed item.
-    // Change the displayed item to the next one available.
-    if(index == menuIndex)
-    {
-      // If there are items previous to the one deleted,
-      // select the first one.
-      if(menuIndex > 0)
-        menuIndex--;
-
-      // If we deleted the first item (0) and there 
-      else
-        menuIndex++;
-
-      DisplayMenuItem();
-    }
+    DisplaySplash(display);
+  }
+  else if(state == STATE_APPLICATION_NAVIGATE)
+  {
+    DisplayAppNavigateScreen(display, &items[itemIndex], itemIndex, itemCount);
+  }
+  else if(state == STATE_APPLICATION_EDIT)
+  {
+    DisplayAppEditScreen(display, &items[itemIndex]);
   }
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void UpdateSettings() 
+void UpdateLighting()
 {
-  settings.displayNewSession = decodeBuffer[1];
-  settings.sleepWhenInactive = decodeBuffer[2];
-  settings.sleepAfterSeconds = decodeBuffer[3];
+   if(screenState == STATE_SCREEN_SLEEP)
+   {
+     SetPixelsColor(pixels, 0,0,0);
+     return;
+   }
+ 
+   if(itemCount == 0)
+   {
+     SetPixelsColor(pixels, 128,128,128);
+   }
+   else
+   {
+      uint8_t volumeColor = round(items[itemIndex].volume * 2.55f);
+      SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
+   }
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void UpdateItemVolume() 
+void SwitchMode()
 {
-  uint32_t id = ((uint32_t)decodeBuffer[1]) |
-                ((uint32_t)decodeBuffer[2] << 8)  |
-                ((uint32_t)decodeBuffer[3] << 16) |
-                ((uint32_t)decodeBuffer[4] << 24);
-
-  
-  int8_t index = FindItem(id);
-  if(index > -1)
+  if(state == STATE_APPLICATION_NAVIGATE)
   {
-    items[index].volume = decodeBuffer[5];
-    items[index].isMuted = decodeBuffer[6];
-
-    if(index == menuIndex)
-      DisplayMenuItem();
+    state = STATE_APPLICATION_EDIT;
+  }
+  else if(state == STATE_APPLICATION_EDIT)
+  {
+    state = STATE_APPLICATION_NAVIGATE;
   }
 }
 
@@ -493,198 +403,9 @@ void UpdateItemVolume()
 //---------------------------------------------------------
 int8_t FindItem(uint32_t id)
 {
-  for(int8_t i = 0; i < itemsCount; i++)
+  for(int8_t i = 0; i < itemCount; i++)
     if(items[i].id == id)
       return i;
 
   return -1;
-}
-
-//---------------------------------------------------------
-// Empties the serial receive buffer.
-//---------------------------------------------------------
-void ClearSerial()
-{
-  while(Serial.available() > 0)
-    Serial.read();
-}
-
-//---------------------------------------------------------
-// Resets the message buffer.
-//---------------------------------------------------------
-void ClearReceiveBuffer()
-{
-  for(size_t i = 0; i < RECEIVE_BUFFER_SIZE; i++)
-    receiveBuffer[i] = 0;
-}
-
-void ClearDecodeBuffer()
-{
-  for(size_t i = 0; i < RECEIVE_BUFFER_SIZE; i++)
-    decodeBuffer[i] = 0;
-}
-
-void ClearSendBuffer()
-{
-  for(size_t i = 0; i < SEND_BUFFER_SIZE; i++)
-    sendBuffer[i] = 0;
-}
-
-void ClearEncodeBuffer()
-{
-  for(size_t i = 0; i < SEND_BUFFER_SIZE; i++)
-    encodeBuffer[i] = 0;
-}
-
-void ResetReceive()
-{
-  receiveIndex = 0;
-  ClearReceiveBuffer();
-  ClearDecodeBuffer();
-}
-
-void ResetSend()
-{
-  sendIndex = 0;
-  ClearSendBuffer();
-  ClearEncodeBuffer();
-}
-
-//---------------------------------------------------------
-// Alternates between navigation and edit modes.
-//---------------------------------------------------------
-void SwitchMode()
-{
-  if(menuState == STATE_MENU_NAVIGATE)
-  {
-    menuState = STATE_MENU_EDIT;
-  }
-  else if(menuState == STATE_MENU_EDIT)
-  {
-    menuState = STATE_MENU_NAVIGATE;
-  }
-}
-
-//---------------------------------------------------------
-// Draws the splash screen logo
-//---------------------------------------------------------
-void DisplaySplash()
-{
-  display.clearDisplay();
-  display.drawBitmap(0, 0, logoBmp, LOGO_WIDTH, LOGO_HEIGHT, 1);
-  display.display();
-
-  SetPixels(128, 128, 128);
-}
-
-//---------------------------------------------------------
-// Draws the screen ui
-//---------------------------------------------------------
-void DisplayMenuItem()
-{
-
-  // Update Display
-  display.clearDisplay();
-
-  if(menuState == STATE_MENU_NAVIGATE)
-  {
-    DisplayNavigateScreen();
-  }
-  else if(menuState == STATE_MENU_EDIT)
-  {
-    DisplayEditScreen();
-  }
-
-  display.display();
-
-  // Update Pixels
-  int volumeColor = round(items[menuIndex].volume * 2.55f);
-  SetPixels(volumeColor, 255 - volumeColor, volumeColor);
-}
-
-void DisplayNavigateScreen()
-{
-  // Left Arrow
-  if(menuIndex > 0)
-  {
-    // X0, Y0, X1, Y1, X2, Y2
-    // Height of text is 6.
-    display.fillTriangle(0, 10, 3, 7, 3, 13, WHITE);
-  }
-
-  // Right Arrow
-  if(menuIndex < itemsCount - 1)
-  {
-    // X0, Y0, X1, Y1, X2, Y2
-    // We start at the right of the screen and draw the triangle backwards.
-    // We leave 1 pixel of margin on the right, otherwise looks fuzzy.
-    display.fillTriangle(127, 10, 124, 7, 124, 13, WHITE);
-  }
-
-  // Item Name
-  // Width of the left triangle is 3, we leave 4 pixels of margin.
-  display.setTextSize(2);             
-  display.setTextColor(WHITE);      
-  display.setCursor(11, 4);             
-
-  // We can fit up to 9 characters in the line.
-  // Truncate the name and draw 1 char at a time.
-  int nameLength = min(9, strlen(items[menuIndex].name));  
-  for(size_t i = 0; i < nameLength; i++)
-    display.print(items[menuIndex].name[i]);
-
-  // Bottom Line
-  // The height of size 2 font is 16 and the screen is 32 pixels high.
-  // So we start at 16 down.
-
-  // Volume Bar Margins
-  display.drawLine(7, 28, 7, 32, WHITE);
-  display.drawLine(121, 28, 121, 32, WHITE);
-
-  // Volume Bar
-  // The width of the bar is the area between the 2 margins - 4 pixels margin on each side. 
-  int barWidth = max(1, items[menuIndex].volume) * 1.07;
-  display.fillRect(11, 28, barWidth, 32, WHITE);
-}
-
-void DisplayEditScreen()
-{
-  // Item Name
-  // Width of the left triangle is 3, we leave 4 pixels of margin.
-  display.setTextSize(1);             
-  display.setTextColor(WHITE);      
-  display.setCursor(7, 4);             
-
-  // We can fit up to 18 characters in the line.
-  // Truncate the name and draw 1 char at a time.
-  // int nameLength = min(18, strlen(items[index].name));
-  int nameLength = min(18, strlen(items[menuIndex].name));
-  for(size_t i = 0; i < nameLength; i++)
-    display.print(items[menuIndex].name[i]);
-
-  // Bottom Line
-  // The height of size 2 font is 16 and the screen is 32 pixels high.
-  // So we start at 16 down.
-
-  // Volume Bar limits
-  display.drawLine(7, 18, 7, 32, WHITE); // Left
-  display.drawLine(86, 18, 86, 32, WHITE); // Right
-
-  // Volume Bar
-  // The width of the bar is the area between the 2 margins - 4 pixels margin on each side. 
-  int barWidth = max(1, items[menuIndex].volume) * 0.72;
-  display.fillRect(11, 18, barWidth, 32, WHITE);
-
-  // Volume Digits
-  display.setTextSize(2);
-  display.setCursor(92, 18);
-  display.print(items[menuIndex].volume);
-}
-
-void SetPixels(uint8_t r, uint8_t g, uint8_t b)
-{
-  pixels.setPixelColor(0, pixels.Color(r, g, b)); // BACK
-  pixels.setPixelColor(3, pixels.Color(r, g, b)); // FRONT-RIGHT
-  pixels.setPixelColor(5, pixels.Color(r, g, b)); // FRONT-LEFT
-  pixels.show();
 }
