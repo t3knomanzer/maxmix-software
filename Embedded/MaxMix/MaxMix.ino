@@ -135,12 +135,16 @@ void loop()
     isDirty = true;
   }
 
+  if(ProcessSleep())
+  {
+    isDirty = true;
+  }
+
   // Check for buffer overflow
   if(receiveIndex == RECEIVE_BUFFER_SIZE)
     ClearReceive();
 
   ClearSend();
-  ProcessSleep();
   encoderButton.update();
 
   if(isDirty)
@@ -299,23 +303,31 @@ bool ProcessEncoderButton()
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void ProcessSleep()
+bool ProcessSleep()
 {
   if(settings.sleepWhenInactive == 0)
-    return;
+    return false;
 
   uint32_t activityTimeDelta = millis() - lastActivityTime;
 
   if(screenState == STATE_SCREEN_AWAKE)
   {
     if(activityTimeDelta > settings.sleepAfterSeconds * 1000)
+    {
       screenState = STATE_SCREEN_SLEEP;
+      return true;
+    }
   }
   else if(screenState == STATE_SCREEN_SLEEP)
   {
     if(activityTimeDelta < settings.sleepAfterSeconds * 1000)
+    {
       screenState = STATE_SCREEN_AWAKE;
+      return true;
+    }
   }
+
+  return false;
 }
 
 //---------------------------------------------------------
