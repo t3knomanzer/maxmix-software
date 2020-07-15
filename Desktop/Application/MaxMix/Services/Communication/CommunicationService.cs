@@ -25,7 +25,7 @@ namespace MaxMix.Services.Communication
 
         #region Consts
         private const int _checkPortInterval = 500;
-        private const int _timeout = 100;
+        private const int _timeout = 1000;
         #endregion
 
         #region Fields
@@ -95,6 +95,9 @@ namespace MaxMix.Services.Communication
             {
                 var message_ = _serializationService.Serialize(message);
                 _serialPort.Write(message_, 0, message_.Length);
+
+                // TODO: Temporary hack to prevent messages being sent too quickly
+                Thread.Sleep(100);
             }
             catch(Exception e)
             {
