@@ -23,10 +23,9 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_NeoPixel.h>
-#include <TimerOne.h>
+#include <ButtonEvents.h>
 
 // Custom
-#include "src/ClickEncoder/ClickEncoder.h"
 #include "Config.h"
 
 //********************************************************
@@ -70,10 +69,11 @@ uint8_t itemCount = 0;
 struct Settings settings;
 
 // Rotary Encoder
-ClickEncoder* encoder;
+ButtonEvents encoderButton;
 int16_t encoderLast = -1;
 int16_t encoderCurrent = -1;
 int8_t encoderVolumeStep = 5;
+
 
 // Sleep
 uint8_t screenState = STATE_SCREEN_AWAKE;
@@ -108,9 +108,7 @@ void setup()
   DisplaySplash(display);
 
   // --- Encoder
-  encoder = new ClickEncoder(PIN_ROTARY_OUTB, PIN_ROTARY_OUTA, PIN_ROTARY_SWITCH, 4);
-  Timer1.initialize(100);
-  Timer1.attachInterrupt(timerIsr);
+  encoderButton.attach(PIN_ENCODER_SWITCH);
 }
 
 //---------------------------------------------------------
@@ -139,16 +137,7 @@ void loop()
   ProcessSleep();
   UpdateDisplay();
   UpdateLighting();
-}
-
-//********************************************************
-// *** INTERRUPTS
-//********************************************************
-//---------------------------------------------------------
-//---------------------------------------------------------
-void timerIsr() 
-{
-  encoder->service();
+  encoderButton.update();
 }
 
 //********************************************************
@@ -242,45 +231,29 @@ void ProcessPackage()
 //---------------------------------------------------------
 bool ProcessEncoderRotation()
 {
-  encoderCurrent += encoder->getValue();
- 
-  if (encoderCurrent == encoderLast)
-    return false;
-
-  int8_t encoderPosDelta = encoderCurrent - encoderLast;
-  encoderCurrent = encoderLast;
-
-  if(itemCount == 0)
-    return true;
-
-  if(state == STATE_APPLICATION_NAVIGATE)
-  {
-    itemIndex += encoderPosDelta;
-    itemIndex = constrain(itemIndex, 0, itemCount - 1);
-  }
-
-  else if(state == STATE_APPLICATION_EDIT)
-  {
-    items[itemIndex].volume += encoderPosDelta * encoderVolumeStep;
-    items[itemIndex].volume = constrain(items[itemIndex].volume, 0, 100);
-    
-    SendItemVolumeCommand(&items[itemIndex], sendBuffer, encodeBuffer);
-  }
-  
-  return true;
+  return false;
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 bool ProcessEncoderButton()
 {
-  ClickEncoder::Button button = encoder->getButton();
-  if(button == ClickEncoder::Clicked)
+  if(encoderButton.tapped())
   {
     if(itemCount > 0)
       SwitchMode();
       
     return true;
+  }
+  
+  if(encoderButton.doubleTapped())
+  {
+
+  }
+
+  if(encoderButton.held())
+  {
+
   }
 
   return false;

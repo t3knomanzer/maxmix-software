@@ -17,9 +17,9 @@ static const uint32_t BAUD_RATE = 115200;
 
 // --- Pins
 static const uint8_t  PIN_PIXELS = 12; //D12
-static const uint8_t  PIN_ROTARY_OUTA = 15; //A1
-static const uint8_t  PIN_ROTARY_OUTB = 16; //A2
-static const uint8_t  PIN_ROTARY_SWITCH = 17; //A3
+static const uint8_t  PIN_ENCODER_OUTA = 15; //A1
+static const uint8_t  PIN_ENCODER_OUTB = 16; //A2
+static const uint8_t  PIN_ENCODER_SWITCH = 17; //A3
 
 // --- States
 static const uint8_t  MODE_MASTER = 0;
