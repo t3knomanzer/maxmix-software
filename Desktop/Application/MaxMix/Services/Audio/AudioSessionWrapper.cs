@@ -115,14 +115,18 @@ namespace MaxMix.Services.Audio
         public bool IsMuted
         {
             get => _simpleAudio.IsMuted;
-            set => _simpleAudio.IsMuted = value;
+            set
+            {
+                _isNotifyEnabled = false;
+                _simpleAudio.IsMuted = value;
+            }
         }
         #endregion                  
 
         #region Event Handlers
         private void OnSimpleVolumeChanged(object sender, AudioSessionSimpleVolumeChangedEventArgs e)
         {
-            if(!_isNotifyEnabled)
+            if (!_isNotifyEnabled)
             {
                 _isNotifyEnabled = true;
                 return;
@@ -133,7 +137,7 @@ namespace MaxMix.Services.Audio
 
         private void OnStateChanged(object sender, AudioSessionStateChangedEventArgs e)
         {
-            if(e.NewState == AudioSessionState.AudioSessionStateExpired)
+            if (e.NewState == AudioSessionState.AudioSessionStateExpired)
             {
                 SessionDisconnected?.Invoke(this, new AudioSessionDisconnectedEventArgs(AudioSessionDisconnectReason.DisconnectReasonSessionDisconnected));
             }
@@ -154,7 +158,7 @@ namespace MaxMix.Services.Audio
             _session2 = null;
             _simpleAudio = null;
             _events = null;
-    }
+        }
         #endregion
     }
 }

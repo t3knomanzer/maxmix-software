@@ -111,6 +111,7 @@
     </Compile>
     <Compile Include="Services\Audio\AudioCommon.cs" />
     <Compile Include="Services\Audio\AudioSessionService.cs" />
+    <Compile Include="Services\Audio\AudioEndpointVolumeWrapper.cs" />
     <Compile Include="Services\Audio\AudioSessionWrapper.cs" />
     <Compile Include="Services\Audio\IAudioSessionService.cs" />
     <Compile Include="Services\Communication\CobsSerializationService .cs" />

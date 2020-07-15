@@ -162,9 +162,7 @@ void loop()
 //---------------------------------------------------------
 void ClearReceive()
 {
-  receiveIndex = 0;
-  ClearBuffer(receiveBuffer, RECEIVE_BUFFER_SIZE);
-  ClearBuffer(decodeBuffer, RECEIVE_BUFFER_SIZE);
+  receiveIndex = 0;  
 }
 
 //---------------------------------------------------------
@@ -172,8 +170,6 @@ void ClearReceive()
 void ClearSend()
 {
   sendIndex = 0;
-  ClearBuffer(sendBuffer, SEND_BUFFER_SIZE);
-  ClearBuffer(encodeBuffer, SEND_BUFFER_SIZE);
 }
 
 //---------------------------------------------------------

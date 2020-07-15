@@ -26,10 +26,21 @@ namespace MaxMix.Services.Audio
         #region Fields
         private readonly SynchronizationContext _synchronizationContext;
         private AudioSessionManager2 _sessionManager;
+        private AudioEndpointVolumeWrapper _endpointVolumeWrapper;
         private IDictionary<int, AudioSessionWrapper> _wrappers;
         #endregion
 
         #region Events
+        /// <summary>
+        /// Raised when the volume for an active session has changed.
+        /// </summary>
+        public event AudioEndpointDelegate EndpointCreated;
+
+        /// <summary>
+        /// Raised when the volume for an active session has changed.
+        /// </summary>
+        public event AudioEndpointVolumeDelegate EndpointVolumeChanged;
+
         /// <summary>
         /// Raised when a new audio session has been created.
         /// </summary>
@@ -53,7 +64,7 @@ namespace MaxMix.Services.Audio
         public void Start()
         {
             _wrappers = new Dictionary<int, AudioSessionWrapper>();
-            new Thread(() => InitializeEvents()).Start();
+            new Thread(() => InitializeWrappers()).Start();
         }
 
         /// <summary>
@@ -67,6 +78,11 @@ namespace MaxMix.Services.Audio
                 _sessionManager.Dispose();
             }
 
+            if(_endpointVolumeWrapper != null)
+            {
+                _endpointVolumeWrapper.Dispose();
+            }
+
             if (_wrappers != null)
             {
                 foreach (var wrapper in _wrappers.Values)
@@ -77,39 +93,53 @@ namespace MaxMix.Services.Audio
         }
 
         /// <summary>
+        /// Sets the volume of the endpoint (master volume).
+        /// </summary>
+        /// <param name="volume">The desired volume.</param>
+        /// <param name="isMuted">The mute state of the endpoint.</param>
+        public void SetEndpointVolume(int volume, bool isMuted)
+        {
+            _endpointVolumeWrapper.Volume = volume;
+            _endpointVolumeWrapper.IsMuted = isMuted;
+        }
+
+        /// <summary>
         /// Sets the volume of an audio session.
         /// </summary>
         /// <param name="pid">The process Id of the target session.</param>
         /// <param name="volume">The desired volume.</param>
-        public void SetVolume(int pid, int volume)
+        public void SetSessionVolume(int pid, int volume, bool isMuted)
         {
             if (!_wrappers.ContainsKey(pid))
                 return;
 
             _wrappers[pid].Volume = volume;
-        }
-
-        /// <summary>
-        /// Sets the mute state of an audio session.
-        /// </summary>
-        /// <param name="pid">The process Id of the target session.</param>
-        /// <param name="isMuted">The mute state.</param>
-        public void SetMute(int pid, bool isMuted)
-        {
-            if (!_wrappers.ContainsKey(pid))
-                return;
-
             _wrappers[pid].IsMuted = isMuted;
         }
         #endregion
 
         #region Private Methods
-        private void InitializeEvents()
+        private void InitializeWrappers()
         {
-            _sessionManager = GetDefaultAudioSessionManager(DataFlow.Render);
-            _sessionManager.SessionCreated += OnSessionCreated;
+            AudioEndpointVolume endpointVolume;
+            GetDefaultEndpointObjects(DataFlow.Render, out _sessionManager, out endpointVolume);
 
-            using (var sessionEnumerator = _sessionManager.GetSessionEnumerator())
+            InitializeEndpointWrapper(endpointVolume);
+            InitializeSessionWrappers(_sessionManager);            
+        }
+
+        private void InitializeEndpointWrapper(AudioEndpointVolume endpointVolume)
+        {
+            _endpointVolumeWrapper = new AudioEndpointVolumeWrapper(endpointVolume);
+            _endpointVolumeWrapper.VolumeChanged += OnEndpointVolumeChanged;
+            RaiseEndpointCreated(_endpointVolumeWrapper.DisplayName, _endpointVolumeWrapper.Volume, _endpointVolumeWrapper.IsMuted);
+        }
+
+        private void InitializeSessionWrappers(AudioSessionManager2 sessionManager)
+        {
+            sessionManager.SessionCreated += OnSessionCreated;
+
+            using (var sessionEnumerator = sessionManager.GetSessionEnumerator())
                 foreach (var session in sessionEnumerator)
                 {
                     var session2 = session.QueryInterface<AudioSessionControl2>();
@@ -141,18 +171,26 @@ namespace MaxMix.Services.Audio
             wrapper.Dispose();
         }
 
-        private AudioSessionManager2 GetDefaultAudioSessionManager(DataFlow dataFlow)
+        private void GetDefaultEndpointObjects(DataFlow dataFlow, out AudioSessionManager2 sessionManager, out AudioEndpointVolume endpointVolume)
         {
-            AudioSessionManager2 sessionManager;
             using (var enumerator = new MMDeviceEnumerator())
+            {
                 using (var device = enumerator.GetDefaultAudioEndpoint(dataFlow, Role.Multimedia))
+                {
                     sessionManager = AudioSessionManager2.FromMMDevice(device);
-
-            return sessionManager;
+                    endpointVolume = AudioEndpointVolume.FromDevice(device);
+                }
+            }
         }
         #endregion
 
         #region Event Handlers
+        private void OnEndpointVolumeChanged(object sender, AudioEndpointVolumeCallbackEventArgs e)
+        {
+            var wrapper = (AudioEndpointVolumeWrapper)sender;
+            RaiseEndpointVolumeChanged(wrapper.Volume, wrapper.IsMuted);
+        }
+
         private void OnSessionCreated(object sender, SessionCreatedEventArgs e)
         {
             var session = e.NewSession;
@@ -175,6 +213,22 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Event Dispatchers
+        private void RaiseEndpointCreated(string displayName, int volume, bool isMuted)
+        {
+            if (SynchronizationContext.Current != _synchronizationContext)
+                _synchronizationContext.Post(o => EndpointCreated?.Invoke(this, displayName, volume, isMuted), null);
+            else
+                EndpointCreated.Invoke(this, displayName, volume, isMuted);
+        }
+
+        private void RaiseEndpointVolumeChanged(int volume, bool isMuted)
+        {
+            if (SynchronizationContext.Current != _synchronizationContext)
+                _synchronizationContext.Post(o => EndpointVolumeChanged?.Invoke(this, volume, isMuted), null);
+            else
+                EndpointVolumeChanged?.Invoke(this, volume, isMuted);
+        }
+
         private void RaiseSessionCreated(int pid, string displayName, int volume, bool isMuted)
         {
             if (SynchronizationContext.Current != _synchronizationContext)

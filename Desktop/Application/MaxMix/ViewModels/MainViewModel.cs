@@ -36,6 +36,8 @@ namespace MaxMix.ViewModels
             _serializationService.RegisterType<MessageSettings>(5);
 
             _audioSessionService = new AudioSessionService();
+            _audioSessionService.EndpointCreated += OnAudioEndpointCreated;
+            _audioSessionService.EndpointVolumeChanged += OnAudioEndpointVolumeChanged;
             _audioSessionService.SessionCreated += OnAudioSessionCreated;
             _audioSessionService.SessionRemoved += OnAudioSessionRemoved;
             _audioSessionService.SessionVolumeChanged += OnAudioSessionVolumeChanged;
@@ -180,6 +182,18 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region EventHandlers
+        private void OnAudioEndpointCreated(object sender, string displayName, int volume, bool isMuted)
+        {
+            var message = new MessageAddSession(int.MinValue, displayName, volume, isMuted);
+            _communicationService.Send(message);
+        }
+
+        private void OnAudioEndpointVolumeChanged(object sender, int volume, bool isMuted)
+        {
+            var message = new MessageUpdateVolumeSession(int.MinValue, volume, isMuted);
+            _communicationService.Send(message);
+        }
+
         private void OnAudioSessionCreated(object sender, int pid, string displayName, int volume, bool isMuted)
         {
             var message = new MessageAddSession(pid, displayName, volume, isMuted);
@@ -217,8 +231,11 @@ namespace MaxMix.ViewModels
             if (message.GetType() == typeof(MessageUpdateVolumeSession))
             {
                 var message_ = message as MessageUpdateVolumeSession;
-                _audioSessionService.SetVolume(message_.Id, message_.Volume);
-                _audioSessionService.SetMute(message_.Id, message_.IsMuted);
+
+                if(message_.Id == int.MinValue)
+                    _audioSessionService.SetEndpointVolume(message_.Volume, message_.IsMuted);
+                else
+                    _audioSessionService.SetSessionVolume(message_.Id, message_.Volume, message_.IsMuted);
             }
         }
 
