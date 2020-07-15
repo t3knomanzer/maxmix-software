@@ -25,6 +25,9 @@
 #include <Adafruit_NeoPixel.h>
 #include <ButtonEvents.h>
 
+#define HALF_STEP
+#include <Rotary.h>
+
 // Custom
 #include "Config.h"
 
@@ -60,6 +63,7 @@ uint8_t encodeBuffer[SEND_BUFFER_SIZE];
 
 // State
 uint8_t state = STATE_APPLICATION_NAVIGATE;
+uint8_t isDirty = true;
 
 struct Item items[ITEM_BUFFER_SIZE];
 int8_t itemIndex = -1;
@@ -70,8 +74,7 @@ struct Settings settings;
 
 // Rotary Encoder
 ButtonEvents encoderButton;
-int16_t encoderLast = -1;
-int16_t encoderCurrent = -1;
+Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
 int8_t encoderVolumeStep = 5;
 
 
@@ -109,6 +112,7 @@ void setup()
 
   // --- Encoder
   encoderButton.attach(PIN_ENCODER_SWITCH);
+  encoderRotary.begin(true);
 }
 
 //---------------------------------------------------------
@@ -118,16 +122,18 @@ void loop()
   if(ReceivePackage(receiveBuffer, &receiveIndex, MSG_PACKET_DELIMITER, RECEIVE_BUFFER_SIZE))
   {
     if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
-    {
       ProcessPackage();
-      UpdateActivityTime();
-    }
 
     ClearReceive();
+    UpdateActivityTime();
+    isDirty = true;
   }
 
   if(ProcessEncoderRotation() || ProcessEncoderButton())
+  {
     UpdateActivityTime();
+    isDirty = true;
+  }
 
   // Check for buffer overflow
   if(receiveIndex == RECEIVE_BUFFER_SIZE)
@@ -135,9 +141,14 @@ void loop()
 
   ClearSend();
   ProcessSleep();
-  UpdateDisplay();
-  UpdateLighting();
   encoderButton.update();
+
+  if(isDirty)
+  {
+    UpdateDisplay();
+    UpdateLighting();  
+    isDirty = false;
+  }  
 }
 
 //********************************************************
@@ -231,7 +242,34 @@ void ProcessPackage()
 //---------------------------------------------------------
 bool ProcessEncoderRotation()
 {
-  return false;
+  uint8_t encoderDir = encoderRotary.process();  
+  int8_t encoderDelta = 0;
+
+  if(encoderDir == DIR_NONE)
+    return false;
+  else if(encoderDir == DIR_CW)
+    encoderDelta = 1;
+  else if(encoderDir == DIR_CCW)
+    encoderDelta = -1;
+
+  if(itemCount == 0)
+    return true;
+
+  if(state == STATE_APPLICATION_NAVIGATE)
+  {
+    itemIndex += encoderDelta;
+    itemIndex = constrain(itemIndex, 0, itemCount - 1);
+  }
+
+  else if(state == STATE_APPLICATION_EDIT)
+  {
+    items[itemIndex].volume += encoderDelta * encoderVolumeStep;
+    items[itemIndex].volume = constrain(items[itemIndex].volume, 0, 100);
+
+    SendItemVolumeCommand(&items[itemIndex], sendBuffer, encodeBuffer);
+  }
+  
+  return true;
 }
 
 //---------------------------------------------------------
