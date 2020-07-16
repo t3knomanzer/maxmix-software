@@ -48,10 +48,6 @@ struct Settings
   uint8_t displayNewSession = 1;
   uint8_t sleepWhenInactive = 1;
   uint8_t sleepAfterSeconds = 30;
-<<<<<<< HEAD
-=======
-  bool continuousScroll = 1;
->>>>>>> parent of 7ce8b14... Change continuous scroll type
 };
 
 //********************************************************
