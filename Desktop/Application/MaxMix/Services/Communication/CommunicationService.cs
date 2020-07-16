@@ -96,7 +96,10 @@ namespace MaxMix.Services.Communication
                 var message_ = _serializationService.Serialize(message);
                 _serialPort.Write(message_, 0, message_.Length);
 
-                // TODO: Temporary hack to prevent messages being sent too quickly
+                // TODO: Temporary hack to prevent messages being sent too quickly.
+                // When the application is first run or the device is first connected, if there are
+                // multiple audio sessions active, the device does only receive the first message.
+                // Serial communication on the device side needs to be made more robust.
                 Thread.Sleep(50);
             }
             catch(Exception e)
