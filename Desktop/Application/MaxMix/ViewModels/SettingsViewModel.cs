@@ -82,12 +82,12 @@ namespace MaxMix.ViewModels
         }
 
         // TODO: Delete, updates are checked automatically at application launch.
-        public bool CheckForUpdates
+        public bool ContinuousScroll
         {
-            get => _settings.CheckForUpdates;
+            get => _settings.ContinuousScroll;
             set
             {
-                _settings.CheckForUpdates = value;
+                _settings.ContinuousScroll = value;
                 RaisePropertyChanged();
             }
         }

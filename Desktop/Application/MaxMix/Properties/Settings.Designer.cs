@@ -61,13 +61,13 @@ namespace MaxMix.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool CheckForUpdates {
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ContinuousScroll {
             get {
-                return ((bool)(this["CheckForUpdates"]));
+                return ((bool)(this["ContinuousScroll"]));
             }
             set {
-                this["CheckForUpdates"] = value;
+                this["ContinuousScroll"] = value;
             }
         }
     }

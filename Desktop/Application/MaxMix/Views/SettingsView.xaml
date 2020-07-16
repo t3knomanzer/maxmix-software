@@ -38,5 +38,10 @@
                             Foreground="{StaticResource Brush_White}"
                             Minimum="0" Maximum="60"
                             Value="{Binding SleepAfterSeconds}" />
+
+        <Label Grid.Column="0" Grid.Row="3"
+               Content="Loop around applications" />
+        <CheckBox Grid.Column="1" Grid.Row="3"
+                  IsChecked="{Binding ContinuousScroll}" />
     </Grid>
 </UserControl>
