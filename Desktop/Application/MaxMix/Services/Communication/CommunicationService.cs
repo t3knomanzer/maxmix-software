@@ -130,7 +130,8 @@ namespace MaxMix.Services.Communication
                 _serialPort = new SerialPort(portName, baudRate);
                 _serialPort.ReadTimeout = _timeout;
                 _serialPort.WriteTimeout = _timeout;
-
+                _serialPort.DtrEnable = true;
+                _serialPort.RtsEnable = true;
                 _serialPort.Open();
                 _serialPort.DataReceived += OnDataReceived;
             }
