@@ -48,6 +48,7 @@ struct Settings
   uint8_t displayNewSession = 1;
   uint8_t sleepWhenInactive = 1;
   uint8_t sleepAfterSeconds = 30;
+  uint8_t continuousScroll = 1;
 };
 
 //********************************************************
@@ -259,9 +260,23 @@ bool ProcessEncoderRotation()
   if(state == STATE_APPLICATION_NAVIGATE)
   {
     itemIndex += encoderDelta;
-    itemIndex = constrain(itemIndex, 0, itemCount - 1);
+    if(settings.continuousScroll)
+    {
+      if(itemIndex >= itemCount)
+      {
+        itemIndex = 0;
+      }
+      else if(itemIndex < 0)
+      {
+        itemIndex = itemCount - 1;
+      }
+    }
+    else
+    {
+      itemIndex = constrain(itemIndex, 0, itemCount - 1);
+    }
   }
-
+  
   else if(state == STATE_APPLICATION_EDIT)
   {
     items[itemIndex].volume += encoderDelta * encoderVolumeStep;
