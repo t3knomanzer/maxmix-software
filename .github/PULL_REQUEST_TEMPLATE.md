@@ -19,6 +19,7 @@ _Put an `x` in the boxes that apply_
 
 _Put an `x` in the boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This is simply a reminder of what we are going to look for before merging your code._
 
+- [ ] Requested changes are in a branch
 - [ ] Compiled and tested requested changes on target hardware (PC, device)
 - [ ] Updated the documentation, if necessary
 - [ ] Updated the LICENSES file, if necessary
