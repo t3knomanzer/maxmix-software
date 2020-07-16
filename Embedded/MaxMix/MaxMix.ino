@@ -111,6 +111,7 @@ void setup()
   DisplaySplash(display);
 
   // --- Encoder
+  pinMode(PIN_ENCODER_SWITCH, INPUT_PULLUP);
   encoderButton.attach(PIN_ENCODER_SWITCH);
   encoderRotary.begin(true);
 }
