@@ -48,7 +48,7 @@ struct Settings
   uint8_t displayNewSession = 1;
   uint8_t sleepWhenInactive = 1;
   uint8_t sleepAfterSeconds = 30;
-  bool continuousScroll = 1;
+  uint8_t continuousScroll = 1;
 };
 
 //********************************************************
