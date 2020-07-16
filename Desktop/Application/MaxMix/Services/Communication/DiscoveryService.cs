@@ -91,6 +91,8 @@ namespace MaxMix.Services.Communication
                     serialPort = new SerialPort(portName, _baudRate);
                     serialPort.ReadTimeout = _timeout;
                     serialPort.WriteTimeout = _timeout;
+                    serialPort.DtrEnable = true;
+                    serialPort.RtsEnable = true;
                     serialPort.Open();
 
                     Send(serialPort);
