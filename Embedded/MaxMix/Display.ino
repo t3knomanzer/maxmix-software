@@ -35,41 +35,23 @@ void DisplayAppNavigateScreen(Adafruit_SSD1306* display, Item* item, int8_t item
 {
   display->clearDisplay();
 
-
-  if(settings.continuousScroll && itemCount > 0)
-  { 
-    // Left Arrow
+  // Left Arrow
+  if(itemIndex > 0)
+  {
     // X0, Y0, X1, Y1, X2, Y2
     // Height of text is 6.
     display->fillTriangle(0, 10, 3, 7, 3, 13, WHITE);
+  }
 
-    // Right Arrow
+  // Right Arrow
+  if(itemIndex < itemCount - 1)
+  {
     // X0, Y0, X1, Y1, X2, Y2
     // We start at the right of the screen and draw the triangle backwards.
     // We leave 1 pixel of margin on the right, otherwise looks fuzzy.
     display->fillTriangle(127, 10, 124, 7, 124, 13, WHITE);
+  }
 
-  }
-  else
-  {
-    if(itemIndex > 0)
-    {
-      // Left Arrow
-      // X0, Y0, X1, Y1, X2, Y2
-      // Height of text is 6.
-      display->fillTriangle(0, 10, 3, 7, 3, 13, WHITE);
-    }
-  
-    if(itemIndex < itemCount - 1)
-    { 
-      // Right Arrow
-      // X0, Y0, X1, Y1, X2, Y2
-      // We start at the right of the screen and draw the triangle backwards.
-      // We leave 1 pixel of margin on the right, otherwise looks fuzzy.
-      display->fillTriangle(127, 10, 124, 7, 124, 13, WHITE);
-    }
-  }
-  
   // Item Name
   // Width of the left triangle is 3, we leave 4 pixels of margin.
   display->setTextSize(2);             
