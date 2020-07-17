@@ -366,7 +366,7 @@ void UpdateDisplay()
   }
   else if(state == STATE_APPLICATION_NAVIGATE)
   {
-    DisplayAppNavigateScreen(display, &items[itemIndex], itemIndex, itemCount);
+    DisplayAppNavigateScreen(display, &items[itemIndex], itemIndex, itemCount, settings.continuousScroll);
   }
   else if(state == STATE_APPLICATION_EDIT)
   {
