@@ -4,9 +4,9 @@
 // EMAIL: rhenares0@gmail.com
 //
 // DECRIPTION:
-// 
-//
-//
+// Resolution: 128x32
+// Characters @size 1: 21x4
+// Character size in pixels: 6.095x8
 //********************************************************
 
 //********************************************************
@@ -137,3 +137,68 @@ void DisplayAppEditScreen(Adafruit_SSD1306* display, Item* item)
 
   display->display();
 }
+<<<<<<< HEAD
+=======
+
+void DisplayGameScreen(Adafruit_SSD1306* display, Item* items, uint8_t itemIndexA, uint8_t itemIndexB, uint8_t itemCount)
+{
+  display->clearDisplay();
+
+  // Channel A Left arrow
+  display->setCursor(4, 4);
+
+  // Channel A Right arrow
+  // Aligned to the right, withing the left half of the screen.
+  display->setCursor(128/2 - 4 - 3, 4);
+
+  // Item names
+  // The width of half the screen is halfScreen = 128/2 - 4*2(border on both sides).
+  // The area available for the text is textArea = halfScreen - 3*2(size of arrows on both sides) - 2*2(margin text and between arrows)
+  // That allows gives us a practical size in pixels of 128/2 - 4*2 - 3*2 - 2*2 = 46px
+  // 46px / 6.095(characted width) = 7.54 characters
+
+  // Item A
+  display->setTextSize(1);             
+  display->setTextColor(WHITE);
+  
+  uint8_t nameLength = min(7, strlen(items[itemIndexA].name));
+  uint8_t nameX = round((46 - nameLength * 6) / 2.0f);
+  display->setCursor(4 + 3 + 2 + nameX, 4);
+
+  for(size_t i = 0; i < nameLength; i++)
+    display->print(items[itemIndexA].name[i]);
+
+  // Center line, height of a character
+  display->drawLine(64, 4, 64, 4 + 8, WHITE);
+  
+  // Item B
+  nameLength = min(7, strlen(items[itemIndexB].name));
+  nameX = round((46 - nameLength * 6) / 2.0f);
+  display->setCursor(128/2 + 3 + 2 + nameX, 4);
+
+  for(size_t i = 0; i < nameLength; i++)
+    display->print(items[itemIndexB].name[i]);
+
+  // Volume bars
+  // Item A
+  uint8_t barY = map(items[itemIndexA].volume, 0, 100, 32 - 4, 4 + 8 + 4);
+  display->fillRect(128/2 - 4 - 8,  barY, 8, 32 - 4 - barY , WHITE);
+
+  // Item B
+  barY = map(items[itemIndexB].volume, 0, 100, 32 - 4, 4 + 8 + 4);
+  display->fillRect(128/2 + 4,  barY, 8, 32 - 4 - barY , WHITE);
+
+  // Volume text
+  display->setTextSize(2);          
+
+  // Item A
+  display->setCursor(4 + 3 + 2, 4 + 8 + 4);
+  display->print(items[itemIndexA].volume);
+
+  // Item B
+  display->setCursor(128/2 + 4 + 8 + 4, 4 + 8 + 4);
+  display->print(items[itemIndexB].volume);
+
+  display->display();
+}
+>>>>>>> fccc787... Adding game mode screen
