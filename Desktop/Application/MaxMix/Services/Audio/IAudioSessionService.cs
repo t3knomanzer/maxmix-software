@@ -12,7 +12,7 @@ namespace MaxMix.Services.Audio
         void Start();
         void Stop();
         void SetEndpointVolume(int volume, bool isMuted);
-        void SetSessionVolume(int pid, int volume, bool isMuted);
+        void SetSessionVolume(int appID, int volume, bool isMuted);
 
         event AudioEndpointDelegate EndpointCreated;
         event AudioEndpointVolumeDelegate EndpointVolumeChanged;

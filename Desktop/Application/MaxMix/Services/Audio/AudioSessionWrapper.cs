@@ -28,6 +28,14 @@ namespace MaxMix.Services.Audio
             _simpleAudio = _session.QueryInterface<SimpleAudioVolume>();
 
             _isNotifyEnabled = true;
+
+            if (_session2.IsSystemSoundSession || ProcessID == 0)
+                AppID = "System Sounds".GetHashCode();
+            else
+            {
+                var fileName = Process.GetMainModuleFileName();
+                AppID = string.IsNullOrEmpty(fileName) ? ProcessID : fileName.GetHashCode();
+            }
         }
         #endregion
 
@@ -65,7 +73,7 @@ namespace MaxMix.Services.Audio
         /// <summary>
         /// ???
         /// </summary>
-        public bool IsSingleProcessSessionession => _session2.IsSingleProcessSession;
+        public bool IsSingleProcessSession => _session2.IsSingleProcessSession;
 
         /// <summary>
         /// Indicates if this is the session responsible for windows system sounds.
@@ -77,6 +85,8 @@ namespace MaxMix.Services.Audio
         /// </summary>
         public Process Process => _session2.Process;
 
+        public int AppID { get; protected set; }
+
         /// <summary>
         /// The display name of the process that created this session.
         /// </summary>
@@ -85,6 +95,7 @@ namespace MaxMix.Services.Audio
             get
             {
                 var displayName = _session2.DisplayName;
+                if (_session2.IsSystemSoundSession || _session2.ProcessID == 0) { displayName = "System Sounds"; }
                 if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
                 if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.MainWindowTitle; }
                 if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }

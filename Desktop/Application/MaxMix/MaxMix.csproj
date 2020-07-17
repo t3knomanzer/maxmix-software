@@ -110,6 +110,8 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Services\Audio\AudioCommon.cs" />
+    <Compile Include="Services\Audio\AudioExtensions.cs" />
+    <Compile Include="Services\Audio\AudioSessionGroup.cs" />
     <Compile Include="Services\Audio\AudioSessionService.cs" />
     <Compile Include="Services\Audio\AudioEndpointVolumeWrapper.cs" />
     <Compile Include="Services\Audio\AudioSessionWrapper.cs" />

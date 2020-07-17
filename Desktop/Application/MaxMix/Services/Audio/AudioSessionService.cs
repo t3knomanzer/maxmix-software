@@ -1,6 +1,7 @@
 ﻿using CSCore.CoreAudioAPI;
 using MaxMix.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace MaxMix.Services.Audio
         private readonly SynchronizationContext _synchronizationContext;
         private AudioSessionManager2 _sessionManager;
         private AudioEndpointVolumeWrapper _endpointVolumeWrapper;
-        private IDictionary<int, AudioSessionWrapper> _wrappers;
+        private IDictionary<int, AudioSessionGroup> _groups;
         #endregion
 
         #region Events
@@ -63,7 +64,7 @@ namespace MaxMix.Services.Audio
         /// </summary>
         public void Start()
         {
-            _wrappers = new Dictionary<int, AudioSessionWrapper>();
+            _groups = new ConcurrentDictionary<int, AudioSessionGroup>();
             new Thread(() => InitializeWrappers()).Start();
         }
 
@@ -78,17 +79,17 @@ namespace MaxMix.Services.Audio
                 _sessionManager.Dispose();
             }
 
-            if(_endpointVolumeWrapper != null)
+            if (_endpointVolumeWrapper != null)
             {
                 _endpointVolumeWrapper.Dispose();
             }
 
-            if (_wrappers != null)
+            if (_groups != null)
             {
-                foreach (var wrapper in _wrappers.Values)
-                    wrapper.Dispose();
+                foreach (var group in _groups.Values)
+                    group.Dispose();
 
-                _wrappers.Clear();
+                _groups.Clear();
             }
         }
 
@@ -106,15 +107,15 @@ namespace MaxMix.Services.Audio
         /// <summary>
         /// Sets the volume of an audio session.
         /// </summary>
-        /// <param name="pid">The process Id of the target session.</param>
+        /// <param name="appID">The App Id of the target session.</param>
         /// <param name="volume">The desired volume.</param>
-        public void SetSessionVolume(int pid, int volume, bool isMuted)
+        public void SetSessionVolume(int appID, int volume, bool isMuted)
         {
-            if (!_wrappers.ContainsKey(pid))
+            if (!_groups.TryGetValue(appID, out var group))
                 return;
 
-            _wrappers[pid].Volume = volume;
-            _wrappers[pid].IsMuted = isMuted;
+            group.Volume = volume;
+            group.IsMuted = isMuted;
         }
         #endregion
 
@@ -125,7 +126,7 @@ namespace MaxMix.Services.Audio
             GetDefaultEndpointObjects(DataFlow.Render, out _sessionManager, out endpointVolume);
 
             InitializeEndpointWrapper(endpointVolume);
-            InitializeSessionWrappers(_sessionManager);            
+            InitializeSessionWrappers(_sessionManager);
         }
 
         private void InitializeEndpointWrapper(AudioEndpointVolume endpointVolume)
@@ -140,31 +141,43 @@ namespace MaxMix.Services.Audio
             sessionManager.SessionCreated += OnSessionCreated;
 
             using (var sessionEnumerator = sessionManager.GetSessionEnumerator())
+            {
                 foreach (var session in sessionEnumerator)
-                {
-                    var session2 = session.QueryInterface<AudioSessionControl2>();
-                    if (session2.IsSystemSoundSession)
-                        continue;
-
-                    var wrapper = RegisterSession(session);
-                    RaiseSessionCreated(wrapper.ProcessID, wrapper.DisplayName, wrapper.Volume, wrapper.IsMuted);
-                }
+                    RegisterSession(session);
+            }
         }
 
-        private AudioSessionWrapper RegisterSession(AudioSessionControl session)
+        private void RegisterSession(AudioSessionControl session)
         {
             var wrapper = new AudioSessionWrapper(session);
-            _wrappers[wrapper.ProcessID] = wrapper;
-
             wrapper.SimpleVolumeChanged += OnSimpleVolumeChanged;
             wrapper.SessionDisconnected += OnSessionRemoved;
 
-            return wrapper;
+            if (!_groups.TryGetValue(wrapper.AppID, out var group))
+            {
+                group = new AudioSessionGroup();
+                group.AddWrapper(wrapper);
+
+                _groups.Add(wrapper.AppID, group);
+                RaiseSessionCreated(wrapper.AppID, wrapper.DisplayName, wrapper.Volume, wrapper.IsMuted);
+            }
+            else
+            {
+                group.AddWrapper(wrapper);
+            }
         }
 
         private void UnregisterSession(AudioSessionWrapper wrapper)
         {
-            _wrappers.Remove(wrapper.ProcessID);
+            if (!_groups.TryGetValue(wrapper.AppID, out var group))
+                return;
+
+            if (!group.RemoveWrapper(wrapper))
+            {
+                _groups.Remove(group.AppID);
+                group.Dispose();
+                RaiseSessionRemoved(wrapper.AppID);
+            }
 
             wrapper.SimpleVolumeChanged -= OnSimpleVolumeChanged;
             wrapper.SessionDisconnected -= OnSessionRemoved;
@@ -194,21 +207,19 @@ namespace MaxMix.Services.Audio
         private void OnSessionCreated(object sender, SessionCreatedEventArgs e)
         {
             var session = e.NewSession;
-            var wrapper = RegisterSession(session);
-            RaiseSessionCreated(wrapper.ProcessID, wrapper.DisplayName, wrapper.Volume, wrapper.IsMuted);
+            RegisterSession(session);
         }
 
         private void OnSessionRemoved(object sender, AudioSessionDisconnectedEventArgs e)
         {
             var wrapper = (AudioSessionWrapper)sender;
-            RaiseSessionRemoved(wrapper.ProcessID);
             UnregisterSession(wrapper);
         }
 
         private void OnSimpleVolumeChanged(object sender, AudioSessionSimpleVolumeChangedEventArgs e)
         {
             var wrapper = (AudioSessionWrapper)sender;
-            RaiseSessionVolumeChanged(wrapper.ProcessID, wrapper.Volume, wrapper.IsMuted);
+            RaiseSessionVolumeChanged(wrapper.AppID, wrapper.Volume, wrapper.IsMuted);
         }
         #endregion
 
@@ -229,28 +240,28 @@ namespace MaxMix.Services.Audio
                 EndpointVolumeChanged?.Invoke(this, volume, isMuted);
         }
 
-        private void RaiseSessionCreated(int pid, string displayName, int volume, bool isMuted)
+        private void RaiseSessionCreated(int appID, string displayName, int volume, bool isMuted)
         {
             if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => SessionCreated?.Invoke(this, pid, displayName, volume, isMuted), null);
+                _synchronizationContext.Post(o => SessionCreated?.Invoke(this, appID, displayName, volume, isMuted), null);
             else
-                SessionCreated.Invoke(this, pid, displayName, volume, isMuted);
+                SessionCreated.Invoke(this, appID, displayName, volume, isMuted);
         }
 
-        private void RaiseSessionRemoved(int pid)
+        private void RaiseSessionRemoved(int appID)
         {
             if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => SessionRemoved?.Invoke(this, pid), null);
+                _synchronizationContext.Post(o => SessionRemoved?.Invoke(this, appID), null);
             else
-                SessionRemoved?.Invoke(this, pid);
+                SessionRemoved?.Invoke(this, appID);
         }
 
-        private void RaiseSessionVolumeChanged(int pid, int volume, bool isMuted)
+        private void RaiseSessionVolumeChanged(int appID, int volume, bool isMuted)
         {
             if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => SessionVolumeChanged?.Invoke(this, pid, volume, isMuted), null);
+                _synchronizationContext.Post(o => SessionVolumeChanged?.Invoke(this, appID, volume, isMuted), null);
             else
-                SessionVolumeChanged?.Invoke(this, pid, volume, isMuted);
+                SessionVolumeChanged?.Invoke(this, appID, volume, isMuted);
         }
         #endregion
     }
