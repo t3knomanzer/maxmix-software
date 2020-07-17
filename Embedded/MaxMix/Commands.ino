@@ -83,5 +83,5 @@ void UpdateSettingsCommand(uint8_t* packageBuffer, Settings* settings)
   settings->displayNewSession = packageBuffer[1];
   settings->sleepWhenInactive = packageBuffer[2];
   settings->sleepAfterSeconds = packageBuffer[3];
+  settings->continuousScroll = packageBuffer[4];
 }
-
