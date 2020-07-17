@@ -412,14 +412,10 @@ void UpdateDisplay()
   
   if(mode == MODE_APPLICATION)
   {
-<<<<<<< HEAD
-    DisplayAppNavigateScreen(display, &items[itemIndex], itemIndex, itemCount, settings.continuousScroll);
-=======
     if(state == STATE_APPLICATION_NAVIGATE)
-      DisplayAppNavigateScreen(display, &items[itemIndex], itemIndex, itemCount);
+      DisplayAppNavigateScreen(display, &items[itemIndex], itemIndex, itemCount, settings.continuousScroll);
     else if(state == STATE_APPLICATION_EDIT)
       DisplayAppEditScreen(display, &items[itemIndex]);
->>>>>>> 3b202ab... Adding game mode first pass logic
   }
   else if(mode == MODE_GAME)
   {
