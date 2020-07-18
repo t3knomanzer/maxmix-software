@@ -29,12 +29,11 @@ void DisplaySplash(Adafruit_SSD1306* display)
 }
 
 //---------------------------------------------------------
-// Draws the screen ui
+// Draws the Application mode Navigation screen
 //---------------------------------------------------------
 void DisplayAppNavigateScreen(Adafruit_SSD1306* display, Item* item, int8_t itemIndex, uint8_t itemCount, uint8_t continuousScroll)
 {
   display->clearDisplay();
-
 
   if(itemCount > 0)
   {
@@ -100,6 +99,9 @@ void DisplayAppNavigateScreen(Adafruit_SSD1306* display, Item* item, int8_t item
   display->display();
 }
 
+//---------------------------------------------------------
+// Draws the Application mode Edit screen
+//---------------------------------------------------------
 void DisplayAppEditScreen(Adafruit_SSD1306* display, Item* item)
 {
   display->clearDisplay();
@@ -138,110 +140,104 @@ void DisplayAppEditScreen(Adafruit_SSD1306* display, Item* item)
   display->display();
 }
 
-void DisplayGameScreen__(Adafruit_SSD1306* display, Item* items, uint8_t itemIndexA, uint8_t itemIndexB, uint8_t itemCount)
+//---------------------------------------------------------
+// Draws the Game mode screen
+//---------------------------------------------------------
+void DisplayGameScreen(Adafruit_SSD1306* display, Item* items, uint8_t itemIndexA, uint8_t itemIndexB,
+                       uint8_t itemCount, uint8_t state, uint8_t continuousScroll)
 {
   display->clearDisplay();
 
-  // Channel A Left arrow
-  display->setCursor(4, 4);
+  // Top Row
+  uint8_t paddingVertical = (SCREEN_HEIGHT - (SCREEN_MODE_GAME_ROW_HEIGHT * 2 + SCREEN_MARGIN_X2)) / 2.0f;
+  uint8_t py = paddingVertical + SCREEN_MODE_GAME_ROW_HEIGHT / 2; // Vertical center of top row
+  uint8_t leftArrow = CanScrollLeft(itemIndexA, itemCount, continuousScroll) && state == STATE_GAME_SELECT_A;
+  uint8_t rightArrow = CanScrollRight(itemIndexA, itemCount, continuousScroll) && state == STATE_GAME_SELECT_A;
 
-  // Channel A Right arrow
-  // Aligned to the right, withing the left half of the screen.
-  display->setCursor(128/2 - 4 - 3, 4);
+  DrawGameModeRow(display, items, itemIndexA, SCREEN_MARGIN_X1, py, leftArrow, rightArrow);
 
-  // Item names
-  // The width of half the screen is halfScreen = 128/2 - 4*2(border on both sides).
-  // The area available for the text is textArea = halfScreen - 3*2(size of arrows on both sides) - 2*2(margin text and between arrows)
-  // That allows gives us a practical size in pixels of 128/2 - 4*2 - 3*2 - 2*2 = 46px
-  // 46px / 6.095(characted width) = 7.54 characters
-
-  // Item A
-  display->setTextSize(1);             
-  display->setTextColor(WHITE);
-  
-  uint8_t nameLength = min(7, strlen(items[itemIndexA].name));
-  uint8_t nameX = round((46 - nameLength * 6) / 2.0f);
-  display->setCursor(4 + 3 + 2 + nameX, 4);
-
-  for(size_t i = 0; i < nameLength; i++)
-    display->print(items[itemIndexA].name[i]);
-
-  // Center line, height of a character
-  display->drawLine(64, 4, 64, 4 + 8, WHITE);
-  
-  // Item B
-  nameLength = min(7, strlen(items[itemIndexB].name));
-  nameX = round((46 - nameLength * 6) / 2.0f);
-  display->setCursor(128/2 + 3 + 2 + nameX, 4);
-
-  for(size_t i = 0; i < nameLength; i++)
-    display->print(items[itemIndexB].name[i]);
-
-  // Volume bars
-  // Item A
-  uint8_t barY = map(items[itemIndexA].volume, 0, 100, 32 - 4, 4 + 8 + 4);
-  display->fillRect(128/2 - 4 - 8,  barY, 8, 32 - 4 - barY , WHITE);
-
-  // Item B
-  barY = map(items[itemIndexB].volume, 0, 100, 32 - 4, 4 + 8 + 4);
-  display->fillRect(128/2 + 4,  barY, 8, 32 - 4 - barY , WHITE);
-
-  // Volume text
-  display->setTextSize(2);          
-
-  // Item A
-  display->setCursor(4 + 3 + 2, 4 + 8 + 4);
-  display->print(items[itemIndexA].volume);
-
-  // Item B
-  display->setCursor(128/2 + 4 + 8 + 4, 4 + 8 + 4);
-  display->print(items[itemIndexB].volume);
+  // Bottom Row
+  py += SCREEN_MARGIN_X2 + SCREEN_MODE_GAME_ROW_HEIGHT; // Vertical center of bottom row
+  leftArrow = CanScrollLeft(itemIndexB, itemCount, continuousScroll) && state == STATE_GAME_SELECT_B;
+  rightArrow = CanScrollRight(itemIndexB, itemCount, continuousScroll) && state == STATE_GAME_SELECT_B;
+  DrawGameModeRow(display, items, itemIndexB, SCREEN_MARGIN_X1, py, leftArrow, rightArrow);
 
   display->display();
 }
 
-void DisplayGameScreen(Adafruit_SSD1306* display, Item* items, uint8_t itemIndexA, uint8_t itemIndexB, uint8_t itemCount)
+
+//---------------------------------------------------------
+// Draws a row of the Game mode screen
+//---------------------------------------------------------
+void DrawGameModeRow(Adafruit_SSD1306* display, Item* items, uint8_t itemIndex, uint8_t px, uint8_t py, uint8_t leftArrow, uint8_t rightArrow)
 {
-  display->clearDisplay();
+  uint8_t x0, y0, x1, y1, x2, y2;
 
-  // Channel A Left arrow
-  display->setCursor(4, 4);
+  // Left arrow
+  x0 = px;
+  y0 = py;
+  x1 = px + SCREEN_MODE_GAME_ARROW_SIZE;
+  y1 = py - SCREEN_MODE_GAME_ARROW_SIZE;
+  x2 = px + SCREEN_MODE_GAME_ARROW_SIZE;
+  y2 = py + SCREEN_MODE_GAME_ARROW_SIZE;
 
-  // Channel A Right arrow
-  // Aligned to the right, withing the left half of the screen.
-  display->setCursor(128/2 - 4 - 3, 4);
+  if(leftArrow)
+    display->fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
 
-  // Item names
-  // The width of half the screen is halfScreen = 128/2 - 4*2(border on both sides).
-  // The area available for the text is textArea = halfScreen - 3*2(size of arrows on both sides) - 2*2(margin text and between arrows)
-  // That allows gives us a practical size in pixels of 128/2 - 4*2 - 3*2 - 2*2 = 46px
-  // 46px / 6.095(characted width) = 7.54 characters
+  // Name 
+  px += SCREEN_MODE_GAME_ARROW_SIZE + SCREEN_MARGIN_X2;
+  x0 = px;
+  y0 = py - SCREEN_CHAR_HEIGHT_X1 / 2;
 
-  // Item A
+  uint8_t nameLength = min(SCREEN_MODE_GAME_MAX_NAME_CHARS, strlen(items[itemIndex].name));
+
   display->setTextSize(1);             
   display->setTextColor(WHITE);
+  display->setCursor(x0, y0);
+
+  for(size_t i = 0; i < nameLength; i++)
+    display->print(items[itemIndex].name[i]);
+
+  // Right arrow
+  px += SCREEN_MODE_GAME_MAX_NAME_WIDTH + SCREEN_MARGIN_X2;
   
-  uint8_t nameLength = min(7, strlen(items[itemIndexA].name));
-  display->setCursor(4 + 3 + 2 + nameX, 4);
+  x0 = px;
+  y0 = py;
+  x1 = px - SCREEN_MODE_GAME_ARROW_SIZE;
+  y1 = py - SCREEN_MODE_GAME_ARROW_SIZE;
+  x2 = px - SCREEN_MODE_GAME_ARROW_SIZE;
+  y2 = py + SCREEN_MODE_GAME_ARROW_SIZE;
 
-  for(size_t i = 0; i < nameLength; i++)
-    display->print(items[itemIndexA].name[i]);
+  if(rightArrow)
+    display->fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
 
-  // Item B
-  nameLength = min(7, strlen(items[itemIndexB].name));
-  display->setCursor(128/2 + 3 + 2 + nameX, 4);
+  // Min indicator
+  px += SCREEN_MODE_GAME_ARROW_SIZE + SCREEN_MARGIN_X2;
+  x0 = px;
+  y0 = py - SCREEN_MODE_GAME_ROW_HEIGHT / 2;
+  x1 = px;
+  y1 = py + SCREEN_MODE_GAME_ROW_HEIGHT / 2;
 
-  for(size_t i = 0; i < nameLength; i++)
-    display->print(items[itemIndexB].name[i]);
+  display->drawLine(x0, y0, x1, y1, WHITE);
 
-  // Volume bars
-  // Item A
-  uint8_t barY = map(items[itemIndexA].volume, 0, 100, 32 - 4, 4 + 8 + 4);
-  display->fillRect(128/2 - 4 - 8,  barY, 8, 32 - 4 - barY , WHITE);
+  // Volume bar
+  px += SCREEN_MARGIN_X1 + 1;
+  x0 = px;
+  y0 = py - SCREEN_MODE_GAME_ROW_HEIGHT / 2;
+  x1 = SCREEN_WIDTH - px - SCREEN_MARGIN_X1 * 2 - 1; // max width
+  y2 = SCREEN_MODE_GAME_ROW_HEIGHT; // height
+  x2 = map(items[itemIndex].volume, 0, 100, 0, x1); // current width
+  
+  if(x2 > 0)
+    display->fillRect(x0, y0, x2, y2, WHITE);
 
-  // Item B
-  barY = map(items[itemIndexB].volume, 0, 100, 32 - 4, 4 + 8 + 4);
-  display->fillRect(128/2 + 4,  barY, 8, 32 - 4 - barY , WHITE);
+  // Max indicator
+  px += x1 + SCREEN_MARGIN_X1; // Add max volume bar width and margin
+  x0 = px;
+  y0 = py - SCREEN_MODE_GAME_ROW_HEIGHT / 2;
+  x1 = px;
+  y1 = py + SCREEN_MODE_GAME_ROW_HEIGHT / 2;
 
-  display->display();
+  display->drawLine(x0, y0, x1, y1, WHITE);
+
 }

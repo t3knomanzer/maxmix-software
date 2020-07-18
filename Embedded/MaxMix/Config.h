@@ -58,3 +58,14 @@ static const uint8_t MSG_COMMAND_UPDATE_VOLUME =  4;
 static const uint8_t MSG_COMMAND_SETTINGS =  5;
 
 static const uint8_t MSG_PACKET_DELIMITER = 0;
+
+// --- Screen Drawing
+static const uint8_t SCREEN_CHAR_WIDTH_X1 = 6;
+static const uint8_t SCREEN_CHAR_HEIGHT_X1 = 8;
+static const uint8_t SCREEN_MARGIN = 4;
+
+// - Balance Mode
+static const uint8_t SCREEN_MODE_GAME_MAX_NAME_CHARS = 8;
+static const uint8_t SCREEN_MODE_GAME_MAX_NAME_WIDTH = SCREEN_MODE_GAME_MAX_NAME_CHARS * SCREEN_CHAR_WIDTH_X1;
+static const uint8_t SCREEN_MODE_GAME_ROW_HEIGHT = 10;
+static const uint8_t SCREEN_MODE_GAME_ARROW_SIZE = 3;

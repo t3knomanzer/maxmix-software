@@ -299,15 +299,10 @@ bool ProcessEncoderRotation()
   else if(mode == MODE_GAME)
   {
     if(state == STATE_GAME_SELECT_A)
-    {
-      itemIndexA += encoderDelta;
-      itemIndexA = constrain(itemIndexA, 0, itemCount - 1);
-    }
+      itemIndexA = GetNextIndex(itemIndexA, itemCount, encoderDelta, settings.continuousScroll);
     else if(state == STATE_GAME_SELECT_B)
-    {
-      itemIndexB += encoderDelta;
-      itemIndexB = constrain(itemIndexB, 0, itemCount - 1);
-    }
+      itemIndexB = GetNextIndex(itemIndexB, itemCount, encoderDelta, settings.continuousScroll);
+
     else if(state == STATE_GAME_EDIT)
     {
       items[itemIndexA].volume += encoderDelta * encoderVolumeStep;
@@ -419,7 +414,7 @@ void UpdateDisplay()
   }
   else if(mode == MODE_GAME)
   {
-    DisplayGameScreen(display, items, itemIndexA, itemIndexB, itemCount);
+    DisplayGameScreen(display, items, itemIndexA, itemIndexB, itemCount, state, settings.continuousScroll);
   }
 }
 
