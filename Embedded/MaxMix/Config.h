@@ -36,8 +36,6 @@ static const uint8_t  STATE_SCREEN_AWAKE = 0;
 static const uint8_t  STATE_SCREEN_SLEEP = 1;
 
 // --- Display
-static const uint8_t  SCREEN_WIDTH = 128; // Width in pixels
-static const uint8_t  SCREEN_HEIGHT = 32; // Height in pixels
 static const uint8_t  SCREEN_RESET =   4; // Reset pin # (or -1 if sharing Arduino reset pin)
 
 // --- Lighting
@@ -60,9 +58,12 @@ static const uint8_t MSG_COMMAND_SETTINGS =  5;
 static const uint8_t MSG_PACKET_DELIMITER = 0;
 
 // --- Screen Drawing
+static const uint8_t SCREEN_WIDTH = 128;
+static const uint8_t SCREEN_HEIGHT = 32;
 static const uint8_t SCREEN_CHAR_WIDTH_X1 = 6;
 static const uint8_t SCREEN_CHAR_HEIGHT_X1 = 8;
-static const uint8_t SCREEN_MARGIN = 4;
+static const uint8_t SCREEN_MARGIN_X1 = 2;
+static const uint8_t SCREEN_MARGIN_X2 = 4;
 
 // - Balance Mode
 static const uint8_t SCREEN_MODE_GAME_MAX_NAME_CHARS = 8;
