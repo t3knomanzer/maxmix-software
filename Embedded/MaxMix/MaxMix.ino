@@ -225,7 +225,9 @@ void ProcessPackage()
     RemoveItemCommand(decodeBuffer, items, &itemCount, index);
 
     // Make sure current menu index is not out of bounds after removing item.
-    itemIndex = constrain(itemIndex, 0, itemCount - 1);
+    itemIndex = GetNextIndex(itemIndex, itemCount, 0, settings.continuousScroll);
+    itemIndexA = GetNextIndex(itemIndexA, itemCount, 0, settings.continuousScroll);
+    itemIndexB = GetNextIndex(itemIndexB, itemCount, 0, settings.continuousScroll);
 
     // TODO: Game mode
     // If the removed item was itemIndexA or itemIndexB
