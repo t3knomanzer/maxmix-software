@@ -63,11 +63,14 @@ uint8_t sendBuffer[SEND_BUFFER_SIZE];
 uint8_t encodeBuffer[SEND_BUFFER_SIZE];
 
 // State
+uint8_t mode = MODE_APPLICATION;
 uint8_t state = STATE_APPLICATION_NAVIGATE;
 uint8_t isDirty = true;
 
 struct Item items[ITEM_BUFFER_SIZE];
 int8_t itemIndex = -1;
+int8_t itemIndexA = 0;
+int8_t itemIndexB = 0;
 uint8_t itemCount = 0;
 
 // Settings
@@ -222,7 +225,16 @@ void ProcessPackage()
     RemoveItemCommand(decodeBuffer, items, &itemCount, index);
 
     // Make sure current menu index is not out of bounds after removing item.
-    itemIndex = constrain(itemIndex, 0, itemCount - 1);
+    itemIndex = GetNextIndex(itemIndex, itemCount, 0, settings.continuousScroll);
+    itemIndexA = GetNextIndex(itemIndexA, itemCount, 0, settings.continuousScroll);
+    itemIndexB = GetNextIndex(itemIndexB, itemCount, 0, settings.continuousScroll);
+
+    // TODO: Game mode
+    // If the removed item was itemIndexA or itemIndexB
+    // set those index to -1 so the user needs to select a new
+    // application for the channel.
+    // If the index of the removed item was higher, no need to do anything.
+    // If it was lower, just decrease the the index by 1.
   }
   else if(command == MSG_COMMAND_UPDATE_VOLUME)
   {
@@ -233,6 +245,11 @@ void ProcessPackage()
       return;
 
     UpdateItemVolumeCommand(decodeBuffer, items, index);
+
+    // TODO: Game mode
+    // If the updated item is in itemIndexA or itemIndexB
+    // call a method here to rebalance.
+
   }
   else if(command == MSG_COMMAND_SETTINGS)
   {
@@ -257,32 +274,37 @@ bool ProcessEncoderRotation()
   if(itemCount == 0)
     return true;
 
-  if(state == STATE_APPLICATION_NAVIGATE)
+  if(mode == MODE_APPLICATION)
   {
-    itemIndex += encoderDelta;
-    if(settings.continuousScroll)
+    if(state == STATE_APPLICATION_NAVIGATE)
+      itemIndex = GetNextIndex(itemIndex, itemCount, encoderDelta, settings.continuousScroll);
+
+    else if(state == STATE_APPLICATION_EDIT)
     {
-      if(itemIndex >= itemCount)
-      {
-        itemIndex = 0;
-      }
-      else if(itemIndex < 0)
-      {
-        itemIndex = itemCount - 1;
-      }
-    }
-    else
-    {
-      itemIndex = constrain(itemIndex, 0, itemCount - 1);
+      items[itemIndex].volume += encoderDelta * encoderVolumeStep;
+      items[itemIndex].volume = constrain(items[itemIndex].volume, 0, 100);
+
+      SendItemVolumeCommand(&items[itemIndex], sendBuffer, encodeBuffer);
     }
   }
-  
-  else if(state == STATE_APPLICATION_EDIT)
+  else if(mode == MODE_GAME)
   {
-    items[itemIndex].volume += encoderDelta * encoderVolumeStep;
-    items[itemIndex].volume = constrain(items[itemIndex].volume, 0, 100);
+    if(state == STATE_GAME_SELECT_A)
+      itemIndexA = GetNextIndex(itemIndexA, itemCount, encoderDelta, settings.continuousScroll);
+    else if(state == STATE_GAME_SELECT_B)
+      itemIndexB = GetNextIndex(itemIndexB, itemCount, encoderDelta, settings.continuousScroll);
 
-    SendItemVolumeCommand(&items[itemIndex], sendBuffer, encodeBuffer);
+    else if(state == STATE_GAME_EDIT)
+    {
+      items[itemIndexA].volume += encoderDelta * encoderVolumeStep;
+      items[itemIndexA].volume = constrain(items[itemIndexA].volume, 0, 100);
+
+      items[itemIndexB].volume -= encoderDelta * encoderVolumeStep;
+      items[itemIndexB].volume = constrain(items[itemIndexB].volume, 0, 100);
+
+      SendItemVolumeCommand(&items[itemIndexA], sendBuffer, encodeBuffer);
+      SendItemVolumeCommand(&items[itemIndexB], sendBuffer, encodeBuffer);
+    } 
   }
   
   return true;
@@ -294,20 +316,28 @@ bool ProcessEncoderButton()
 {
   if(encoderButton.tapped())
   {
-    if(itemCount > 0)
-      SwitchMode();
-      
+    if(mode == MODE_APPLICATION)
+      CycleAppModeState();
+    else if(mode == MODE_GAME)
+      CycleGameModeState();
+
     return true;
   }
   
   if(encoderButton.doubleTapped())
   {
+    if(mode == MODE_GAME)
+      ResetGameModeVolumes();
 
+    return true;
   }
 
   if(encoderButton.held())
   {
-
+    if(itemCount > 0)
+      CycleMode();
+      
+    return true;
   }
 
   return false;
@@ -363,14 +393,19 @@ void UpdateDisplay()
   if(itemCount == 0)
   {
     DisplaySplash(display);
+    return;
   }
-  else if(state == STATE_APPLICATION_NAVIGATE)
+  
+  if(mode == MODE_APPLICATION)
   {
-    DisplayAppNavigateScreen(display, &items[itemIndex], itemIndex, itemCount, settings.continuousScroll);
+    if(state == STATE_APPLICATION_NAVIGATE)
+      DisplayAppNavigateScreen(display, &items[itemIndex], itemIndex, itemCount, settings.continuousScroll);
+    else if(state == STATE_APPLICATION_EDIT)
+      DisplayAppEditScreen(display, &items[itemIndex]);
   }
-  else if(state == STATE_APPLICATION_EDIT)
+  else if(mode == MODE_GAME)
   {
-    DisplayAppEditScreen(display, &items[itemIndex]);
+    DisplayGameScreen(display, items, itemIndexA, itemIndexB, itemCount, state, settings.continuousScroll);
   }
 }
 
@@ -387,26 +422,67 @@ void UpdateLighting()
    if(itemCount == 0)
    {
      SetPixelsColor(pixels, 128,128,128);
+     return;
    }
-   else
+   
+   if(mode == MODE_APPLICATION)
    {
       uint8_t volumeColor = round(items[itemIndex].volume * 2.55f);
       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
+   }
+   else if(mode == MODE_GAME)
+   {
+     SetPixelsColor(pixels, 128, 128, 128);
    }
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void SwitchMode()
+void CycleMode()
 {
-  if(state == STATE_APPLICATION_NAVIGATE)
+  if(mode == MODE_APPLICATION)
   {
-    state = STATE_APPLICATION_EDIT;
+    mode = MODE_GAME;
+    state = STATE_GAME_SELECT_A;
   }
-  else if(state == STATE_APPLICATION_EDIT)
+  else if(mode == MODE_GAME)
   {
+    mode = MODE_APPLICATION;
     state = STATE_APPLICATION_NAVIGATE;
   }
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+void CycleAppModeState()
+{
+  if(state == STATE_APPLICATION_NAVIGATE)  
+    state = STATE_APPLICATION_EDIT;
+  else if(state == STATE_APPLICATION_EDIT)
+    state = STATE_APPLICATION_NAVIGATE;
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+void CycleGameModeState()
+{
+  if(state == STATE_GAME_SELECT_A)
+    state = STATE_GAME_SELECT_B;
+  else if(state == STATE_GAME_SELECT_B)
+    state = STATE_GAME_EDIT;
+  else if(state == STATE_GAME_EDIT)
+    state = STATE_GAME_SELECT_A;
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+void ResetGameModeVolumes()
+{
+  items[itemIndexA].volume = 50;
+  items[itemIndexB].volume = 50;
+
+  SendItemVolumeCommand(&items[itemIndexA], sendBuffer, encodeBuffer);
+  SendItemVolumeCommand(&items[itemIndexB], sendBuffer, encodeBuffer);
 }
 
 //---------------------------------------------------------
