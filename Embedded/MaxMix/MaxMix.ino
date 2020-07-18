@@ -278,7 +278,7 @@ bool ProcessEncoderRotation()
   else if(encoderDir == DIR_CCW)
     encoderDelta = -1;
 
-  if(itemCount == 0)
+  if(itemCount == 0 || screenState == STATE_SCREEN_SLEEP)
     return true;
 
   if(mode == MODE_APPLICATION)
@@ -323,6 +323,9 @@ bool ProcessEncoderButton()
 {
   if(encoderButton.tapped())
   {
+    if(screenState == STATE_SCREEN_SLEEP)
+      return true;
+      
     if(mode == MODE_APPLICATION)
       CycleAppModeState();
     else if(mode == MODE_GAME)
@@ -333,6 +336,9 @@ bool ProcessEncoderButton()
   
   if(encoderButton.doubleTapped())
   {
+    if(screenState == STATE_SCREEN_SLEEP)
+      return true;
+      
     if(mode == MODE_GAME)
       ResetGameModeVolumes();
 
@@ -341,6 +347,9 @@ bool ProcessEncoderButton()
 
   if(encoderButton.held())
   {
+    if(screenState == STATE_SCREEN_SLEEP)
+      return true;
+      
     if(itemCount > 0)
       CycleMode();
       
