@@ -275,18 +275,7 @@ bool ProcessEncoderRotation()
   if(mode == MODE_APPLICATION)
   {
     if(state == STATE_APPLICATION_NAVIGATE)
-    {
-      itemIndex += encoderDelta;
-      if(settings.continuousScroll)
-      {
-        if(itemIndex >= itemCount)
-          itemIndex = 0;
-        else if(itemIndex < 0)
-          itemIndex = itemCount - 1;
-      }
-      else
-        itemIndex = constrain(itemIndex, 0, itemCount - 1);
-    }
+      itemIndex = GetNextIndex(itemIndex, itemCount, encoderDelta, settings.continuousScroll);
 
     else if(state == STATE_APPLICATION_EDIT)
     {
