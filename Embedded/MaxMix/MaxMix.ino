@@ -210,7 +210,8 @@ void ProcessPackage()
     if(settings.displayNewSession)
     {
       itemIndex = index;
-      state = STATE_APPLICATION_NAVIGATE;
+      if(mode == MODE_APPLICATION)
+        state = STATE_APPLICATION_NAVIGATE;
     }
   }
   else if(command == MSG_COMMAND_REMOVE)
@@ -228,7 +229,7 @@ void ProcessPackage()
     RemoveItemCommand(decodeBuffer, items, &itemCount, index);
 
     // Return to Navigate state if active application is removed
-    if(itemIndex == index)
+    if(itemIndex == index && mode == MODE_APPLICATION)
       state = STATE_APPLICATION_NAVIGATE;
 
     // Make sure current menu index is not out of bounds after removing item.
