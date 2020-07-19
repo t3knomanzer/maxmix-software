@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MaxMix.Services.Audio
+﻿namespace MaxMix.Services.Audio
 {
-    public delegate void AudioEndpointDelegate(object sender, string displayName, int volume, bool isMuted);
-    public delegate void AudioEndpointVolumeDelegate(object sender, int volume, bool isMuted);
-    public delegate void AudioSessionDelegate(object sender, int appID, string displayName, int volume, bool isMuted);
-    public delegate void AudioSessionNameDelegate(object sender, int appID, string displayName);
-    public delegate void AudioSessionVolumeDelegate(object sender, int appID, int volume, bool isMuted);
+    public delegate void AudioSessionCreatedDelegate(object sender, int id, string displayName, int volume, bool isMuted);
+    public delegate void AudioSessionRemovedDelegate(object sender, int id);
+    public delegate void AudioSessionVolumeDelegate(object sender, int id, int volume, bool isMuted);
 }

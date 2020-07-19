@@ -1,14 +1,8 @@
 ﻿using CSCore.CoreAudioAPI;
-using MaxMix.Models;
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Threading;
 
 namespace MaxMix.Services.Audio
 {
@@ -18,39 +12,29 @@ namespace MaxMix.Services.Audio
     internal class AudioSessionService : IAudioSessionService
     {
         #region Constructor
-        public AudioSessionService()
+        public AudioSessionService(bool visibleSystemSounds = false)
         {
             _synchronizationContext = SynchronizationContext.Current;
+            _visibleSystemSounds = visibleSystemSounds;
         }
         #endregion
 
         #region Fields
         private readonly SynchronizationContext _synchronizationContext;
-        private AudioSessionManager2 _sessionManager;
-        private AudioEndpointVolumeWrapper _endpointVolumeWrapper;
-        private IDictionary<int, AudioSessionGroup> _groups;
+        private IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
+        private bool _visibleSystemSounds = false;
         #endregion
 
         #region Events
         /// <summary>
-        /// Raised when the volume for an active session has changed.
-        /// </summary>
-        public event AudioEndpointDelegate EndpointCreated;
-
-        /// <summary>
-        /// Raised when the volume for an active session has changed.
-        /// </summary>
-        public event AudioEndpointVolumeDelegate EndpointVolumeChanged;
-
-        /// <summary>
         /// Raised when a new audio session has been created.
         /// </summary>
-        public event AudioSessionDelegate SessionCreated;
+        public event AudioSessionCreatedDelegate SessionCreated;
 
         /// <summary>
         /// Raised when a previously active audio session has been removed.
         /// </summary>
-        public event EventHandler<int> SessionRemoved;
+        public event AudioSessionRemovedDelegate SessionRemoved;
 
         /// <summary>
         /// Raised when the volume for an active session has changed.
@@ -64,8 +48,7 @@ namespace MaxMix.Services.Audio
         /// </summary>
         public void Start()
         {
-            _groups = new ConcurrentDictionary<int, AudioSessionGroup>();
-            new Thread(() => InitializeWrappers()).Start();
+            ThreadPool.QueueUserWorkItem(Initialize);
         }
 
         /// <summary>
@@ -73,195 +56,165 @@ namespace MaxMix.Services.Audio
         /// </summary>
         public void Stop()
         {
-            if (_sessionManager != null)
-            {
-                _sessionManager.SessionCreated -= OnSessionCreated;
-                _sessionManager.Dispose();
-            }
+            foreach (var group in _sessions.Values)
+                group.Dispose();
 
-            if (_endpointVolumeWrapper != null)
-            {
-                _endpointVolumeWrapper.Dispose();
-            }
-
-            if (_groups != null)
-            {
-                foreach (var group in _groups.Values)
-                    group.Dispose();
-
-                _groups.Clear();
-            }
+            _sessions.Clear();
         }
 
         /// <summary>
-        /// Sets the volume of the endpoint (master volume).
+        /// Toggles the displaying of the System Sounds audio session.
         /// </summary>
-        /// <param name="volume">The desired volume.</param>
-        /// <param name="isMuted">The mute state of the endpoint.</param>
-        public void SetEndpointVolume(int volume, bool isMuted)
+        /// <param name="value">The desiered visibility of system sounds.</param>
+        public void SetVisibleSystemSounds(bool value)
         {
-            _endpointVolumeWrapper.Volume = volume;
-            _endpointVolumeWrapper.IsMuted = isMuted;
+            if (_visibleSystemSounds == value)
+                return;
+
+            _visibleSystemSounds = value;
+            if (_sessions.Count == 0)
+                return;
+
+            if (!_visibleSystemSounds)
+            {
+                // Remove existing sessions
+                var systemSessions = _sessions.Where(x => x.Value.IsSystemSound).Select(x => x.Value).ToArray();
+                foreach (var session in systemSessions)
+                    UnregisterSession(session);
+            }
+            else
+            {
+                // Add sessions for system sounds
+                var deviceSessions = _sessions.Where(x => x.Value is AudioDevice).Select(x => x.Value as AudioDevice).ToArray();
+                foreach (var session in deviceSessions)
+                    session.InitializeSystemSessions();
+            }
         }
 
         /// <summary>
         /// Sets the volume of an audio session.
         /// </summary>
-        /// <param name="appID">The App Id of the target session.</param>
+        /// <param name="id">The App Id of the target session.</param>
         /// <param name="volume">The desired volume.</param>
-        public void SetSessionVolume(int appID, int volume, bool isMuted)
+        public void SetSessionVolume(int id, int volume, bool isMuted)
         {
-            if (!_groups.TryGetValue(appID, out var group))
+            if (!_sessions.TryGetValue(id, out var session))
                 return;
 
-            group.Volume = volume;
-            group.IsMuted = isMuted;
+            session.Volume = volume;
+            session.IsMuted = isMuted;
         }
         #endregion
 
         #region Private Methods
-        private void InitializeWrappers()
-        {
-            AudioEndpointVolume endpointVolume;
-            GetDefaultEndpointObjects(DataFlow.Render, out _sessionManager, out endpointVolume);
-
-            InitializeEndpointWrapper(endpointVolume);
-            InitializeSessionWrappers(_sessionManager);
-        }
-
-        private void InitializeEndpointWrapper(AudioEndpointVolume endpointVolume)
-        {
-            _endpointVolumeWrapper = new AudioEndpointVolumeWrapper(endpointVolume);
-            _endpointVolumeWrapper.VolumeChanged += OnEndpointVolumeChanged;
-            RaiseEndpointCreated(_endpointVolumeWrapper.DisplayName, _endpointVolumeWrapper.Volume, _endpointVolumeWrapper.IsMuted);
-        }
-
-        private void InitializeSessionWrappers(AudioSessionManager2 sessionManager)
-        {
-            sessionManager.SessionCreated += OnSessionCreated;
-
-            using (var sessionEnumerator = sessionManager.GetSessionEnumerator())
-            {
-                foreach (var session in sessionEnumerator)
-                    RegisterSession(session);
-            }
-        }
-
-        private void RegisterSession(AudioSessionControl session)
-        {
-            var wrapper = new AudioSessionWrapper(session);
-            wrapper.SimpleVolumeChanged += OnSimpleVolumeChanged;
-            wrapper.SessionDisconnected += OnSessionRemoved;
-
-            if (!_groups.TryGetValue(wrapper.AppID, out var group))
-            {
-                group = new AudioSessionGroup();
-                group.AddWrapper(wrapper);
-
-                _groups.Add(wrapper.AppID, group);
-                RaiseSessionCreated(wrapper.AppID, wrapper.DisplayName, wrapper.Volume, wrapper.IsMuted);
-            }
-            else
-            {
-                group.AddWrapper(wrapper);
-            }
-        }
-
-        private void UnregisterSession(AudioSessionWrapper wrapper)
-        {
-            if (!_groups.TryGetValue(wrapper.AppID, out var group))
-                return;
-
-            if (!group.RemoveWrapper(wrapper))
-            {
-                _groups.Remove(group.AppID);
-                group.Dispose();
-                RaiseSessionRemoved(wrapper.AppID);
-            }
-
-            wrapper.SimpleVolumeChanged -= OnSimpleVolumeChanged;
-            wrapper.SessionDisconnected -= OnSessionRemoved;
-            wrapper.Dispose();
-        }
-
-        private void GetDefaultEndpointObjects(DataFlow dataFlow, out AudioSessionManager2 sessionManager, out AudioEndpointVolume endpointVolume)
+        private void Initialize(object stateInfo)
         {
             using (var enumerator = new MMDeviceEnumerator())
             {
-                using (var device = enumerator.GetDefaultAudioEndpoint(dataFlow, Role.Multimedia))
-                {
-                    sessionManager = AudioSessionManager2.FromMMDevice(device);
-                    endpointVolume = AudioEndpointVolume.FromDevice(device);
-                }
+                var device = new AudioDevice(enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia));
+                device.SessionCreated += OnSessionCreated;
+                RegisterSession(device);
+                if (_visibleSystemSounds)
+                    device.InitializeSystemSessions();
+                device.InitializeSessions();
             }
+        }
+
+        private void RegisterSession(IAudioSession session)
+        {
+            _sessions.Add(session.ID, session);
+            session.SessionEnded += OnSessionRemoved;
+            session.VolumeChanged += OnSessionVolumeChanged;
+            RaiseSessionCreated(session.ID, session.DisplayName, session.Volume, session.IsMuted);
+        }
+
+        private void UnregisterSession(IAudioSession session)
+        {
+            if (!_sessions.Remove(session.ID))
+                return;
+
+            session.SessionEnded -= OnSessionRemoved;
+            session.VolumeChanged -= OnSessionVolumeChanged;
+
+            var id = session.ID;
+            session.Dispose();
+            RaiseSessionRemoved(id);
         }
         #endregion
 
         #region Event Handlers
-        private void OnEndpointVolumeChanged(object sender, AudioEndpointVolumeCallbackEventArgs e)
+        private void OnSessionVolumeChanged(IAudioSession session)
         {
-            var wrapper = (AudioEndpointVolumeWrapper)sender;
-            RaiseEndpointVolumeChanged(wrapper.Volume, wrapper.IsMuted);
+            RaiseSessionVolumeChanged(session.ID, session.Volume, session.IsMuted);
         }
 
-        private void OnSessionCreated(object sender, SessionCreatedEventArgs e)
+        private void OnSessionCreated(IAudioSession session)
         {
-            var session = e.NewSession;
+            // All sessions comming in are AudioSession types from AudioDevice types
+            // QUESTION: Should grouping be done at the service level, or the device level?
+            // Service level is data oriented, Device level is object oriented.
+            // For now lets handle it here and change it based on the review
+            if (!_visibleSystemSounds && session.IsSystemSound)
+            {
+                session.Dispose();
+                return;
+            }
+
+            var audioSession = session as AudioSession;
+            var fileName = audioSession.Process.GetMainModuleFileName();
+
+            // If we are able to grab the fileName for the process, group it with sessions from the same fileName
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                var groupID = fileName.GetHashCode();
+
+                AudioSessionGroup sessionGroup;
+                if (_sessions.TryGetValue(groupID, out var group))
+                {
+                    // We have a previously constrcuted group, so just add this session to that group and early out.
+                    sessionGroup = group as AudioSessionGroup;
+                    sessionGroup.AddSession(session);
+                    return;
+                }
+                
+                // Need to create a new group for this session and register it
+                sessionGroup = new AudioSessionGroup(groupID, session.DisplayName);
+                sessionGroup.AddSession(session);
+                session = sessionGroup;
+            }
+
             RegisterSession(session);
         }
 
-        private void OnSessionRemoved(object sender, AudioSessionDisconnectedEventArgs e)
+        private void OnSessionRemoved(IAudioSession session)
         {
-            var wrapper = (AudioSessionWrapper)sender;
-            UnregisterSession(wrapper);
-        }
-
-        private void OnSimpleVolumeChanged(object sender, AudioSessionSimpleVolumeChangedEventArgs e)
-        {
-            var wrapper = (AudioSessionWrapper)sender;
-            RaiseSessionVolumeChanged(wrapper.AppID, wrapper.Volume, wrapper.IsMuted);
+            UnregisterSession(session);
         }
         #endregion
 
         #region Event Dispatchers
-        private void RaiseEndpointCreated(string displayName, int volume, bool isMuted)
+        private void RaiseSessionCreated(int id, string displayName, int volume, bool isMuted)
         {
             if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => EndpointCreated?.Invoke(this, displayName, volume, isMuted), null);
+                _synchronizationContext.Post(o => SessionCreated?.Invoke(this, id, displayName, volume, isMuted), null);
             else
-                EndpointCreated.Invoke(this, displayName, volume, isMuted);
+                SessionCreated.Invoke(this, id, displayName, volume, isMuted);
         }
 
-        private void RaiseEndpointVolumeChanged(int volume, bool isMuted)
+        private void RaiseSessionRemoved(int id)
         {
             if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => EndpointVolumeChanged?.Invoke(this, volume, isMuted), null);
+                _synchronizationContext.Post(o => SessionRemoved?.Invoke(this, id), null);
             else
-                EndpointVolumeChanged?.Invoke(this, volume, isMuted);
+                SessionRemoved?.Invoke(this, id);
         }
 
-        private void RaiseSessionCreated(int appID, string displayName, int volume, bool isMuted)
+        private void RaiseSessionVolumeChanged(int id, int volume, bool isMuted)
         {
             if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => SessionCreated?.Invoke(this, appID, displayName, volume, isMuted), null);
+                _synchronizationContext.Post(o => SessionVolumeChanged?.Invoke(this, id, volume, isMuted), null);
             else
-                SessionCreated.Invoke(this, appID, displayName, volume, isMuted);
-        }
-
-        private void RaiseSessionRemoved(int appID)
-        {
-            if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => SessionRemoved?.Invoke(this, appID), null);
-            else
-                SessionRemoved?.Invoke(this, appID);
-        }
-
-        private void RaiseSessionVolumeChanged(int appID, int volume, bool isMuted)
-        {
-            if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => SessionVolumeChanged?.Invoke(this, appID, volume, isMuted), null);
-            else
-                SessionVolumeChanged?.Invoke(this, appID, volume, isMuted);
+                SessionVolumeChanged?.Invoke(this, id, volume, isMuted);
         }
         #endregion
     }

@@ -1,110 +1,135 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 
 namespace MaxMix.Services.Audio
 {
     /// <summary>
-    /// Provides a facade with a simpler interface over multiple AudioSessionControl
-    /// CSCore class.
+    /// Provides a facade with a simpler interface over multiple AudioSessions.
     /// </summary>
-    public class AudioSessionGroup : IDisposable
+    public class AudioSessionGroup : IAudioSession
     {
         #region Constructor
-        public AudioSessionGroup()
+        public AudioSessionGroup(int id, string displayName)
         {
-            _wrappers = new ConcurrentDictionary<int, AudioSessionWrapper>();
+            ID = id;
+            DisplayName = displayName;
         }
+        #endregion
+
+        #region Events
+        /// <inheritdoc/>
+        public event Action<IAudioSession> VolumeChanged;
+
+        /// <inheritdoc/>
+        public event Action<IAudioSession> SessionEnded;
         #endregion
 
         #region Fields
-        private IDictionary<int, AudioSessionWrapper> _wrappers;
+        private IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
+        private int _volume = 100;
+        private bool _isMuted = false;
+        private bool _isNotifyEnabled = true;
         #endregion
 
         #region Properties
-        /// <summary>
-        /// The process ID of this session.
-        /// </summary>
-        private int ProcessID => _wrappers.First().Value.ProcessID;
+        /// <inheritdoc/>
+        public int ID { get; protected set; }
 
-        /// <summary>
-        /// The path to the icon used for this session.
-        /// </summary>
-        public string IconPath => _wrappers.First().Value.IconPath;
+        /// <inheritdoc/>
+        public string DisplayName { get; protected set; }
 
-        /// <summary>
-        /// ???
-        /// </summary>
-        public bool IsSingleProcessSession => _wrappers.First().Value.IsSingleProcessSession;
+        /// <inheritdoc/>
+        public bool IsSystemSound { get; protected set; }
 
-        /// <summary>
-        /// Indicates if this is the session responsible for windows system sounds.
-        /// </summary>
-        public bool IsSystemSoundSession => _wrappers.First().Value.IsSystemSoundSession;
-
-        /// <summary>
-        /// A reference to the process that created this session.
-        /// </summary>
-        public Process Process => _wrappers.First().Value.Process;
-
-        public int AppID { get; protected set; }
-
-        /// <summary>
-        /// The display name of the process that created this session.
-        /// </summary>
-        public string DisplayName => _wrappers.First().Value.DisplayName;
-
-        /// <summary>
-        /// Current volume of this session (0-100).
-        /// </summary>
+        /// <inheritdoc/>
         public int Volume
         {
-            get => _wrappers.First().Value.Volume;
-            set
-            {
-                foreach (var wrapper in _wrappers)
-                    wrapper.Value.Volume = value;
-            }
+            get => _volume;
+            set => SetVolume(value);
         }
 
-        /// <summary>
-        /// Current mute state of this session.
-        /// </summary>
+        /// <inheritdoc/>
         public bool IsMuted
         {
-            get => _wrappers.First().Value.IsMuted;
-            set
-            {
-                foreach (var wrapper in _wrappers)
-                    wrapper.Value.IsMuted = value;
-            }
+            get => _isMuted;
+            set => SetIsMuted(value);
         }
         #endregion
 
         #region Public Methods
-        public void AddWrapper(AudioSessionWrapper wrapper)
+        public void AddSession(IAudioSession session)
         {
-            _wrappers.Add(wrapper.ProcessID, wrapper);
+            _sessions.Add(session.ID, session);
+            session.VolumeChanged += OnVolumeChanged;
+            session.SessionEnded += OnSessionEnded;
+
+            if (_sessions.Count == 1)
+            {
+                _volume = session.Volume;
+                _isMuted = session.IsMuted;
+                IsSystemSound |= session.IsSystemSound;
+            }
+        }
+        #endregion
+
+        #region Private Methods
+        private void SetVolume(int value)
+        {
+            if (_volume == value)
+                return;
+
+            _isNotifyEnabled = false;
+            _volume = value;
+            foreach (var session in _sessions)
+                session.Value.Volume = value;
+            _isNotifyEnabled = true;
         }
 
-        public bool RemoveWrapper(AudioSessionWrapper wrapper)
+        private void SetIsMuted(bool value)
         {
-            _wrappers.Remove(wrapper.ProcessID);
-            return _wrappers.Count > 0;
+            if (_isMuted == value)
+                return;
+
+            _isNotifyEnabled = false;
+            _isMuted = value;
+            foreach (var session in _sessions)
+                session.Value.IsMuted = value;
+            _isNotifyEnabled = true;
+        }
+
+        private void OnVolumeChanged(IAudioSession session)
+        {
+            Volume = session.Volume;
+            IsMuted = session.IsMuted;
+
+            if (!_isNotifyEnabled)
+                return;
+
+            VolumeChanged?.Invoke(this);
+        }
+
+        private void OnSessionEnded(IAudioSession session)
+        {
+            _sessions.Remove(session.ID);
+            session.Dispose();
+
+            if (_sessions.Count > 0)
+                return;
+
+            SessionEnded?.Invoke(this);
         }
         #endregion
 
         #region IDisposable
         public void Dispose()
         {
-            if (_wrappers != null)
+            if (_sessions != null)
             {
-                foreach (var wrapper in _wrappers.Values)
+                foreach (var wrapper in _sessions.Values)
                     wrapper.Dispose();
 
-                _wrappers.Clear();
+                _sessions.Clear();
             }
         }
         #endregion

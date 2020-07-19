@@ -91,6 +91,16 @@ namespace MaxMix.ViewModels
                 RaisePropertyChanged();
             }
         }
+
+        public bool SystemSounds
+        {
+            get => _settings.SystemSounds;
+            set
+            {
+                _settings.SystemSounds = value;
+                RaisePropertyChanged();
+            }
+        }
         #endregion
 
         #region Commands
