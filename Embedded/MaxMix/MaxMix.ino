@@ -208,7 +208,11 @@ void ProcessPackage()
 
     // Switch to newly added item.
     if(settings.displayNewSession)
+    {
       itemIndex = index;
+      if(mode == MODE_APPLICATION)
+        state = STATE_APPLICATION_NAVIGATE;
+    }
   }
   else if(command == MSG_COMMAND_REMOVE)
   {
@@ -223,6 +227,10 @@ void ProcessPackage()
       return;
       
     RemoveItemCommand(decodeBuffer, items, &itemCount, index);
+
+    // Return to Navigate state if active application is removed
+    if(itemIndex == index && mode == MODE_APPLICATION)
+      state = STATE_APPLICATION_NAVIGATE;
 
     // Make sure current menu index is not out of bounds after removing item.
     itemIndex = GetNextIndex(itemIndex, itemCount, 0, settings.continuousScroll);
@@ -255,7 +263,7 @@ void ProcessPackage()
   {
     UpdateSettingsCommand(decodeBuffer, &settings);
   }
-}
+} 
 
 //---------------------------------------------------------
 //---------------------------------------------------------
@@ -271,7 +279,7 @@ bool ProcessEncoderRotation()
   else if(encoderDir == DIR_CCW)
     encoderDelta = -1;
 
-  if(itemCount == 0)
+  if(itemCount == 0 || screenState == STATE_SCREEN_SLEEP)
     return true;
 
   if(mode == MODE_APPLICATION)
@@ -316,6 +324,9 @@ bool ProcessEncoderButton()
 {
   if(encoderButton.tapped())
   {
+    if(screenState == STATE_SCREEN_SLEEP)
+      return true;
+      
     if(mode == MODE_APPLICATION)
       CycleAppModeState();
     else if(mode == MODE_GAME)
@@ -326,6 +337,9 @@ bool ProcessEncoderButton()
   
   if(encoderButton.doubleTapped())
   {
+    if(screenState == STATE_SCREEN_SLEEP)
+      return true;
+      
     if(mode == MODE_GAME)
       ResetGameModeVolumes();
 
@@ -334,6 +348,9 @@ bool ProcessEncoderButton()
 
   if(encoderButton.held())
   {
+    if(screenState == STATE_SCREEN_SLEEP)
+      return true;
+      
     if(itemCount > 0)
       CycleMode();
       
