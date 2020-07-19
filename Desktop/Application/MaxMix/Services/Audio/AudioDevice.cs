@@ -60,7 +60,7 @@ namespace MaxMix.Services.Audio
         /// <inheritdoc/>
         public int Volume
         {
-            get => (int)(_endpointVolume.MasterVolumeLevelScalar * 100);
+            get => (int)Math.Round(_endpointVolume.MasterVolumeLevelScalar * 100);
             set
             {
                 if (Volume == value)
