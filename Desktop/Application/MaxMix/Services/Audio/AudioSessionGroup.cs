@@ -100,8 +100,8 @@ namespace MaxMix.Services.Audio
 
         private void OnVolumeChanged(IAudioSession session)
         {
-            Volume = session.Volume;
-            IsMuted = session.IsMuted;
+            _volume = session.Volume;
+            _isMuted = session.IsMuted;
 
             if (!_isNotifyEnabled)
                 return;
