@@ -4,7 +4,7 @@ using System;
 namespace MaxMix.Services.Audio
 {
     /// <summary>
-    /// Provides a facade with a simpler interface over multiple AudioSessions.
+    /// Provides a facade with a simpler interface over the MMDevice CSCore class.
     /// </summary>
     public class AudioDevice : IAudioSession
     {

@@ -56,8 +56,8 @@ namespace MaxMix.Services.Audio
         /// </summary>
         public void Stop()
         {
-            foreach (var group in _sessions.Values)
-                group.Dispose();
+            foreach (var session in _sessions.Values)
+                session.Dispose();
 
             _sessions.Clear();
         }
