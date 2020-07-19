@@ -105,6 +105,7 @@ namespace MaxMix.Services.Audio
             if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.MainWindowTitle; }
             if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
             if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
+            displayName = char.ToUpper(displayName[0]) + displayName.Substring(1);
             DisplayName = displayName;
         }
         #endregion
