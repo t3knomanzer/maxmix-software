@@ -64,7 +64,8 @@ uint8_t encodeBuffer[SEND_BUFFER_SIZE];
 
 // State
 uint8_t mode = MODE_APPLICATION;
-uint8_t state = STATE_APPLICATION_NAVIGATE;
+uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
+uint8_t stateGame = STATE_GAME_SELECT_A;
 uint8_t isDirty = true;
 
 struct Item items[ITEM_BUFFER_SIZE];
@@ -211,7 +212,7 @@ void ProcessPackage()
     {
       itemIndex = index;
       if(mode == MODE_APPLICATION)
-        state = STATE_APPLICATION_NAVIGATE;
+        stateApplication = STATE_APPLICATION_NAVIGATE;
     }
   }
   else if(command == MSG_COMMAND_REMOVE)
@@ -230,7 +231,7 @@ void ProcessPackage()
 
     // Return to Navigate state if active application is removed
     if(itemIndex == index && mode == MODE_APPLICATION)
-      state = STATE_APPLICATION_NAVIGATE;
+      stateApplication = STATE_APPLICATION_NAVIGATE;
 
     // Make sure current menu index is not out of bounds after removing item.
     itemIndex = GetNextIndex(itemIndex, itemCount, 0, settings.continuousScroll);
@@ -284,10 +285,10 @@ bool ProcessEncoderRotation()
 
   if(mode == MODE_APPLICATION)
   {
-    if(state == STATE_APPLICATION_NAVIGATE)
+    if(stateApplication == STATE_APPLICATION_NAVIGATE)
       itemIndex = GetNextIndex(itemIndex, itemCount, encoderDelta, settings.continuousScroll);
 
-    else if(state == STATE_APPLICATION_EDIT)
+    else if(stateApplication == STATE_APPLICATION_EDIT)
     {
       items[itemIndex].volume += encoderDelta * encoderVolumeStep;
       items[itemIndex].volume = constrain(items[itemIndex].volume, 0, 100);
@@ -297,12 +298,12 @@ bool ProcessEncoderRotation()
   }
   else if(mode == MODE_GAME)
   {
-    if(state == STATE_GAME_SELECT_A)
+    if(stateGame == STATE_GAME_SELECT_A)
       itemIndexA = GetNextIndex(itemIndexA, itemCount, encoderDelta, settings.continuousScroll);
-    else if(state == STATE_GAME_SELECT_B)
+    else if(stateGame == STATE_GAME_SELECT_B)
       itemIndexB = GetNextIndex(itemIndexB, itemCount, encoderDelta, settings.continuousScroll);
 
-    else if(state == STATE_GAME_EDIT)
+    else if(stateGame == STATE_GAME_EDIT)
     {
       items[itemIndexA].volume += encoderDelta * encoderVolumeStep;
       items[itemIndexA].volume = constrain(items[itemIndexA].volume, 0, 100);
@@ -415,14 +416,14 @@ void UpdateDisplay()
   
   if(mode == MODE_APPLICATION)
   {
-    if(state == STATE_APPLICATION_NAVIGATE)
+    if(stateApplication == STATE_APPLICATION_NAVIGATE)
       DisplayAppNavigateScreen(display, &items[itemIndex], itemIndex, itemCount, settings.continuousScroll);
-    else if(state == STATE_APPLICATION_EDIT)
+    else if(stateApplication == STATE_APPLICATION_EDIT)
       DisplayAppEditScreen(display, &items[itemIndex]);
   }
   else if(mode == MODE_GAME)
   {
-    DisplayGameScreen(display, items, itemIndexA, itemIndexB, itemCount, state, settings.continuousScroll);
+    DisplayGameScreen(display, items, itemIndexA, itemIndexB, itemCount, stateGame, settings.continuousScroll);
   }
 }
 
@@ -460,12 +461,10 @@ void CycleMode()
   if(mode == MODE_APPLICATION)
   {
     mode = MODE_GAME;
-    state = STATE_GAME_SELECT_A;
   }
   else if(mode == MODE_GAME)
   {
     mode = MODE_APPLICATION;
-    state = STATE_APPLICATION_NAVIGATE;
   }
 }
 
@@ -473,22 +472,22 @@ void CycleMode()
 //---------------------------------------------------------
 void CycleAppModeState()
 {
-  if(state == STATE_APPLICATION_NAVIGATE)  
-    state = STATE_APPLICATION_EDIT;
-  else if(state == STATE_APPLICATION_EDIT)
-    state = STATE_APPLICATION_NAVIGATE;
+  if(stateApplication == STATE_APPLICATION_NAVIGATE)  
+    stateApplication = STATE_APPLICATION_EDIT;
+  else if(stateApplication == STATE_APPLICATION_EDIT)
+    stateApplication = STATE_APPLICATION_NAVIGATE;
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 void CycleGameModeState()
 {
-  if(state == STATE_GAME_SELECT_A)
-    state = STATE_GAME_SELECT_B;
-  else if(state == STATE_GAME_SELECT_B)
-    state = STATE_GAME_EDIT;
-  else if(state == STATE_GAME_EDIT)
-    state = STATE_GAME_SELECT_A;
+  if(stateGame == STATE_GAME_SELECT_A)
+    stateGame = STATE_GAME_SELECT_B;
+  else if(stateGame == STATE_GAME_SELECT_B)
+    stateGame = STATE_GAME_EDIT;
+  else if(stateGame == STATE_GAME_EDIT)
+    stateGame = STATE_GAME_SELECT_A;
 }
 
 //---------------------------------------------------------
