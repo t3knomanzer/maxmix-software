@@ -25,6 +25,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -34,6 +35,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ControlzEx, Version=3.0.2.4, Culture=neutral, processorArchitecture=MSIL">
@@ -110,9 +112,12 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Services\Audio\AudioCommon.cs" />
+    <Compile Include="Services\Audio\AudioDevice.cs" />
+    <Compile Include="Services\Audio\AudioExtensions.cs" />
+    <Compile Include="Services\Audio\AudioSessionGroup.cs" />
     <Compile Include="Services\Audio\AudioSessionService.cs" />
-    <Compile Include="Services\Audio\AudioEndpointVolumeWrapper.cs" />
-    <Compile Include="Services\Audio\AudioSessionWrapper.cs" />
+    <Compile Include="Services\Audio\AudioSession.cs" />
+    <Compile Include="Services\Audio\IAudioSession.cs" />
     <Compile Include="Services\Audio\IAudioSessionService.cs" />
     <Compile Include="Services\Communication\CobsSerializationService .cs" />
     <Compile Include="Services\Communication\Common.cs" />

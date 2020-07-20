@@ -17,6 +17,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- DisplayNewSession -->
@@ -43,5 +44,10 @@
                Content="Loop around applications" />
         <CheckBox Grid.Column="1" Grid.Row="3"
                   IsChecked="{Binding ContinuousScroll}" />
+
+        <Label Grid.Column="0" Grid.Row="4"
+               Content="Display System Sounds" />
+        <CheckBox Grid.Column="1" Grid.Row="4"
+                  IsChecked="{Binding SystemSounds}" />
     </Grid>
 </UserControl>
