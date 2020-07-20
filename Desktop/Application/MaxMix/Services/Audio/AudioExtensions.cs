@@ -25,5 +25,13 @@ namespace MaxMix.Services.Audio
             IntPtr handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, false, process.Id);
             return QueryFullProcessImageName(handle, 0, fileNameBuilder, ref bufferLength) ? fileNameBuilder.ToString() : null;
         }
+
+        public static string GetProductName(this Process process)
+        {
+            string fileName = process.GetMainModuleFileName();
+            if (string.IsNullOrEmpty(fileName)) return null;
+            var versionInfo = FileVersionInfo.GetVersionInfo(fileName);
+            return versionInfo.ProductName;
+        }
     }
 }
