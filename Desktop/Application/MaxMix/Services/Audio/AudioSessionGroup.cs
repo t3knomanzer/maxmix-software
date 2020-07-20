@@ -124,13 +124,14 @@ namespace MaxMix.Services.Audio
         #region IDisposable
         public void Dispose()
         {
-            if (_sessions != null)
+            foreach (var session in _sessions.Values)
             {
-                foreach (var wrapper in _sessions.Values)
-                    wrapper.Dispose();
-
-                _sessions.Clear();
+                session.VolumeChanged += OnVolumeChanged;
+                session.SessionEnded += OnSessionEnded;
+                session.Dispose();
             }
+
+            _sessions.Clear();
         }
         #endregion
     }

@@ -1,5 +1,8 @@
 ﻿using CSCore.CoreAudioAPI;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MaxMix.Services.Audio
 {
@@ -9,9 +12,10 @@ namespace MaxMix.Services.Audio
     public class AudioDevice : IAudioSession
     {
         #region Constructor
-        public AudioDevice(MMDevice device)
+        public AudioDevice(MMDevice device, bool visibleSystemSounds = false)
         {
             _device = device;
+            _visibleSystemSounds = visibleSystemSounds;
 
             _sessionManager = AudioSessionManager2.FromMMDevice(_device);
             _endpointVolume = AudioEndpointVolume.FromDevice(_device);
@@ -44,6 +48,8 @@ namespace MaxMix.Services.Audio
         private AudioSessionManager2 _sessionManager;
         private AudioEndpointVolume _endpointVolume;
 
+        private IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
+        private bool _visibleSystemSounds = false;
         private bool _isNotifyEnabled = true;
         #endregion
 
@@ -94,27 +100,85 @@ namespace MaxMix.Services.Audio
             if (!_isNotifyEnabled)
                 return;
 
-            VolumeChanged?.Invoke(this);
+            // Convert to IAudioSession and call OnSessionVolumeChanged
+            OnSessionVolumeChanged(this);
+        }
+
+        private void OnSessionVolumeChanged(IAudioSession session)
+        {
+            VolumeChanged?.Invoke(session);
         }
 
         private void OnSessionCreated(object sender, SessionCreatedEventArgs e)
         {
-            SessionCreated?.Invoke(new AudioSession(e.NewSession));
+            // Convert to IAudioSession and call OnSessionCreated
+            OnSessionCreated(new AudioSession(e.NewSession));
         }
 
-        // TODO: Register default device change as SessionEnded
+        private void OnSessionCreated(IAudioSession session)
+        {
+            if (!_visibleSystemSounds && session.IsSystemSound)
+            {
+                session.Dispose();
+                return;
+            }
+
+            var audioSession = session as AudioSession;
+            var fileName = audioSession.Process.GetMainModuleFileName();
+
+            // If we are able to grab the fileName for the process, group it with sessions from the same fileName
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                var groupID = fileName.GetHashCode();
+
+                AudioSessionGroup sessionGroup;
+                if (_sessions.TryGetValue(groupID, out var group))
+                {
+                    // We have a previously constrcuted group, so just add this session to that group and early out.
+                    sessionGroup = group as AudioSessionGroup;
+                    sessionGroup.AddSession(session);
+                    return;
+                }
+
+                // Need to create a new group for this session and register it
+                sessionGroup = new AudioSessionGroup(groupID, session.DisplayName);
+                sessionGroup.AddSession(session);
+                session = sessionGroup;
+            }
+
+            _sessions.Add(session.ID, session);
+            session.SessionEnded += OnSessionRemoved;
+            session.VolumeChanged += OnSessionVolumeChanged;
+
+            // Raise session created event
+            SessionCreated?.Invoke(session);
+        }
+
+        private void OnSessionRemoved(IAudioSession session)
+        {
+            if (!_sessions.Remove(session.ID))
+                return;
+
+            session.SessionEnded -= OnSessionRemoved;
+            session.VolumeChanged -= OnSessionVolumeChanged;
+            session.Dispose();
+            SessionEnded?.Invoke(session);
+        }
         #endregion
 
         #region Public Methods
         public void InitializeSystemSessions()
         {
+            if (!_visibleSystemSounds)
+                return;
+
             using (var sessionEnumerator = _sessionManager.GetSessionEnumerator())
             {
                 foreach (var session in sessionEnumerator)
                 {
                     var audioSession = new AudioSession(session);
                     if (audioSession.IsSystemSound)
-                        SessionCreated?.Invoke(new AudioSession(session));
+                        OnSessionCreated(new AudioSession(session));
                     else
                         audioSession.Dispose();
                 }
@@ -129,10 +193,33 @@ namespace MaxMix.Services.Audio
                 {
                     var audioSession = new AudioSession(session);
                     if (!audioSession.IsSystemSound)
-                        SessionCreated?.Invoke(new AudioSession(session));
+                        OnSessionCreated(new AudioSession(session));
                     else
                         audioSession.Dispose();
                 }
+            }
+        }
+
+        public void SetVisibleSystemSounds(bool value)
+        {
+            if (_visibleSystemSounds == value)
+                return;
+
+            _visibleSystemSounds = value;
+            if (_sessions.Count == 0)
+                return;
+
+            if (!_visibleSystemSounds)
+            {
+                // Remove existing sessions
+                var systemSessions = _sessions.Where(x => x.Value.IsSystemSound).Select(x => x.Value).ToArray();
+                foreach (var session in systemSessions)
+                    OnSessionRemoved(session);
+            }
+            else
+            {
+                // Add sessions for system sounds
+                InitializeSystemSessions();
             }
         }
         #endregion
@@ -140,7 +227,17 @@ namespace MaxMix.Services.Audio
         #region IDisposable
         public void Dispose()
         {
+            foreach (var session in _sessions.Values)
+            {
+                session.SessionEnded -= OnSessionRemoved;
+                session.VolumeChanged -= OnSessionVolumeChanged;
+                session.Dispose();
+            }
+
+            _sessions.Clear();
+
             _callback.NotifyRecived -= OnVolumeChanged;
+            _sessionManager.SessionCreated -= OnSessionCreated;
 
             _endpointVolume?.UnregisterControlChangeNotify(_callback);
             _endpointVolume?.Dispose();

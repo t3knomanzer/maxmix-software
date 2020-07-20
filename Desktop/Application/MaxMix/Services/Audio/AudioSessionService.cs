@@ -21,7 +21,7 @@ namespace MaxMix.Services.Audio
 
         #region Fields
         private readonly SynchronizationContext _synchronizationContext;
-        private IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
+        private IDictionary<int, IAudioSession> _devices = new ConcurrentDictionary<int, IAudioSession>();
         private bool _visibleSystemSounds = false;
         #endregion
 
@@ -56,10 +56,10 @@ namespace MaxMix.Services.Audio
         /// </summary>
         public void Stop()
         {
-            foreach (var session in _sessions.Values)
+            foreach (var session in _devices.Values)
                 session.Dispose();
 
-            _sessions.Clear();
+            _devices.Clear();
         }
 
         /// <summary>
@@ -72,22 +72,13 @@ namespace MaxMix.Services.Audio
                 return;
 
             _visibleSystemSounds = value;
-            if (_sessions.Count == 0)
+            if (_devices.Count == 0)
                 return;
 
-            if (!_visibleSystemSounds)
+            foreach (var device in _devices)
             {
-                // Remove existing sessions
-                var systemSessions = _sessions.Where(x => x.Value.IsSystemSound).Select(x => x.Value).ToArray();
-                foreach (var session in systemSessions)
-                    UnregisterSession(session);
-            }
-            else
-            {
-                // Add sessions for system sounds
-                var deviceSessions = _sessions.Where(x => x.Value is AudioDevice).Select(x => x.Value as AudioDevice).ToArray();
-                foreach (var session in deviceSessions)
-                    session.InitializeSystemSessions();
+                var deviceSession = device.Value as AudioDevice;
+                deviceSession.SetVisibleSystemSounds(value);
             }
         }
 
@@ -98,7 +89,7 @@ namespace MaxMix.Services.Audio
         /// <param name="volume">The desired volume.</param>
         public void SetSessionVolume(int id, int volume, bool isMuted)
         {
-            if (!_sessions.TryGetValue(id, out var session))
+            if (!_devices.TryGetValue(id, out var session))
                 return;
 
             session.Volume = volume;
@@ -111,34 +102,15 @@ namespace MaxMix.Services.Audio
         {
             using (var enumerator = new MMDeviceEnumerator())
             {
-                var device = new AudioDevice(enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia));
+                var device = new AudioDevice(enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia), _visibleSystemSounds);
+                _devices.Add(device.ID, device);
+
                 device.SessionCreated += OnSessionCreated;
-                RegisterSession(device);
-                if (_visibleSystemSounds)
-                    device.InitializeSystemSessions();
+                device.SessionEnded += OnSessionRemoved;
+                device.VolumeChanged += OnSessionVolumeChanged;
+                device.InitializeSystemSessions();
                 device.InitializeSessions();
             }
-        }
-
-        private void RegisterSession(IAudioSession session)
-        {
-            _sessions.Add(session.ID, session);
-            session.SessionEnded += OnSessionRemoved;
-            session.VolumeChanged += OnSessionVolumeChanged;
-            RaiseSessionCreated(session.ID, session.DisplayName, session.Volume, session.IsMuted);
-        }
-
-        private void UnregisterSession(IAudioSession session)
-        {
-            if (!_sessions.Remove(session.ID))
-                return;
-
-            session.SessionEnded -= OnSessionRemoved;
-            session.VolumeChanged -= OnSessionVolumeChanged;
-
-            var id = session.ID;
-            session.Dispose();
-            RaiseSessionRemoved(id);
         }
         #endregion
 
@@ -150,45 +122,21 @@ namespace MaxMix.Services.Audio
 
         private void OnSessionCreated(IAudioSession session)
         {
-            // All sessions comming in are AudioSession types from AudioDevice types
-            // QUESTION: Should grouping be done at the service level, or the device level?
-            // Service level is data oriented, Device level is object oriented.
-            // For now lets handle it here and change it based on the review
-            if (!_visibleSystemSounds && session.IsSystemSound)
-            {
-                session.Dispose();
-                return;
-            }
-
-            var audioSession = session as AudioSession;
-            var fileName = audioSession.Process.GetMainModuleFileName();
-
-            // If we are able to grab the fileName for the process, group it with sessions from the same fileName
-            if (!string.IsNullOrEmpty(fileName))
-            {
-                var groupID = fileName.GetHashCode();
-
-                AudioSessionGroup sessionGroup;
-                if (_sessions.TryGetValue(groupID, out var group))
-                {
-                    // We have a previously constrcuted group, so just add this session to that group and early out.
-                    sessionGroup = group as AudioSessionGroup;
-                    sessionGroup.AddSession(session);
-                    return;
-                }
-                
-                // Need to create a new group for this session and register it
-                sessionGroup = new AudioSessionGroup(groupID, session.DisplayName);
-                sessionGroup.AddSession(session);
-                session = sessionGroup;
-            }
-
-            RegisterSession(session);
+            RaiseSessionCreated(session.ID, session.DisplayName, session.Volume, session.IsMuted);
         }
 
         private void OnSessionRemoved(IAudioSession session)
         {
-            UnregisterSession(session);
+            if (_devices.Remove(session.ID))
+            {
+                var deviceSession = session as AudioDevice;
+                deviceSession.SessionCreated -= OnSessionCreated;
+                deviceSession.SessionEnded -= OnSessionRemoved;
+                deviceSession.VolumeChanged -= OnSessionVolumeChanged;
+                session.Dispose();
+            }
+
+            RaiseSessionRemoved(session.ID);
         }
         #endregion
 
