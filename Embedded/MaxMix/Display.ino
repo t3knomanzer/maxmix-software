@@ -1,4 +1,4 @@
-//********************************************************
+  //********************************************************
 // PROJECT: MAXMIX
 // AUTHOR: Ruben Henares
 // EMAIL: rhenares0@gmail.com
@@ -34,42 +34,15 @@ void DisplaySplash(Adafruit_SSD1306* display)
 void DisplayAppNavigateScreen(Adafruit_SSD1306* display, Item* item, int8_t itemIndex, uint8_t itemCount, uint8_t continuousScroll)
 {
   display->clearDisplay();
-
-  if(itemCount > 0)
-  {
-    if(continuousScroll)
-    {
-      // Left Arrow
-      // X0, Y0, X1, Y1, X2, Y2
-      // Height of text is 6.
-      display->fillTriangle(0, 10, 3, 7, 3, 13, WHITE);
   
-      // Right Arrow
-      // X0, Y0, X1, Y1, X2, Y2
-      // We start at the right of the screen and draw the triangle backwards.
-      // We leave 1 pixel of margin on the right, otherwise looks fuzzy.
-      display->fillTriangle(127, 10, 124, 7, 124, 13, WHITE);
-    }
-    else
-    {
-      if(itemIndex > 0)
-      {
-        // Left Arrow
-        // X0, Y0, X1, Y1, X2, Y2
-        // Height of text is 6.
-        display->fillTriangle(0, 10, 3, 7, 3, 13, WHITE);
-      }
-    
-      if(itemIndex < itemCount - 1)
-      { 
-        // Right Arrow
-        // X0, Y0, X1, Y1, X2, Y2
-        // We start at the right of the screen and draw the triangle backwards.
-        // We leave 1 pixel of margin on the right, otherwise looks fuzzy.
-        display->fillTriangle(127, 10, 124, 7, 124, 13, WHITE);
-      }
-    }
-  }
+  uint8_t leftArrow = CanScrollLeft(itemIndex, itemCount, continuousScroll);
+  uint8_t rightArrow = CanScrollRight(itemIndex, itemCount, continuousScroll);
+
+  if(leftArrow)
+    display->fillTriangle(0, 10, 3, 7, 3, 13, WHITE);
+  
+  if(rightArrow)
+    display->fillTriangle(127, 10, 124, 7, 124, 13, WHITE);
   
   // Item Name
   // Width of the left triangle is 3, we leave 4 pixels of margin.
