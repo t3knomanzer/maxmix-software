@@ -21,11 +21,8 @@ namespace MaxMix.Services.Audio
             _endpointVolume = AudioEndpointVolume.FromDevice(_device);
 
             _endpointVolume.RegisterControlChangeNotify(_callback);
-            _callback.NotifyRecived += OnVolumeChanged;
+            _callback.NotifyRecived += OnEndpointVolumeChanged;
             _sessionManager.SessionCreated += OnSessionCreated;
-
-            DisplayName = "Master";
-            ID = _device.DeviceID.GetHashCode();
         }
         #endregion
 
@@ -55,10 +52,10 @@ namespace MaxMix.Services.Audio
 
         #region Properties
         /// <inheritdoc/>
-        public int ID { get; protected set; }
+        public int ID => _device.DeviceID.GetHashCode();
 
         /// <inheritdoc/>
-        public string DisplayName { get; protected set; }
+        public string DisplayName => "Master";
 
         /// <inheritdoc/>
         public bool IsSystemSound { get; protected set; }
@@ -95,27 +92,7 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Private Methods
-        private void OnVolumeChanged(object sender, AudioEndpointVolumeCallbackEventArgs e)
-        {
-            if (!_isNotifyEnabled)
-                return;
-
-            // Convert to IAudioSession and call OnSessionVolumeChanged
-            OnSessionVolumeChanged(this);
-        }
-
-        private void OnSessionVolumeChanged(IAudioSession session)
-        {
-            VolumeChanged?.Invoke(session);
-        }
-
-        private void OnSessionCreated(object sender, SessionCreatedEventArgs e)
-        {
-            // Convert to IAudioSession and call OnSessionCreated
-            OnSessionCreated(new AudioSession(e.NewSession));
-        }
-
-        private void OnSessionCreated(IAudioSession session)
+        private void RegisterSession(IAudioSession session)
         {
             if (!_visibleSystemSounds && session.IsSystemSound)
             {
@@ -147,22 +124,10 @@ namespace MaxMix.Services.Audio
             }
 
             _sessions.Add(session.ID, session);
-            session.SessionEnded += OnSessionRemoved;
+            session.SessionEnded += OnSessionEnded;
             session.VolumeChanged += OnSessionVolumeChanged;
 
-            // Raise session created event
             SessionCreated?.Invoke(session);
-        }
-
-        private void OnSessionRemoved(IAudioSession session)
-        {
-            if (!_sessions.Remove(session.ID))
-                return;
-
-            session.SessionEnded -= OnSessionRemoved;
-            session.VolumeChanged -= OnSessionVolumeChanged;
-            session.Dispose();
-            SessionEnded?.Invoke(session);
         }
         #endregion
 
@@ -172,7 +137,7 @@ namespace MaxMix.Services.Audio
             using (var sessionEnumerator = _sessionManager.GetSessionEnumerator())
             {
                 foreach (var session in sessionEnumerator)
-                    OnSessionCreated(new AudioSession(session));
+                    RegisterSession(new AudioSession(session));
             }
         }
 
@@ -190,7 +155,7 @@ namespace MaxMix.Services.Audio
                 // Remove existing sessions
                 var systemSessions = _sessions.Where(x => x.Value.IsSystemSound).Select(x => x.Value).ToArray();
                 foreach (var session in systemSessions)
-                    OnSessionRemoved(session);
+                    OnSessionEnded(session);
             }
             else
             {
@@ -209,24 +174,57 @@ namespace MaxMix.Services.Audio
         }
         #endregion
 
+        #region Event Handlers
+        private void OnSessionCreated(object sender, SessionCreatedEventArgs e)
+        {
+            RegisterSession(new AudioSession(e.NewSession));
+        }
+
+        private void OnEndpointVolumeChanged(object sender, AudioEndpointVolumeCallbackEventArgs e)
+        {
+            if (!_isNotifyEnabled)
+                return;
+
+            VolumeChanged?.Invoke(this);
+        }
+
+        private void OnSessionVolumeChanged(IAudioSession session)
+        {
+            VolumeChanged?.Invoke(session);
+        }
+
+        private void OnSessionEnded(IAudioSession session)
+        {
+            if (!_sessions.Remove(session.ID))
+                return;
+
+            session.SessionEnded -= OnSessionEnded;
+            session.VolumeChanged -= OnSessionVolumeChanged;
+            session.Dispose();
+
+            SessionEnded?.Invoke(session);
+        }
+        #endregion
+
         #region IDisposable
         public void Dispose()
         {
             foreach (var session in _sessions.Values)
             {
-                session.SessionEnded -= OnSessionRemoved;
+                session.SessionEnded -= OnSessionEnded;
                 session.VolumeChanged -= OnSessionVolumeChanged;
                 session.Dispose();
             }
 
             _sessions.Clear();
 
-            _callback.NotifyRecived -= OnVolumeChanged;
+            _callback.NotifyRecived -= OnEndpointVolumeChanged;
             _sessionManager.SessionCreated -= OnSessionCreated;
 
             _endpointVolume?.UnregisterControlChangeNotify(_callback);
             _endpointVolume?.Dispose();
             _endpointVolume = null;
+            _callback = null;
 
             _sessionManager?.Dispose();
             _sessionManager = null;
