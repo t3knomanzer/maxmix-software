@@ -128,11 +128,23 @@ void loop()
   if(ReceivePackage(receiveBuffer, &receiveIndex, MSG_PACKET_DELIMITER, RECEIVE_BUFFER_SIZE))
   {
     if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
-      ProcessPackage();
-
+    {
+      uint8_t command = GetCommandFromPackage(decodeBuffer);
+      ProcessPackage(command);
+      
+      if(command == MSG_COMMAND_UPDATE_VOLUME && IsActive())
+      {
+        UpdateActivityTime();
+        isDirty = true;
+      }
+      else if(command == MSG_COMMAND_ADD && settings.displayNewSession)
+      {
+        UpdateActivityTime();
+        isDirty = true;
+      }
+    }
+      
     ClearReceive();
-    UpdateActivityTime();
-    isDirty = true;
   }
 
   if(ProcessEncoderRotation() || ProcessEncoderButton())
@@ -180,10 +192,8 @@ void ClearSend()
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void ProcessPackage()
+void ProcessPackage(uint8_t command)
 {
-  uint8_t command = GetCommandFromPackage(decodeBuffer);
-
   if(command == MSG_COMMAND_HS_REQUEST)
   {
     SendHandshakeCommand(sendBuffer, encodeBuffer);
@@ -230,7 +240,7 @@ void ProcessPackage()
     RemoveItemCommand(decodeBuffer, items, &itemCount, index);
 
     // Return to Navigate state if active application is removed
-    if(itemIndex == index && mode == MODE_APPLICATION)
+    if(IsActive() && mode == MODE_APPLICATION)
       stateApplication = STATE_APPLICATION_NAVIGATE;
 
     // Make sure current menu index is not out of bounds after removing item.
@@ -513,3 +523,23 @@ int8_t FindItem(uint32_t id)
 
   return -1;
 }
+
+//---------------------------------------------------------
+// Checks if command package target is the active application.
+// Returns true if ids match.
+//---------------------------------------------------------
+bool IsActive()
+{
+  uint32_t id = GetIdFromPackage(decodeBuffer);  
+  int8_t index = FindItem(id);
+  if(mode == MODE_APPLICATION && itemIndex == index)
+  {
+    return true;
+  }
+  else if(mode == MODE_GAME && (itemIndexA == index || itemIndexB == index))
+  {
+    return true;
+  }
+  return false;
+}
+
