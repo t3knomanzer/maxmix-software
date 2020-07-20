@@ -23,10 +23,6 @@ namespace MaxMix.Services.Audio
             _events.SimpleVolumeChanged += OnVolumeChanged;
 
             UpdateDisplayName();
-            if (IsSystemSound)
-                ID = DisplayName.GetHashCode();
-            else
-                ID = _session2.ProcessID;
         }
         #endregion
 
@@ -48,7 +44,7 @@ namespace MaxMix.Services.Audio
 
         #region Properties
         /// <inheritdoc/>
-        public int ID { get; protected set; }
+        public int ID => IsSystemSound ? DisplayName.GetHashCode() : _session2.ProcessID;
 
         /// <inheritdoc/>
         public string DisplayName { get; protected set; }
@@ -106,6 +102,7 @@ namespace MaxMix.Services.Audio
             if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
             if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
             displayName = char.ToUpper(displayName[0]) + displayName.Substring(1);
+
             DisplayName = displayName;
         }
         #endregion
@@ -141,7 +138,7 @@ namespace MaxMix.Services.Audio
             _session2?.Dispose();
             _session2 = null;
 
-            _simpleAudio?.Dispose();
+            // Disposing of SimpleAudioVolume causes it to freeze.
             _simpleAudio = null;
         }
         #endregion
