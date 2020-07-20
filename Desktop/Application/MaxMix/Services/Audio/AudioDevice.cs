@@ -24,7 +24,7 @@ namespace MaxMix.Services.Audio
             _callback.NotifyRecived += OnVolumeChanged;
             _sessionManager.SessionCreated += OnSessionCreated;
 
-            DisplayName = _device.FriendlyName;
+            DisplayName = "Master";
             ID = _device.DeviceID.GetHashCode();
         }
         #endregion
