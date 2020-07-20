@@ -76,7 +76,7 @@ namespace MaxMix.Services.Audio
                 _isMuted = session.IsMuted;
                 IsSystemSound |= session.IsSystemSound;
 
-                // QUESTION: Should we raise volume changed here?
+                VolumeChanged?.Invoke(this);
             }
         }
         #endregion
@@ -105,16 +105,6 @@ namespace MaxMix.Services.Audio
                 session.IsMuted = value;
             _isNotifyEnabled = true;
         }
-
-        private void RaiseVolumeChanged()
-        {
-            VolumeChanged?.Invoke(this);
-        }
-
-        private void RaiseSessionEnded()
-        {
-            SessionEnded?.Invoke(this);
-        }
         #endregion
 
         #region Event Handlers
@@ -126,7 +116,7 @@ namespace MaxMix.Services.Audio
             if (!_isNotifyEnabled)
                 return;
 
-            RaiseVolumeChanged();
+            VolumeChanged?.Invoke(this);
         }
 
         private void OnSessionEnded(IAudioSession session)
@@ -137,7 +127,7 @@ namespace MaxMix.Services.Audio
             if (_sessions.Count > 0)
                 return;
 
-            RaiseSessionEnded();
+            SessionEnded?.Invoke(this);
         }
         #endregion
 
@@ -146,8 +136,8 @@ namespace MaxMix.Services.Audio
         {
             foreach (var session in _sessions.Values)
             {
-                session.VolumeChanged += OnVolumeChanged;
-                session.SessionEnded += OnSessionEnded;
+                session.VolumeChanged -= OnVolumeChanged;
+                session.SessionEnded -= OnSessionEnded;
                 session.Dispose();
             }
 
