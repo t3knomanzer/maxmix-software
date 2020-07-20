@@ -101,7 +101,7 @@ namespace MaxMix.Services.Audio
             }
 
             var audioSession = session as AudioSession;
-            var fileName = audioSession.Process.GetMainModuleFileName();
+            var fileName = audioSession.Process.GetMainModuleFileName(); // QUESTION: Should we use session.GroupingParam instead?
 
             // If we are able to grab the fileName for the process, group it with sessions from the same fileName
             if (!string.IsNullOrEmpty(fileName))
@@ -129,6 +129,12 @@ namespace MaxMix.Services.Audio
 
             SessionCreated?.Invoke(session);
         }
+
+        private bool ValidateSession(AudioSessionControl session)
+        {
+            var session2 = session.QueryInterface<AudioSessionControl2>();
+            return session2.Process != null;
+        }
         #endregion
 
         #region Public Methods
@@ -137,7 +143,10 @@ namespace MaxMix.Services.Audio
             using (var sessionEnumerator = _sessionManager.GetSessionEnumerator())
             {
                 foreach (var session in sessionEnumerator)
-                    RegisterSession(new AudioSession(session));
+                {
+                   if(ValidateSession(session))
+                        RegisterSession(new AudioSession(session));
+                }
             }
         }
 
@@ -177,7 +186,8 @@ namespace MaxMix.Services.Audio
         #region Event Handlers
         private void OnSessionCreated(object sender, SessionCreatedEventArgs e)
         {
-            RegisterSession(new AudioSession(e.NewSession));
+            if (ValidateSession(e.NewSession))
+                RegisterSession(new AudioSession(e.NewSession));
         }
 
         private void OnEndpointVolumeChanged(object sender, AudioEndpointVolumeCallbackEventArgs e)
