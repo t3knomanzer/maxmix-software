@@ -167,36 +167,12 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Public Methods
-        public void InitializeSystemSessions()
-        {
-            if (!_visibleSystemSounds)
-                return;
-
-            using (var sessionEnumerator = _sessionManager.GetSessionEnumerator())
-            {
-                foreach (var session in sessionEnumerator)
-                {
-                    var audioSession = new AudioSession(session);
-                    if (audioSession.IsSystemSound)
-                        OnSessionCreated(new AudioSession(session));
-                    else
-                        audioSession.Dispose();
-                }
-            }
-        }
-
         public void InitializeSessions()
         {
             using (var sessionEnumerator = _sessionManager.GetSessionEnumerator())
             {
                 foreach (var session in sessionEnumerator)
-                {
-                    var audioSession = new AudioSession(session);
-                    if (!audioSession.IsSystemSound)
-                        OnSessionCreated(new AudioSession(session));
-                    else
-                        audioSession.Dispose();
-                }
+                    OnSessionCreated(new AudioSession(session));
             }
         }
 
@@ -219,7 +195,7 @@ namespace MaxMix.Services.Audio
             else
             {
                 // Add sessions for system sounds
-                InitializeSystemSessions();
+                InitializeSessions();
             }
         }
         #endregion

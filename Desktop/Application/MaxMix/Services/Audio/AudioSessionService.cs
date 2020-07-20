@@ -109,7 +109,6 @@ namespace MaxMix.Services.Audio
                 device.SessionCreated += OnSessionCreated;
                 device.SessionEnded += OnSessionRemoved;
                 device.VolumeChanged += OnSessionVolumeChanged;
-                device.InitializeSystemSessions();
                 device.InitializeSessions();
             }
         }

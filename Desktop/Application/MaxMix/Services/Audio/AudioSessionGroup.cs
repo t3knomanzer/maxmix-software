@@ -60,6 +60,12 @@ namespace MaxMix.Services.Audio
         #region Public Methods
         public void AddSession(IAudioSession session)
         {
+            if (_sessions.ContainsKey(session.ID))
+            {
+                session.Dispose();
+                return;
+            }
+
             _sessions.Add(session.ID, session);
             session.VolumeChanged += OnVolumeChanged;
             session.SessionEnded += OnSessionEnded;
