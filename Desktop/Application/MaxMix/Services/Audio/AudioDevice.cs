@@ -198,6 +198,15 @@ namespace MaxMix.Services.Audio
                 InitializeSessions();
             }
         }
+
+        public void SetSessionVolume(int id, int volume, bool isMuted)
+        {
+            if (!_sessions.TryGetValue(id, out var session))
+                return;
+
+            session.Volume = volume;
+            session.IsMuted = isMuted;
+        }
         #endregion
 
         #region IDisposable
