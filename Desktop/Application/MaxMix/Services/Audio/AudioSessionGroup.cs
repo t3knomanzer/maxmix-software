@@ -75,6 +75,8 @@ namespace MaxMix.Services.Audio
                 _volume = session.Volume;
                 _isMuted = session.IsMuted;
                 IsSystemSound |= session.IsSystemSound;
+
+                VolumeChanged?.Invoke(this);
             }
         }
         #endregion
@@ -87,8 +89,8 @@ namespace MaxMix.Services.Audio
 
             _isNotifyEnabled = false;
             _volume = value;
-            foreach (var session in _sessions)
-                session.Value.Volume = value;
+            foreach (var session in _sessions.Values)
+                session.Volume = value;
             _isNotifyEnabled = true;
         }
 
@@ -99,11 +101,13 @@ namespace MaxMix.Services.Audio
 
             _isNotifyEnabled = false;
             _isMuted = value;
-            foreach (var session in _sessions)
-                session.Value.IsMuted = value;
+            foreach (var session in _sessions.Values)
+                session.IsMuted = value;
             _isNotifyEnabled = true;
         }
+        #endregion
 
+        #region Event Handlers
         private void OnVolumeChanged(IAudioSession session)
         {
             _volume = session.Volume;
@@ -132,8 +136,8 @@ namespace MaxMix.Services.Audio
         {
             foreach (var session in _sessions.Values)
             {
-                session.VolumeChanged += OnVolumeChanged;
-                session.SessionEnded += OnSessionEnded;
+                session.VolumeChanged -= OnVolumeChanged;
+                session.SessionEnded -= OnSessionEnded;
                 session.Dispose();
             }
 
