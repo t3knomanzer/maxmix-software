@@ -90,7 +90,14 @@ namespace MaxMix.Services.Audio
         public void SetSessionVolume(int id, int volume, bool isMuted)
         {
             if (!_devices.TryGetValue(id, out var session))
+            {
+                foreach (var device in _devices)
+                {
+                    var deviceSession = device.Value as AudioDevice;
+                    deviceSession.SetSessionVolume(id, volume, isMuted);
+                }
                 return;
+            }
 
             session.Volume = volume;
             session.IsMuted = isMuted;
