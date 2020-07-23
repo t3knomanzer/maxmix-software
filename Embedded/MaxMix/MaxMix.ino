@@ -128,17 +128,17 @@ void loop()
   if(ReceivePackage(receiveBuffer, &receiveIndex, MSG_PACKET_DELIMITER, RECEIVE_BUFFER_SIZE))
   {
     if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
-      ProcessPackage();
-
+    {
+      if(ProcessPackage())
+        RequireDisplayUpdate();
+    }
+      
     ClearReceive();
-    UpdateActivityTime();
-    isDirty = true;
   }
 
   if(ProcessEncoderRotation() || ProcessEncoderButton())
   {
-    UpdateActivityTime();
-    isDirty = true;
+    RequireDisplayUpdate();
   }
 
   if(ProcessSleep())
@@ -179,11 +179,13 @@ void ClearSend()
 }
 
 //---------------------------------------------------------
+// \brief Handles incoming commands.
+// \returns true if screen update is required.
 //---------------------------------------------------------
-void ProcessPackage()
+bool ProcessPackage()
 {
   uint8_t command = GetCommandFromPackage(decodeBuffer);
-
+  
   if(command == MSG_COMMAND_HS_REQUEST)
   {
     SendHandshakeCommand(sendBuffer, encodeBuffer);
@@ -192,7 +194,7 @@ void ProcessPackage()
   {
     // Check for buffer overflow first.
     if(itemCount == ITEM_BUFFER_SIZE)
-      return;
+      return false;
 
     // Check if item exists, add or update accordingly.
     uint32_t id = GetIdFromPackage(decodeBuffer);
@@ -213,6 +215,7 @@ void ProcessPackage()
       itemIndex = index;
       if(mode == MODE_APPLICATION)
         stateApplication = STATE_APPLICATION_NAVIGATE;
+      return true;
     }
   }
   else if(command == MSG_COMMAND_REMOVE)
@@ -225,12 +228,12 @@ void ProcessPackage()
     uint32_t id = GetIdFromPackage(decodeBuffer);
     int8_t index = FindItem(id);
     if(index == -1)
-      return;
+      return false;
       
     RemoveItemCommand(decodeBuffer, items, &itemCount, index);
 
     // Return to Navigate state if active application is removed
-    if(itemIndex == index && mode == MODE_APPLICATION)
+    if(IsItemActive(index) && mode == MODE_APPLICATION)
       stateApplication = STATE_APPLICATION_NAVIGATE;
 
     // Make sure current menu index is not out of bounds after removing item.
@@ -259,11 +262,15 @@ void ProcessPackage()
     // If the updated item is in itemIndexA or itemIndexB
     // call a method here to rebalance.
 
+    if(IsItemActive(index))
+      return true;    
+
   }
   else if(command == MSG_COMMAND_SETTINGS)
   {
     UpdateSettingsCommand(decodeBuffer, &settings);
   }
+  return false;
 } 
 
 //---------------------------------------------------------
@@ -513,3 +520,30 @@ int8_t FindItem(uint32_t id)
 
   return -1;
 }
+
+//---------------------------------------------------------
+// \brief Checks if target ID is the active application.
+// \param index The index of the item to be checked.
+// \returns true if ids match.
+//---------------------------------------------------------
+bool IsItemActive(int8_t index)
+{
+  if(mode == MODE_APPLICATION && itemIndex == index)
+  {
+    return true;
+  }
+  else if(mode == MODE_GAME && (itemIndexA == index || itemIndexB == index))
+  {
+    return true;
+  }
+  return false;
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+void RequireDisplayUpdate()
+{
+  UpdateActivityTime();
+  isDirty = true;
+}
+

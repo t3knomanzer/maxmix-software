@@ -70,10 +70,10 @@ bool DecodePackage(const uint8_t* inBuffer, uint8_t size, uint8_t* outBuffer)
 
 //-----------------------------------------------------------------------------
 // \brief Encode a byte buffer with the COBS encoder.
-// \param buffer A pointer to the unencoded buffer to encode.
-// \param size  The number of bytes in the \p buffer.
-// \param encodedBuffer The buffer for the encoded bytes.
-// \returns The number of bytes written to the \p encodedBuffer.
+// \param inBuffer A pointer to the unencoded buffer to encode.
+// \param size  The number of bytes in the \p inBuffer.
+// \param outBuffer The buffer for the encoded bytes.
+// \returns The number of bytes written to the \p outBuffer.
 // \warning The encodedBuffer must have at least getEncodedBufferSize() 
 //          allocated.
 //-----------------------------------------------------------------------------
@@ -113,10 +113,10 @@ uint8_t Encode(const uint8_t* inBuffer, uint8_t size, uint8_t* outBuffer)
 
 //-----------------------------------------------------------------------------
 // \brief Decode a COBS-encoded buffer.
-// \param encodedBuffer A pointer to the \p encodedBuffer to decode.
-// \param size The number of bytes in the \p encodedBuffer.
-// \param decodedBuffer The target buffer for the decoded bytes.
-// \returns The number of bytes written to the \p decodedBuffer.
+// \param inBuffer A pointer to the \p inBuffer to decode.
+// \param size The number of bytes in the \p inBuffer.
+// \param outBuffer The target buffer for the decoded bytes.
+// \returns The number of bytes written to the \p outBuffer.
 // \warning decodedBuffer must have a minimum capacity of size.
 //-----------------------------------------------------------------------------
 uint8_t Decode(const uint8_t* inBuffer, uint8_t size, uint8_t* outBuffer)
