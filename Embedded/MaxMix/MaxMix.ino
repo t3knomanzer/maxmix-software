@@ -460,7 +460,12 @@ void UpdateLighting()
      return;
    }
    
-   if(mode == MODE_MASTER || mode == MODE_APPLICATION)
+   if(mode == MODE_MASTER)
+   {
+      uint8_t volumeColor = round(items[0].volume * 2.55f);
+      SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
+   }
+   else if(mode == MODE_APPLICATION)
    {
       uint8_t volumeColor = round(items[itemIndex].volume * 2.55f);
       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
