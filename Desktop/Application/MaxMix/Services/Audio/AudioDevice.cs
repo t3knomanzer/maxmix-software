@@ -71,7 +71,6 @@ namespace MaxMix.Services.Audio
 
                 _isNotifyEnabled = false;
                 _endpointVolume.MasterVolumeLevelScalar = value / 100f;
-                _isNotifyEnabled = true;
             }
         }
 
@@ -86,7 +85,6 @@ namespace MaxMix.Services.Audio
 
                 _isNotifyEnabled = false;
                 _endpointVolume.IsMuted = value;
-                _isNotifyEnabled = true;
             }
         }
         #endregion
@@ -193,7 +191,10 @@ namespace MaxMix.Services.Audio
         private void OnEndpointVolumeChanged(object sender, AudioEndpointVolumeCallbackEventArgs e)
         {
             if (!_isNotifyEnabled)
+            {
+                _isNotifyEnabled = true;
                 return;
+            }
 
             VolumeChanged?.Invoke(this);
         }
