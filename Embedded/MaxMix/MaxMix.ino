@@ -418,9 +418,6 @@ void UpdateDisplay()
     return;
   }
   
-  uint8_t scrollLeft = CanScrollLeft(itemIndex, itemCount, settings.continuousScroll);
-  uint8_t scrollRight = CanScrollRight(itemIndex, itemCount, settings.continuousScroll);
-
   if(mode == MODE_MASTER)
   {
     DisplayMasterSelectScreen(display, items[0].volume, mode, MODE_COUNT);
@@ -428,7 +425,11 @@ void UpdateDisplay()
   else if(mode == MODE_APPLICATION)
   {
     if(stateApplication == STATE_APPLICATION_NAVIGATE)
+    {
+      uint8_t scrollLeft = CanScrollLeft(itemIndex, itemCount, settings.continuousScroll);
+      uint8_t scrollRight = CanScrollRight(itemIndex, itemCount, settings.continuousScroll);
       DisplayApplicationSelectScreen(display, items[itemIndex].name, items[itemIndex].volume, scrollLeft, scrollRight, mode, MODE_COUNT);
+    }
 
     else if(stateApplication == STATE_APPLICATION_EDIT)
       DisplayApplicationEditScreen(display, items[itemIndex].name, items[itemIndex].volume, mode, MODE_COUNT);
@@ -436,9 +437,17 @@ void UpdateDisplay()
   else if(mode == MODE_GAME)
   {
     if(stateGame == STATE_GAME_SELECT_A)
+    {
+      uint8_t scrollLeft = CanScrollLeft(itemIndexA, itemCount, settings.continuousScroll);
+      uint8_t scrollRight = CanScrollRight(itemIndexA, itemCount, settings.continuousScroll);
       DisplayGameSelectScreen(display, items[itemIndexA].name, items[itemIndexA].volume, "A", scrollLeft, scrollRight, mode, MODE_COUNT);
+    }
     else if(stateGame == STATE_GAME_SELECT_B)
+    {
+      uint8_t scrollLeft = CanScrollLeft(itemIndexB, itemCount, settings.continuousScroll);
+      uint8_t scrollRight = CanScrollRight(itemIndexB, itemCount, settings.continuousScroll);
       DisplayGameSelectScreen(display, items[itemIndexB].name, items[itemIndexB].volume, "B", scrollLeft, scrollRight, mode, MODE_COUNT);
+    }
     else if(stateGame == STATE_GAME_EDIT)
       DisplayGameEditScreen(display, items[itemIndexA].name, items[itemIndexB].name, items[itemIndexA].volume, items[itemIndexB].volume, mode, MODE_COUNT);
   }
