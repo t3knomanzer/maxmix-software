@@ -91,7 +91,6 @@ namespace MaxMix.Services.Audio
             _volume = value;
             foreach (var session in _sessions.Values)
                 session.Volume = value;
-            _isNotifyEnabled = true;
         }
 
         private void SetIsMuted(bool value)
@@ -103,7 +102,6 @@ namespace MaxMix.Services.Audio
             _isMuted = value;
             foreach (var session in _sessions.Values)
                 session.IsMuted = value;
-            _isNotifyEnabled = true;
         }
         #endregion
 
@@ -114,7 +112,10 @@ namespace MaxMix.Services.Audio
             _isMuted = session.IsMuted;
 
             if (!_isNotifyEnabled)
+            {
+                _isNotifyEnabled = true;
                 return;
+            }
 
             VolumeChanged?.Invoke(this);
         }
