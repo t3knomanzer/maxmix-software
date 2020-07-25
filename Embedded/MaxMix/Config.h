@@ -24,25 +24,29 @@ static const uint8_t  PIN_ENCODER_SWITCH = 17; //A3
 // --- States
 static const uint8_t  MODE_APPLICATION = 0;
 static const uint8_t  MODE_GAME = 1;
+static const uint8_t  MODE_COUNT = 2;
 
 static const uint8_t  STATE_APPLICATION_NAVIGATE = 0;
 static const uint8_t  STATE_APPLICATION_EDIT = 1;
-static const uint8_t  STATE_GAME_SELECT_A = 2;
-static const uint8_t  STATE_GAME_SELECT_B = 3;
-static const uint8_t  STATE_GAME_EDIT = 4;
+static const uint8_t  STATE_APPLICATION_COUNT = 2;
+
+static const uint8_t  STATE_GAME_SELECT_A = 0;
+static const uint8_t  STATE_GAME_SELECT_B = 1;
+static const uint8_t  STATE_GAME_EDIT = 2;
+static const uint8_t  STATE_GAME_COUNT = 3;
 
 
-static const uint8_t  STATE_SCREEN_AWAKE = 0;
-static const uint8_t  STATE_SCREEN_SLEEP = 1;
+static const uint8_t  STATE_DISPLAY_AWAKE = 0;
+static const uint8_t  STATE_DISPLAY_SLEEP = 1;
 
 // --- Display
-static const uint8_t  SCREEN_RESET =   4; // Reset pin # (or -1 if sharing Arduino reset pin)
+static const uint8_t  DISPLAY_RESET =   4; // Reset pin # (or -1 if sharing Arduino reset pin)
 
 // --- Lighting
 static const uint8_t  PIXELS_NUM = 8; // Number of pixels in ring
 
 // --- Messages
-static const uint8_t ITEM_BUFFER_SIZE = 10;
+static const uint8_t ITEM_BUFFER_SIZE = 8;
 static const uint8_t ITEM_BUFFER_NAME_SIZE = 36;
 static const uint8_t RECEIVE_BUFFER_SIZE = 128;
 static const uint8_t SEND_BUFFER_SIZE = 8;
@@ -58,15 +62,41 @@ static const uint8_t MSG_COMMAND_SETTINGS =  5;
 static const uint8_t MSG_PACKET_DELIMITER = 0;
 
 // --- Screen Drawing
-static const uint8_t SCREEN_WIDTH = 128;
-static const uint8_t SCREEN_HEIGHT = 32;
-static const uint8_t SCREEN_CHAR_WIDTH_X1 = 6;
-static const uint8_t SCREEN_CHAR_HEIGHT_X1 = 8;
-static const uint8_t SCREEN_MARGIN_X1 = 2;
-static const uint8_t SCREEN_MARGIN_X2 = 4;
+static const uint8_t DISPLAY_WIDTH = 128;
+static const uint8_t DISPLAY_HEIGHT = 32;
+static const uint8_t DISPLAY_ADDRESS = 0x3C;
 
-// - Balance Mode
-static const uint8_t SCREEN_MODE_GAME_MAX_NAME_CHARS = 8;
-static const uint8_t SCREEN_MODE_GAME_MAX_NAME_WIDTH = SCREEN_MODE_GAME_MAX_NAME_CHARS * SCREEN_CHAR_WIDTH_X1;
-static const uint8_t SCREEN_MODE_GAME_ROW_HEIGHT = 10;
-static const uint8_t SCREEN_MODE_GAME_ARROW_SIZE = 3;
+static const uint8_t DISPLAY_CHAR_WIDTH_X1 = 5;
+static const uint8_t DISPLAY_CHAR_HEIGHT_X1 = 7;
+static const uint8_t DISPLAY_CHAR_WIDTH_X2 = 10;
+static const uint8_t DISPLAY_CHAR_HEIGHT_X2 = 14;
+
+static const uint8_t DISPLAY_CHAR_MAX_X1 = 18;
+static const uint8_t DISPLAY_CHAR_MAX_X2 = 9;
+static const uint8_t DISPLAY_CHAR_MAX_WIDTH_X1 = DISPLAY_CHAR_MAX_X1 * DISPLAY_CHAR_WIDTH_X1 + DISPLAY_CHAR_MAX_X1 - 1;
+static const uint8_t DISPLAY_CHAR_MAX_WIDTH_X2 = DISPLAY_CHAR_MAX_X2 * DISPLAY_CHAR_WIDTH_X2 + DISPLAY_CHAR_MAX_X2 - 1;
+
+
+static const uint8_t DISPLAY_MARGIN_X1 = 2;
+static const uint8_t DISPLAY_MARGIN_X2 = 4;
+static const uint8_t DISPLAY_MARGIN_X3 = 8;
+
+static const uint8_t DISPLAY_AREA_CENTER_MARGIN_SIDE = 11;
+static const uint8_t DISPLAY_AREA_CENTER_MARGIN_BOTTOM = 7;
+static const uint8_t DISPLAY_AREA_CENTER_WIDTH = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE * 2;
+static const uint8_t DISPLAY_AREA_CENTER_HEIGHT = DISPLAY_HEIGHT - DISPLAY_AREA_CENTER_MARGIN_BOTTOM;
+
+static const uint8_t DISPLAY_WIDGET_DOT_SIZE_X1 = 2;
+static const uint8_t DISPLAY_WIDGET_DOT_SIZE_X2 = 4;
+static const uint8_t DISPLAY_WIDGET_ARROW_SIZE_X1 = 3;
+static const uint8_t DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1 = 6;
+static const uint8_t DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2 = 14;
+
+static const uint8_t DISPLAY_WIDGET_DOTGROUP_WIDTH = (MODE_COUNT - 1) * DISPLAY_WIDGET_DOT_SIZE_X1 + DISPLAY_WIDGET_DOT_SIZE_X2 + (MODE_COUNT - 1) * DISPLAY_MARGIN_X2;
+static const uint8_t DISPLAY_WIDGET_DOTGROUP_HEIGHT = DISPLAY_WIDGET_DOT_SIZE_X2;
+
+// - Mode specific
+static const uint8_t DISPLAY_GAME_EDIT_CHAR_MAX = 7;
+static const uint8_t DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH = DISPLAY_GAME_EDIT_CHAR_MAX * DISPLAY_CHAR_WIDTH_X1 + DISPLAY_GAME_EDIT_CHAR_MAX - 1;
+static const uint8_t DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT = 7;
+

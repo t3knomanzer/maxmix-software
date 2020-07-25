@@ -19,7 +19,6 @@
 //********************************************************
 // Third-party
 #include <Arduino.h>
-#include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_NeoPixel.h>
@@ -82,9 +81,8 @@ ButtonEvents encoderButton;
 Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
 int8_t encoderVolumeStep = 5;
 
-
 // Sleep
-uint8_t screenState = STATE_SCREEN_AWAKE;
+uint8_t screenState = STATE_DISPLAY_AWAKE;
 uint32_t lastActivityTime = 0;
 
 // Lighting
@@ -108,12 +106,8 @@ void setup()
   pixels->begin();
 
   // --- Display
-  display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, SCREEN_RESET);
-  if(!display->begin(SSD1306_SWITCHCAPVCC, 0x3C)) 
-    for(;;);
-
-  display->setRotation(2);
-  DisplaySplash(display);
+  display = InitializeDisplay();
+  DisplaySplashScreen(display);
 
   // --- Encoder
   pinMode(PIN_ENCODER_SWITCH, INPUT_PULLUP);
@@ -142,9 +136,7 @@ void loop()
   }
 
   if(ProcessSleep())
-  {
     isDirty = true;
-  }
 
   // Check for buffer overflow
   if(receiveIndex == RECEIVE_BUFFER_SIZE)
@@ -287,7 +279,7 @@ bool ProcessEncoderRotation()
   else if(encoderDir == DIR_CCW)
     encoderDelta = -1;
 
-  if(itemCount == 0 || screenState == STATE_SCREEN_SLEEP)
+  if(itemCount == 0 || screenState == STATE_DISPLAY_SLEEP)
     return true;
 
   if(mode == MODE_APPLICATION)
@@ -332,31 +324,32 @@ bool ProcessEncoderButton()
 {
   if(encoderButton.tapped())
   {
-    if(screenState == STATE_SCREEN_SLEEP)
+    if(screenState == STATE_DISPLAY_SLEEP)
       return true;
       
     if(mode == MODE_APPLICATION)
-      CycleAppModeState();
+      CycleApplicationState();
+
     else if(mode == MODE_GAME)
-      CycleGameModeState();
+      CycleGameState();
 
     return true;
   }
   
   if(encoderButton.doubleTapped())
   {
-    if(screenState == STATE_SCREEN_SLEEP)
+    if(screenState == STATE_DISPLAY_SLEEP)
       return true;
       
     if(mode == MODE_GAME)
-      ResetGameModeVolumes();
+      ResetGameVolume();
 
     return true;
   }
 
   if(encoderButton.held())
   {
-    if(screenState == STATE_SCREEN_SLEEP)
+    if(screenState == STATE_DISPLAY_SLEEP)
       return true;
       
     if(itemCount > 0)
@@ -377,19 +370,19 @@ bool ProcessSleep()
 
   uint32_t activityTimeDelta = millis() - lastActivityTime;
 
-  if(screenState == STATE_SCREEN_AWAKE)
+  if(screenState == STATE_DISPLAY_AWAKE)
   {
     if(activityTimeDelta > settings.sleepAfterSeconds * 1000)
     {
-      screenState = STATE_SCREEN_SLEEP;
+      screenState = STATE_DISPLAY_SLEEP;
       return true;
     }
   }
-  else if(screenState == STATE_SCREEN_SLEEP)
+  else if(screenState == STATE_DISPLAY_SLEEP)
   {
     if(activityTimeDelta < settings.sleepAfterSeconds * 1000)
     {
-      screenState = STATE_SCREEN_AWAKE;
+      screenState = STATE_DISPLAY_AWAKE;
       return true;
     }
   }
@@ -408,29 +401,37 @@ void UpdateActivityTime()
 //---------------------------------------------------------
 void UpdateDisplay()
 {
-  if(screenState == STATE_SCREEN_SLEEP)
+  if(screenState == STATE_DISPLAY_SLEEP)
   {
-    display->clearDisplay();
-    display->display();
+    DisplaySleep(display);
     return;
   }
 
   if(itemCount == 0)
   {
-    DisplaySplash(display);
+    DisplaySplashScreen(display);
     return;
   }
   
+  uint8_t scrollLeft = CanScrollLeft(itemIndex, itemCount, settings.continuousScroll);
+  uint8_t scrollRight = CanScrollRight(itemIndex, itemCount, settings.continuousScroll);
+
   if(mode == MODE_APPLICATION)
   {
     if(stateApplication == STATE_APPLICATION_NAVIGATE)
-      DisplayAppNavigateScreen(display, &items[itemIndex], itemIndex, itemCount, settings.continuousScroll);
+      DisplayApplicationSelectScreen(display, items[itemIndex].name, items[itemIndex].volume, scrollLeft, scrollRight, mode, MODE_COUNT);
+
     else if(stateApplication == STATE_APPLICATION_EDIT)
-      DisplayAppEditScreen(display, &items[itemIndex]);
+      DisplayApplicationEditScreen(display, items[itemIndex].name, items[itemIndex].volume, mode, MODE_COUNT);
   }
   else if(mode == MODE_GAME)
   {
-    DisplayGameScreen(display, items, itemIndexA, itemIndexB, itemCount, stateGame, settings.continuousScroll);
+    if(stateGame == STATE_GAME_SELECT_A)
+      DisplayGameSelectScreen(display, items[itemIndexA].name, items[itemIndexA].volume, "A", scrollLeft, scrollRight, mode, MODE_COUNT);
+    else if(stateGame == STATE_GAME_SELECT_B)
+      DisplayGameSelectScreen(display, items[itemIndexB].name, items[itemIndexB].volume, "B", scrollLeft, scrollRight, mode, MODE_COUNT);
+    else if(stateGame == STATE_GAME_EDIT)
+      DisplayGameEditScreen(display, items[itemIndexA].name, items[itemIndexB].name, items[itemIndexA].volume, items[itemIndexB].volume, mode, MODE_COUNT);
   }
 }
 
@@ -438,7 +439,7 @@ void UpdateDisplay()
 //---------------------------------------------------------
 void UpdateLighting()
 {
-   if(screenState == STATE_SCREEN_SLEEP)
+   if(screenState == STATE_DISPLAY_SLEEP)
    {
      SetPixelsColor(pixels, 0,0,0);
      return;
@@ -457,7 +458,21 @@ void UpdateLighting()
    }
    else if(mode == MODE_GAME)
    {
-     SetPixelsColor(pixels, 128, 128, 128);
+     uint8_t volumeColor;
+     if(stateGame == STATE_GAME_SELECT_A)
+     {
+       volumeColor = round(items[itemIndexA].volume * 2.55f);
+       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
+     }
+     else if(stateGame == STATE_GAME_SELECT_B)
+     {
+       volumeColor = round(items[itemIndexB].volume * 2.55f);
+       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
+     }
+     else
+     {
+      SetPixelsColor(pixels, 128, 128, 128);
+     }
    }
 }
 
@@ -465,41 +480,33 @@ void UpdateLighting()
 //---------------------------------------------------------
 void CycleMode()
 {
-  if(mode == MODE_APPLICATION)
-  {
-    mode = MODE_GAME;
-  }
-  else if(mode == MODE_GAME)
-  {
-    mode = MODE_APPLICATION;
-  }
+    mode++;
+
+    if(mode == MODE_COUNT)
+      mode = 0;
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void CycleAppModeState()
+void CycleApplicationState()
 {
-  if(stateApplication == STATE_APPLICATION_NAVIGATE)  
-    stateApplication = STATE_APPLICATION_EDIT;
-  else if(stateApplication == STATE_APPLICATION_EDIT)
-    stateApplication = STATE_APPLICATION_NAVIGATE;
+  stateApplication++;
+  if(stateApplication == STATE_APPLICATION_COUNT)
+    stateApplication = 0;
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void CycleGameModeState()
+void CycleGameState()
 {
-  if(stateGame == STATE_GAME_SELECT_A)
-    stateGame = STATE_GAME_SELECT_B;
-  else if(stateGame == STATE_GAME_SELECT_B)
-    stateGame = STATE_GAME_EDIT;
-  else if(stateGame == STATE_GAME_EDIT)
-    stateGame = STATE_GAME_SELECT_A;
+  stateGame++;
+  if(stateGame == STATE_GAME_COUNT)
+    stateGame = 0;
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void ResetGameModeVolumes()
+void ResetGameVolume()
 {
   items[itemIndexA].volume = 50;
   items[itemIndexB].volume = 50;

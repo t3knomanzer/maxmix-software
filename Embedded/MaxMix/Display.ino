@@ -1,27 +1,38 @@
-  //********************************************************
+//********************************************************
 // PROJECT: MAXMIX
 // AUTHOR: Ruben Henares
 // EMAIL: rhenares0@gmail.com
 //
-// DECRIPTION:
-// Resolution: 128x32
-// Characters @size 1: 21x4
-// Character size in pixels: 6.095x8
 //********************************************************
 
 //********************************************************
 // *** INCLUDES
 //********************************************************
+#include <Wire.h>
 #include "Logo.h"
-
 
 //********************************************************
 // *** FUNCTIONS
 //********************************************************
+Adafruit_SSD1306* InitializeDisplay()
+{
+  Adafruit_SSD1306* display = new Adafruit_SSD1306(DISPLAY_WIDTH, DISPLAY_HEIGHT, &Wire, DISPLAY_RESET);
+  display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS);
+  display->setRotation(2);
+
+  return display;
+}
+
+void DisplaySleep(Adafruit_SSD1306* display)
+{
+  display->clearDisplay();
+  display->display();
+}
+
 //---------------------------------------------------------
 // Draws the splash screen logo
 //---------------------------------------------------------
-void DisplaySplash(Adafruit_SSD1306* display)
+void DisplaySplashScreen(Adafruit_SSD1306* display)
 {
   display->clearDisplay();
   display->drawBitmap(0, 0, LOGOBMP, LOGO_WIDTH, LOGO_HEIGHT, 1);
@@ -29,45 +40,47 @@ void DisplaySplash(Adafruit_SSD1306* display)
 }
 
 //---------------------------------------------------------
-// Draws the Application mode Navigation screen
+// Draws the master mode screen
 //---------------------------------------------------------
-void DisplayAppNavigateScreen(Adafruit_SSD1306* display, Item* item, int8_t itemIndex, uint8_t itemCount, uint8_t continuousScroll)
+void DisplayMasterSelectScreen(Adafruit_SSD1306* display, uint8_t volume, uint8_t modeIndex, uint8_t modeCount)
 {
   display->clearDisplay();
-  
-  uint8_t leftArrow = CanScrollLeft(itemIndex, itemCount, continuousScroll);
-  uint8_t rightArrow = CanScrollRight(itemIndex, itemCount, continuousScroll);
 
-  if(leftArrow)
-    display->fillTriangle(0, 10, 3, 7, 3, 13, WHITE);
-  
-  if(rightArrow)
-    display->fillTriangle(127, 10, 124, 7, 124, 13, WHITE);
-  
-  // Item Name
-  // Width of the left triangle is 3, we leave 4 pixels of margin.
-  display->setTextSize(2);             
-  display->setTextColor(WHITE);      
-  display->setCursor(11, 4);             
+  DrawDotGroup(display, modeIndex, modeCount);
+  DrawSelectionItemName(display, "VOL");
+  DrawSelectionItemVolume(display, volume);
+  DrawSelectionVolumeBar(display, volume);
 
-  // We can fit up to 9 characters in the line.
-  // Truncate the name and draw 1 char at a time.
-  int nameLength = min(9, strlen(item->name));  
-  for(size_t i = 0; i < nameLength; i++)
-    display->print(item->name[i]);
+  display->display();
+}
 
-  // Bottom Line
-  // The height of size 2 font is 16 and the screen is 32 pixels high.
-  // So we start at 16 down.
+//---------------------------------------------------------
+// Draws the Application mode selection screen
+//---------------------------------------------------------
+void DisplayApplicationSelectScreen(Adafruit_SSD1306* display, char* name, uint8_t volume, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex, uint8_t modeCount)
+{
+  display->clearDisplay();
 
-  // Volume Bar Margins
-  display->drawLine(7, 28, 7, 32, WHITE);
-  display->drawLine(121, 28, 121, 32, WHITE);
+  DrawDotGroup(display, modeIndex, modeCount);
+  DrawSelectionArrows(display, leftArrow, rightArrow);
+  DrawSelectionItemName(display, name);
+  DrawSelectionVolumeBar(display, volume);
 
-  // Volume Bar
-  // The width of the bar is the area between the 2 margins - 4 pixels margin on each side. 
-  int barWidth = max(1, item->volume) * 1.07;
-  display->fillRect(11, 28, barWidth, 32, WHITE);
+  display->display();
+}
+
+//---------------------------------------------------------
+// Draws the Application mode selection screen
+//---------------------------------------------------------
+void DisplayGameSelectScreen(Adafruit_SSD1306* display, char* name, uint8_t volume, char* channel, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex, uint8_t modeCount)
+{
+  display->clearDisplay();
+
+  DrawDotGroup(display, modeIndex, modeCount);
+  DrawSelectionArrows(display, leftArrow, rightArrow);
+  DrawSelectionItemName(display, name);
+  DrawSelectionVolumeBar(display, volume);
+  DrawSelectionChannelName(display, channel);
 
   display->display();
 }
@@ -75,40 +88,55 @@ void DisplayAppNavigateScreen(Adafruit_SSD1306* display, Item* item, int8_t item
 //---------------------------------------------------------
 // Draws the Application mode Edit screen
 //---------------------------------------------------------
-void DisplayAppEditScreen(Adafruit_SSD1306* display, Item* item)
+void DisplayApplicationEditScreen(Adafruit_SSD1306* display, char* name, uint8_t volume, uint8_t modeIndex, uint8_t modeCount)
 {
   display->clearDisplay();
+  
+  DrawDotGroup(display, modeIndex, modeCount);
 
-  // Item Name
-  // Width of the left triangle is 3, we leave 4 pixels of margin.
-  display->setTextSize(1);             
-  display->setTextColor(WHITE);      
-  display->setCursor(7, 4);             
+  uint8_t x0, y0, x1, y1;
 
-  // We can fit up to 18 characters in the line.
-  // Truncate the name and draw 1 char at a time.
-  // int nameLength = min(18, strlen(items[index].name));
-  int nameLength = min(18, strlen(item->name));
-  for(size_t i = 0; i < nameLength; i++)
-    display->print(item->name[i]);
+  // Item name
+  display->setTextSize(1);
+  display->setTextColor(WHITE);
+  display->setCursor(DISPLAY_AREA_CENTER_MARGIN_SIDE, 0);
 
-  // Bottom Line
-  // The height of size 2 font is 16 and the screen is 32 pixels high.
-  // So we start at 16 down.
+  x0 = min(DISPLAY_CHAR_MAX_X1, strlen(name)); // Name length
+  for(size_t i = 0; i < x0; i++)
+    display->print(name[i]);
 
-  // Volume Bar limits
-  display->drawLine(7, 18, 7, 32, WHITE); // Left
-  display->drawLine(86, 18, 86, 32, WHITE); // Right
+  // Volume bar min margin
+  x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE;
+  y0 = DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2;
+  y1 = y0 + DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2 - 1;
 
-  // Volume Bar
-  // The width of the bar is the area between the 2 margins - 4 pixels margin on each side. 
-  int barWidth = max(1, item->volume) * 0.72;
-  display->fillRect(11, 18, barWidth, 32, WHITE);
+  display->drawLine(x0, y0, x0, y1, WHITE);
+
+  // Volume bar
+  x0 += 1 + DISPLAY_MARGIN_X1;
+  x1 = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 2 - DISPLAY_CHAR_WIDTH_X2 * 3; // Volume bar max width
+  x1 = map(volume, 0, 100, 0, x1);
+
+  if(x1 > 0)
+    display->fillRect(x0, y0, x1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2, WHITE);
+
+  // Volume bar max margin
+  x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2 * 3 - 1;
+
+  display->drawLine(x0, y0, x0, y1, WHITE);
 
   // Volume Digits
+  if( volume == 0)
+    x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2;
+  else if(volume < 100)
+    x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2 * 2;
+  else if(volume == 100)
+    x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2 * 3;
+
   display->setTextSize(2);
-  display->setCursor(92, 18);
-  display->print(item->volume);
+  display->setTextColor(WHITE);
+  display->setCursor(x0, y0);
+  display->print(volume);
 
   display->display();
 }
@@ -116,24 +144,19 @@ void DisplayAppEditScreen(Adafruit_SSD1306* display, Item* item)
 //---------------------------------------------------------
 // Draws the Game mode screen
 //---------------------------------------------------------
-void DisplayGameScreen(Adafruit_SSD1306* display, Item* items, uint8_t itemIndexA, uint8_t itemIndexB,
-                       uint8_t itemCount, uint8_t state, uint8_t continuousScroll)
+void DisplayGameEditScreen(Adafruit_SSD1306* display, char* nameA, char* nameB, uint8_t volumeA, uint8_t volumeB, uint8_t modeIndex, uint8_t modeCount)
 {
+  uint8_t py;
+  
   display->clearDisplay();
+  
+  DrawDotGroup(display, modeIndex, modeCount);
 
-  // Top Row
-  uint8_t paddingVertical = (SCREEN_HEIGHT - (SCREEN_MODE_GAME_ROW_HEIGHT * 2 + SCREEN_MARGIN_X2)) / 2.0f;
-  uint8_t py = paddingVertical + SCREEN_MODE_GAME_ROW_HEIGHT / 2; // Vertical center of top row
-  uint8_t leftArrow = CanScrollLeft(itemIndexA, itemCount, continuousScroll) && state == STATE_GAME_SELECT_A;
-  uint8_t rightArrow = CanScrollRight(itemIndexA, itemCount, continuousScroll) && state == STATE_GAME_SELECT_A;
+  py = DISPLAY_MARGIN_X2;
+  DrawGameEditItem(display, nameA, volumeA, DISPLAY_AREA_CENTER_MARGIN_SIDE, py);
 
-  DrawGameModeRow(display, items, itemIndexA, SCREEN_MARGIN_X1, py, leftArrow, rightArrow);
-
-  // Bottom Row
-  py += SCREEN_MARGIN_X2 + SCREEN_MODE_GAME_ROW_HEIGHT; // Vertical center of bottom row
-  leftArrow = CanScrollLeft(itemIndexB, itemCount, continuousScroll) && state == STATE_GAME_SELECT_B;
-  rightArrow = CanScrollRight(itemIndexB, itemCount, continuousScroll) && state == STATE_GAME_SELECT_B;
-  DrawGameModeRow(display, items, itemIndexB, SCREEN_MARGIN_X1, py, leftArrow, rightArrow);
+  py = DISPLAY_MARGIN_X2 + DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2 + DISPLAY_MARGIN_X1;
+  DrawGameEditItem(display, nameB, volumeB, DISPLAY_AREA_CENTER_MARGIN_SIDE, py);
 
   display->display();
 }
@@ -142,75 +165,158 @@ void DisplayGameScreen(Adafruit_SSD1306* display, Item* items, uint8_t itemIndex
 //---------------------------------------------------------
 // Draws a row of the Game mode screen
 //---------------------------------------------------------
-void DrawGameModeRow(Adafruit_SSD1306* display, Item* items, uint8_t itemIndex, uint8_t px, uint8_t py, uint8_t leftArrow, uint8_t rightArrow)
+void DrawGameEditItem(Adafruit_SSD1306* display, char* name, uint8_t volume, uint8_t px, uint8_t py)
+{
+  // Name 
+  display->setTextSize(1);             
+  display->setTextColor(WHITE);
+  display->setCursor(px, py);
+
+  uint8_t length = min(DISPLAY_GAME_EDIT_CHAR_MAX, strlen(name));
+  for(size_t i = 0; i < length; i++)
+    display->print(name[i]);
+
+  // Volume bar min indicator
+  px += DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH + DISPLAY_MARGIN_X2;
+  display->drawLine(px, py, px, py + DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT - 1, WHITE);
+
+  // Volume bar
+  px += 1 + DISPLAY_MARGIN_X1;  
+  uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH - DISPLAY_MARGIN_X2 - 2 - DISPLAY_MARGIN_X1 * 2;
+  uint8_t width = map(volume, 0, 100, 0, maxWidth);
+  
+  if(width > 0)
+    display->fillRect(px, py, width, DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT, WHITE);
+
+  // Volume bar min indicator
+  px += maxWidth + DISPLAY_MARGIN_X1;
+  display->drawLine(px, py, px, py + DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT - 1, WHITE);
+}
+
+//---------------------------------------------------------
+// Draw Mode Indicator
+// Horizontal alignment: display center
+// Vertical alignment: display bottom
+//---------------------------------------------------------
+void DrawDotGroup(Adafruit_SSD1306* display, uint8_t index, uint8_t count)
+{
+  uint8_t px, py, x0, y0, dotSize;  
+
+  px = DISPLAY_WIDTH / 2 - DISPLAY_WIDGET_DOTGROUP_WIDTH / 2;
+  py = DISPLAY_HEIGHT - DISPLAY_WIDGET_DOTGROUP_HEIGHT / 2;
+  
+  x0 = px;
+  y0 = py;
+
+  for(uint8_t i = 0; i < count; i++)
+  {
+    dotSize = i == index ? DISPLAY_WIDGET_DOT_SIZE_X2 : DISPLAY_WIDGET_DOT_SIZE_X1;
+    y0 = py - dotSize / 2;
+
+    display->fillRect(x0, y0, dotSize, dotSize, WHITE);
+    x0 += dotSize + DISPLAY_MARGIN_X2;
+  }
+}
+
+
+//---------------------------------------------------------
+// Draw Selection Arrows
+//---------------------------------------------------------
+void DrawSelectionArrows(Adafruit_SSD1306* display, uint8_t leftArrow, uint8_t rightArrow)
 {
   uint8_t x0, y0, x1, y1, x2, y2;
 
-  // Left arrow
-  x0 = px;
-  y0 = py;
-  x1 = px + SCREEN_MODE_GAME_ARROW_SIZE;
-  y1 = py - SCREEN_MODE_GAME_ARROW_SIZE;
-  x2 = px + SCREEN_MODE_GAME_ARROW_SIZE;
-  y2 = py + SCREEN_MODE_GAME_ARROW_SIZE;
-
   if(leftArrow)
+  {
+    x0 = 0;
+    y0 = DISPLAY_MARGIN_X2 + DISPLAY_WIDGET_ARROW_SIZE_X1;
+    x1 = x0 + DISPLAY_WIDGET_ARROW_SIZE_X1;
+    y1 = y0 - DISPLAY_WIDGET_ARROW_SIZE_X1;
+    x2 = x0 + DISPLAY_WIDGET_ARROW_SIZE_X1;
+    y2 = y0 + DISPLAY_WIDGET_ARROW_SIZE_X1;
+
     display->fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
-
-  // Name 
-  px += SCREEN_MODE_GAME_ARROW_SIZE + SCREEN_MARGIN_X2;
-  x0 = px;
-  y0 = py - SCREEN_CHAR_HEIGHT_X1 / 2;
-
-  uint8_t nameLength = min(SCREEN_MODE_GAME_MAX_NAME_CHARS, strlen(items[itemIndex].name));
-
-  display->setTextSize(1);             
-  display->setTextColor(WHITE);
-  display->setCursor(x0, y0);
-
-  for(size_t i = 0; i < nameLength; i++)
-    display->print(items[itemIndex].name[i]);
-
-  // Right arrow
-  px += SCREEN_MODE_GAME_MAX_NAME_WIDTH + SCREEN_MARGIN_X2;
-  
-  x0 = px;
-  y0 = py;
-  x1 = px - SCREEN_MODE_GAME_ARROW_SIZE;
-  y1 = py - SCREEN_MODE_GAME_ARROW_SIZE;
-  x2 = px - SCREEN_MODE_GAME_ARROW_SIZE;
-  y2 = py + SCREEN_MODE_GAME_ARROW_SIZE;
+  }
 
   if(rightArrow)
+  {
+    x0 = DISPLAY_WIDTH - 1;
+    y0 = DISPLAY_MARGIN_X2 + DISPLAY_WIDGET_ARROW_SIZE_X1;
+    x1 = x0 - DISPLAY_WIDGET_ARROW_SIZE_X1;
+    y1 = y0 - DISPLAY_WIDGET_ARROW_SIZE_X1;
+    x2 = x0 - DISPLAY_WIDGET_ARROW_SIZE_X1;
+    y2 = y0 + DISPLAY_WIDGET_ARROW_SIZE_X1;
+
     display->fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
+  }
+}
 
-  // Min indicator
-  px += SCREEN_MODE_GAME_ARROW_SIZE + SCREEN_MARGIN_X2;
-  x0 = px;
-  y0 = py - SCREEN_MODE_GAME_ROW_HEIGHT / 2;
-  x1 = px;
-  y1 = py + SCREEN_MODE_GAME_ROW_HEIGHT / 2;
+//---------------------------------------------------------
+// Draw Selection Arrows
+//---------------------------------------------------------
+void DrawSelectionItemName(Adafruit_SSD1306* display, char* name)
+{
+  display->setTextSize(2);
+  display->setTextColor(WHITE);
+  display->setCursor(DISPLAY_AREA_CENTER_MARGIN_SIDE, 0);
 
-  display->drawLine(x0, y0, x1, y1, WHITE);
+  int length = min(DISPLAY_CHAR_MAX_X2, strlen(name));  
+  for(size_t i = 0; i < length; i++)
+    display->print(name[i]);
+}
+
+//---------------------------------------------------------
+// Draw Selection Arrows
+//---------------------------------------------------------
+void DrawSelectionItemVolume(Adafruit_SSD1306* display, uint8_t volume)
+{
+  uint8_t x0;
+
+  if( volume == 0)
+    x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - DISPLAY_CHAR_WIDTH_X2;
+  else if(volume < 100)
+    x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - DISPLAY_CHAR_WIDTH_X2 * 2;
+  else if(volume == 100)
+    x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - DISPLAY_CHAR_WIDTH_X2 * 3;
+
+  display->setTextSize(2);
+  display->setTextColor(WHITE);
+  display->setCursor(x0, 0);
+  
+  display->print(volume);
+}
+
+void DrawSelectionChannelName(Adafruit_SSD1306* display, char* channel)
+{
+  display->setTextSize(1);
+  display->setTextColor(WHITE);
+  display->setCursor(0, DISPLAY_AREA_CENTER_HEIGHT - DISPLAY_CHAR_HEIGHT_X1 - 1);
+  
+  display->print(channel);
+}
+
+void DrawSelectionVolumeBar(Adafruit_SSD1306* display, uint8_t volume)
+{
+  uint8_t x0, y0, x1, y1;
+
+  // Volume bar min margin
+  x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE;
+  y0 = DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2;
+  y1 = y0 + DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1 - 1;
+
+  display->drawLine(x0, y0, x0, y1, WHITE);
 
   // Volume bar
-  px += SCREEN_MARGIN_X1 + 1;
-  x0 = px;
-  y0 = py - SCREEN_MODE_GAME_ROW_HEIGHT / 2;
-  x1 = SCREEN_WIDTH - px - SCREEN_MARGIN_X1 * 2 - 1; // max width
-  y2 = SCREEN_MODE_GAME_ROW_HEIGHT; // height
-  x2 = map(items[itemIndex].volume, 0, 100, 0, x1); // current width
+  x0 += 1 + DISPLAY_MARGIN_X1;
+  uint8_t width = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 2;
+  width = map(volume, 0, 100, 0, width);
+
+  if(width > 0)
+    display->fillRect(x0, y0, width, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1, WHITE);
+
+  // Volume bar max margin
+  x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - 1;
+
+  display->drawLine(x0, y0, x0, y1, WHITE);
   
-  if(x2 > 0)
-    display->fillRect(x0, y0, x2, y2, WHITE);
-
-  // Max indicator
-  px += x1 + SCREEN_MARGIN_X1; // Add max volume bar width and margin
-  x0 = px;
-  y0 = py - SCREEN_MODE_GAME_ROW_HEIGHT / 2;
-  x1 = px;
-  y1 = py + SCREEN_MODE_GAME_ROW_HEIGHT / 2;
-
-  display->drawLine(x0, y0, x1, y1, WHITE);
-
 }
