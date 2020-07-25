@@ -22,9 +22,10 @@ static const uint8_t  PIN_ENCODER_OUTB = 16; //A2
 static const uint8_t  PIN_ENCODER_SWITCH = 17; //A3
 
 // --- States
-static const uint8_t  MODE_APPLICATION = 0;
-static const uint8_t  MODE_GAME = 1;
-static const uint8_t  MODE_COUNT = 2;
+static const uint8_t  MODE_MASTER = 0;
+static const uint8_t  MODE_APPLICATION = 1;
+static const uint8_t  MODE_GAME = 2;
+static const uint8_t  MODE_COUNT = 3;
 
 static const uint8_t  STATE_APPLICATION_NAVIGATE = 0;
 static const uint8_t  STATE_APPLICATION_EDIT = 1;
@@ -68,8 +69,10 @@ static const uint8_t DISPLAY_ADDRESS = 0x3C;
 
 static const uint8_t DISPLAY_CHAR_WIDTH_X1 = 5;
 static const uint8_t DISPLAY_CHAR_HEIGHT_X1 = 7;
+static const uint8_t DISPLAY_CHAR_SPACING_X1 = 1;
 static const uint8_t DISPLAY_CHAR_WIDTH_X2 = 10;
 static const uint8_t DISPLAY_CHAR_HEIGHT_X2 = 14;
+static const uint8_t DISPLAY_CHAR_SPACING_X2 = 2;
 
 static const uint8_t DISPLAY_CHAR_MAX_X1 = 18;
 static const uint8_t DISPLAY_CHAR_MAX_X2 = 9;
