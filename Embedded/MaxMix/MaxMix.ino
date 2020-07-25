@@ -46,7 +46,7 @@ struct Settings
 {
   uint8_t displayNewSession = 1;
   uint8_t sleepWhenInactive = 1;
-  uint8_t sleepAfterSeconds = 30;
+  uint8_t sleepAfterSeconds = 5;
   uint8_t continuousScroll = 1;
 };
 
@@ -62,9 +62,10 @@ uint8_t sendBuffer[SEND_BUFFER_SIZE];
 uint8_t encodeBuffer[SEND_BUFFER_SIZE];
 
 // State
-uint8_t mode = MODE_APPLICATION;
-uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
-uint8_t stateGame = STATE_GAME_SELECT_A;
+uint8_t mode = 0;
+uint8_t stateApplication = 0;
+uint8_t stateGame = 0;
+uint8_t stateScreen = 0;
 uint8_t isDirty = true;
 
 struct Item items[ITEM_BUFFER_SIZE];
@@ -82,7 +83,6 @@ Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
 int8_t encoderVolumeStep = 5;
 
 // Sleep
-uint8_t screenState = STATE_DISPLAY_AWAKE;
 uint32_t lastActivityTime = 0;
 
 // Lighting
@@ -279,10 +279,17 @@ bool ProcessEncoderRotation()
   else if(encoderDir == DIR_CCW)
     encoderDelta = -1;
 
-  if(itemCount == 0 || screenState == STATE_DISPLAY_SLEEP)
+  if(itemCount == 0 || stateScreen == STATE_DISPLAY_SLEEP)
     return true;
 
-  if(mode == MODE_APPLICATION)
+  if(mode == MODE_MASTER)
+  {
+    items[0].volume += encoderDelta * encoderVolumeStep;
+    items[0].volume = constrain(items[0].volume, 0, 100);
+
+    SendItemVolumeCommand(&items[0], sendBuffer, encodeBuffer);
+  }
+  else if(mode == MODE_APPLICATION)
   {
     if(stateApplication == STATE_APPLICATION_NAVIGATE)
       itemIndex = GetNextIndex(itemIndex, itemCount, encoderDelta, settings.continuousScroll);
@@ -324,9 +331,9 @@ bool ProcessEncoderButton()
 {
   if(encoderButton.tapped())
   {
-    if(screenState == STATE_DISPLAY_SLEEP)
+    if(itemCount == 0 || stateScreen == STATE_DISPLAY_SLEEP)
       return true;
-      
+    
     if(mode == MODE_APPLICATION)
       CycleApplicationState();
 
@@ -338,7 +345,7 @@ bool ProcessEncoderButton()
   
   if(encoderButton.doubleTapped())
   {
-    if(screenState == STATE_DISPLAY_SLEEP)
+    if(itemCount == 0 || stateScreen == STATE_DISPLAY_SLEEP)
       return true;
       
     if(mode == MODE_GAME)
@@ -349,12 +356,10 @@ bool ProcessEncoderButton()
 
   if(encoderButton.held())
   {
-    if(screenState == STATE_DISPLAY_SLEEP)
+    if(itemCount == 0 || stateScreen == STATE_DISPLAY_SLEEP)
       return true;
       
-    if(itemCount > 0)
-      CycleMode();
-      
+    CycleMode();      
     return true;
   }
 
@@ -370,19 +375,19 @@ bool ProcessSleep()
 
   uint32_t activityTimeDelta = millis() - lastActivityTime;
 
-  if(screenState == STATE_DISPLAY_AWAKE)
+  if(stateScreen == STATE_DISPLAY_AWAKE)
   {
     if(activityTimeDelta > settings.sleepAfterSeconds * 1000)
     {
-      screenState = STATE_DISPLAY_SLEEP;
+      stateScreen = STATE_DISPLAY_SLEEP;
       return true;
     }
   }
-  else if(screenState == STATE_DISPLAY_SLEEP)
+  else if(stateScreen == STATE_DISPLAY_SLEEP)
   {
     if(activityTimeDelta < settings.sleepAfterSeconds * 1000)
     {
-      screenState = STATE_DISPLAY_AWAKE;
+      stateScreen = STATE_DISPLAY_AWAKE;
       return true;
     }
   }
@@ -401,7 +406,7 @@ void UpdateActivityTime()
 //---------------------------------------------------------
 void UpdateDisplay()
 {
-  if(screenState == STATE_DISPLAY_SLEEP)
+  if(stateScreen == STATE_DISPLAY_SLEEP)
   {
     DisplaySleep(display);
     return;
@@ -416,7 +421,11 @@ void UpdateDisplay()
   uint8_t scrollLeft = CanScrollLeft(itemIndex, itemCount, settings.continuousScroll);
   uint8_t scrollRight = CanScrollRight(itemIndex, itemCount, settings.continuousScroll);
 
-  if(mode == MODE_APPLICATION)
+  if(mode == MODE_MASTER)
+  {
+    DisplayMasterSelectScreen(display, items[0].volume, mode, MODE_COUNT);
+  }
+  else if(mode == MODE_APPLICATION)
   {
     if(stateApplication == STATE_APPLICATION_NAVIGATE)
       DisplayApplicationSelectScreen(display, items[itemIndex].name, items[itemIndex].volume, scrollLeft, scrollRight, mode, MODE_COUNT);
@@ -439,7 +448,7 @@ void UpdateDisplay()
 //---------------------------------------------------------
 void UpdateLighting()
 {
-   if(screenState == STATE_DISPLAY_SLEEP)
+   if(stateScreen == STATE_DISPLAY_SLEEP)
    {
      SetPixelsColor(pixels, 0,0,0);
      return;
@@ -451,7 +460,7 @@ void UpdateLighting()
      return;
    }
    
-   if(mode == MODE_APPLICATION)
+   if(mode == MODE_MASTER || mode == MODE_APPLICATION)
    {
       uint8_t volumeColor = round(items[itemIndex].volume * 2.55f);
       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);

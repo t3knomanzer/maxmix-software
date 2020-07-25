@@ -105,7 +105,7 @@ void DisplayApplicationEditScreen(Adafruit_SSD1306* display, char* name, uint8_t
   for(size_t i = 0; i < x0; i++)
     display->print(name[i]);
 
-  // Volume bar min margin
+  // Volume bar min
   x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE;
   y0 = DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2;
   y1 = y0 + DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2 - 1;
@@ -114,19 +114,19 @@ void DisplayApplicationEditScreen(Adafruit_SSD1306* display, char* name, uint8_t
 
   // Volume bar
   x0 += 1 + DISPLAY_MARGIN_X1;
-  x1 = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 2 - DISPLAY_CHAR_WIDTH_X2 * 3; // Volume bar max width
+  x1 = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 3 - DISPLAY_CHAR_WIDTH_X2 * 3  - DISPLAY_CHAR_SPACING_X2 * 2; // Volume bar max width
   x1 = map(volume, 0, 100, 0, x1);
 
   if(x1 > 0)
     display->fillRect(x0, y0, x1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2, WHITE);
 
-  // Volume bar max margin
-  x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2 * 3 - 1;
+  // Volume bar max
+  x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2 * 3 - DISPLAY_CHAR_SPACING_X2 * 2 - DISPLAY_MARGIN_X1;
 
   display->drawLine(x0, y0, x0, y1, WHITE);
 
   // Volume Digits
-  if( volume == 0)
+  if( volume < 10)
     x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2;
   else if(volume < 100)
     x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2 * 2;
@@ -272,12 +272,12 @@ void DrawSelectionItemVolume(Adafruit_SSD1306* display, uint8_t volume)
 {
   uint8_t x0;
 
-  if( volume == 0)
+  if( volume < 10)
     x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - DISPLAY_CHAR_WIDTH_X2;
   else if(volume < 100)
-    x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - DISPLAY_CHAR_WIDTH_X2 * 2;
+    x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - DISPLAY_CHAR_WIDTH_X2 * 2 - DISPLAY_CHAR_SPACING_X2 * 2;
   else if(volume == 100)
-    x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - DISPLAY_CHAR_WIDTH_X2 * 3;
+    x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - DISPLAY_CHAR_WIDTH_X2 * 3 - DISPLAY_CHAR_SPACING_X2 * 3;
 
   display->setTextSize(2);
   display->setTextColor(WHITE);
