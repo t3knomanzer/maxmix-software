@@ -197,9 +197,7 @@ bool ProcessPackage()
       index = itemCount - 1;
     }
     else
-    {
       UpdateItemCommand(decodeBuffer, items, index);
-    }
 
     // Switch to newly added item.
     if(settings.displayNewSession)
@@ -207,6 +205,7 @@ bool ProcessPackage()
       itemIndex = index;
       if(mode == MODE_APPLICATION)
         stateApplication = STATE_APPLICATION_NAVIGATE;
+
       return true;
     }
   }
@@ -214,7 +213,7 @@ bool ProcessPackage()
   {
     // Check if there are any existing items first.
     if(itemCount == 0)  
-      return;
+      return false;
 
     // Check if item to be removed exists.
     uint32_t id = GetIdFromPackage(decodeBuffer);
@@ -223,22 +222,20 @@ bool ProcessPackage()
       return false;
       
     RemoveItemCommand(decodeBuffer, items, &itemCount, index);
+    
+    bool isItemActive = IsItemActive(index);
 
-    // Return to Navigate state if active application is removed
-    if(IsItemActive(index) && mode == MODE_APPLICATION)
-      stateApplication = STATE_APPLICATION_NAVIGATE;
-
-    // Make sure current menu index is not out of bounds after removing item.
     itemIndex = GetNextIndex(itemIndex, itemCount, 0, settings.continuousScroll);
     itemIndexA = GetNextIndex(itemIndexA, itemCount, 0, settings.continuousScroll);
     itemIndexB = GetNextIndex(itemIndexB, itemCount, 0, settings.continuousScroll);
 
-    // TODO: Game mode
-    // If the removed item was itemIndexA or itemIndexB
-    // set those index to -1 so the user needs to select a new
-    // application for the channel.
-    // If the index of the removed item was higher, no need to do anything.
-    // If it was lower, just decrease the the index by 1.
+    if(isItemActive)
+    {
+      if(mode == MODE_APPLICATION)
+        stateApplication = STATE_APPLICATION_NAVIGATE;
+
+      return true;      
+    }
   }
   else if(command == MSG_COMMAND_UPDATE_VOLUME)
   {
@@ -246,7 +243,7 @@ bool ProcessPackage()
     uint32_t id = GetIdFromPackage(decodeBuffer);  
     int8_t index = FindItem(id);
     if(index == -1)
-      return;
+      return false;
 
     UpdateItemVolumeCommand(decodeBuffer, items, index);
 
@@ -255,13 +252,15 @@ bool ProcessPackage()
     // call a method here to rebalance.
 
     if(IsItemActive(index))
-      return true;    
+      return true;
 
   }
   else if(command == MSG_COMMAND_SETTINGS)
   {
     UpdateSettingsCommand(decodeBuffer, &settings);
+    return true;
   }
+
   return false;
 } 
 
@@ -566,6 +565,7 @@ bool IsItemActive(int8_t index)
   {
     return true;
   }
+
   return false;
 }
 
