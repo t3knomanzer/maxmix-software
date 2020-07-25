@@ -43,7 +43,7 @@ namespace MaxMix.Services.Communication
         #region Private Methods
         private void EncodeName()
         {
-            _encodedName = _name;
+            _encodedName = _name.ToUpper();
 
             if (_encodedName.Length > _nameLength)
                 _encodedName = _encodedName.Substring(0, _nameLength);
