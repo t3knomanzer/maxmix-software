@@ -69,9 +69,10 @@ uint8_t stateScreen = 0;
 uint8_t isDirty = true;
 
 struct Item items[ITEM_BUFFER_SIZE];
-int8_t itemIndex = -1;
-int8_t itemIndexA = 0;
-int8_t itemIndexB = 0;
+int8_t itemIndexMaster = 0;
+int8_t itemIndexApp = -1;
+int8_t itemIndexGameA = 0;
+int8_t itemIndexGameB = 0;
 uint8_t itemCount = 0;
 
 // Settings
@@ -202,7 +203,7 @@ bool ProcessPackage()
     // Switch to newly added item.
     if(settings.displayNewSession)
     {
-      itemIndex = index;
+      itemIndexApp = index;
       if(mode == MODE_APPLICATION)
         stateApplication = STATE_APPLICATION_NAVIGATE;
 
@@ -225,9 +226,9 @@ bool ProcessPackage()
     
     bool isItemActive = IsItemActive(index);
 
-    itemIndex = GetNextIndex(itemIndex, itemCount, 0, settings.continuousScroll);
-    itemIndexA = GetNextIndex(itemIndexA, itemCount, 0, settings.continuousScroll);
-    itemIndexB = GetNextIndex(itemIndexB, itemCount, 0, settings.continuousScroll);
+    itemIndexApp = GetNextIndex(itemIndexApp, itemCount, 0, settings.continuousScroll);
+    itemIndexGameA = GetNextIndex(itemIndexGameA, itemCount, 0, settings.continuousScroll);
+    itemIndexGameB = GetNextIndex(itemIndexGameB, itemCount, 0, settings.continuousScroll);
 
     if(isItemActive)
     {
@@ -246,10 +247,6 @@ bool ProcessPackage()
       return false;
 
     UpdateItemVolumeCommand(decodeBuffer, items, index);
-
-    // TODO: Game mode
-    // If the updated item is in itemIndexA or itemIndexB
-    // call a method here to rebalance.
 
     if(IsItemActive(index))
       return true;
@@ -291,33 +288,33 @@ bool ProcessEncoderRotation()
   else if(mode == MODE_APPLICATION)
   {
     if(stateApplication == STATE_APPLICATION_NAVIGATE)
-      itemIndex = GetNextIndex(itemIndex, itemCount, encoderDelta, settings.continuousScroll);
+      itemIndexApp = GetNextIndex(itemIndexApp, itemCount, encoderDelta, settings.continuousScroll);
 
     else if(stateApplication == STATE_APPLICATION_EDIT)
     {
-      items[itemIndex].volume += encoderDelta * encoderVolumeStep;
-      items[itemIndex].volume = constrain(items[itemIndex].volume, 0, 100);
+      items[itemIndexApp].volume += encoderDelta * encoderVolumeStep;
+      items[itemIndexApp].volume = constrain(items[itemIndexApp].volume, 0, 100);
 
-      SendItemVolumeCommand(&items[itemIndex], sendBuffer, encodeBuffer);
+      SendItemVolumeCommand(&items[itemIndexApp], sendBuffer, encodeBuffer);
     }
   }
   else if(mode == MODE_GAME)
   {
     if(stateGame == STATE_GAME_SELECT_A)
-      itemIndexA = GetNextIndex(itemIndexA, itemCount, encoderDelta, settings.continuousScroll);
+      itemIndexGameA = GetNextIndex(itemIndexGameA, itemCount, encoderDelta, settings.continuousScroll);
     else if(stateGame == STATE_GAME_SELECT_B)
-      itemIndexB = GetNextIndex(itemIndexB, itemCount, encoderDelta, settings.continuousScroll);
+      itemIndexGameB = GetNextIndex(itemIndexGameB, itemCount, encoderDelta, settings.continuousScroll);
 
     else if(stateGame == STATE_GAME_EDIT)
     {
-      items[itemIndexA].volume += encoderDelta * encoderVolumeStep;
-      items[itemIndexA].volume = constrain(items[itemIndexA].volume, 0, 100);
+      items[itemIndexGameA].volume += encoderDelta * encoderVolumeStep;
+      items[itemIndexGameA].volume = constrain(items[itemIndexGameA].volume, 0, 100);
 
-      items[itemIndexB].volume -= encoderDelta * encoderVolumeStep;
-      items[itemIndexB].volume = constrain(items[itemIndexB].volume, 0, 100);
+      items[itemIndexGameB].volume -= encoderDelta * encoderVolumeStep;
+      items[itemIndexGameB].volume = constrain(items[itemIndexGameB].volume, 0, 100);
 
-      SendItemVolumeCommand(&items[itemIndexA], sendBuffer, encodeBuffer);
-      SendItemVolumeCommand(&items[itemIndexB], sendBuffer, encodeBuffer);
+      SendItemVolumeCommand(&items[itemIndexGameA], sendBuffer, encodeBuffer);
+      SendItemVolumeCommand(&items[itemIndexGameB], sendBuffer, encodeBuffer);
     } 
   }
   
@@ -346,8 +343,14 @@ bool ProcessEncoderButton()
   {
     if(itemCount == 0 || stateScreen == STATE_DISPLAY_SLEEP)
       return true;
-      
-    if(mode == MODE_GAME)
+
+    if(mode == MODE_MASTER)
+      ToggleMute(itemIndexMaster);
+
+    else if(mode == MODE_APPLICATION)
+      ToggleMute(itemIndexApp);
+
+    else if(mode == MODE_GAME && stateGame == STATE_GAME_EDIT)
       ResetGameVolume();
 
     return true;
@@ -419,36 +422,36 @@ void UpdateDisplay()
   
   if(mode == MODE_MASTER)
   {
-    DisplayMasterSelectScreen(display, items[0].volume, mode, MODE_COUNT);
+    DisplayMasterSelectScreen(display, items[0].volume, items[0].isMuted, mode, MODE_COUNT);
   }
   else if(mode == MODE_APPLICATION)
   {
     if(stateApplication == STATE_APPLICATION_NAVIGATE)
     {
-      uint8_t scrollLeft = CanScrollLeft(itemIndex, itemCount, settings.continuousScroll);
-      uint8_t scrollRight = CanScrollRight(itemIndex, itemCount, settings.continuousScroll);
-      DisplayApplicationSelectScreen(display, items[itemIndex].name, items[itemIndex].volume, scrollLeft, scrollRight, mode, MODE_COUNT);
+      uint8_t scrollLeft = CanScrollLeft(itemIndexApp, itemCount, settings.continuousScroll);
+      uint8_t scrollRight = CanScrollRight(itemIndexApp, itemCount, settings.continuousScroll);
+      DisplayApplicationSelectScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT);
     }
 
     else if(stateApplication == STATE_APPLICATION_EDIT)
-      DisplayApplicationEditScreen(display, items[itemIndex].name, items[itemIndex].volume, mode, MODE_COUNT);
+      DisplayApplicationEditScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, mode, MODE_COUNT);
   }
   else if(mode == MODE_GAME)
   {
     if(stateGame == STATE_GAME_SELECT_A)
     {
-      uint8_t scrollLeft = CanScrollLeft(itemIndexA, itemCount, settings.continuousScroll);
-      uint8_t scrollRight = CanScrollRight(itemIndexA, itemCount, settings.continuousScroll);
-      DisplayGameSelectScreen(display, items[itemIndexA].name, items[itemIndexA].volume, "A", scrollLeft, scrollRight, mode, MODE_COUNT);
+      uint8_t scrollLeft = CanScrollLeft(itemIndexGameA, itemCount, settings.continuousScroll);
+      uint8_t scrollRight = CanScrollRight(itemIndexGameA, itemCount, settings.continuousScroll);
+      DisplayGameSelectScreen(display, items[itemIndexGameA].name, items[itemIndexGameA].volume, items[itemIndexGameA].isMuted, "A", scrollLeft, scrollRight, mode, MODE_COUNT);
     }
     else if(stateGame == STATE_GAME_SELECT_B)
     {
-      uint8_t scrollLeft = CanScrollLeft(itemIndexB, itemCount, settings.continuousScroll);
-      uint8_t scrollRight = CanScrollRight(itemIndexB, itemCount, settings.continuousScroll);
-      DisplayGameSelectScreen(display, items[itemIndexB].name, items[itemIndexB].volume, "B", scrollLeft, scrollRight, mode, MODE_COUNT);
+      uint8_t scrollLeft = CanScrollLeft(itemIndexGameB, itemCount, settings.continuousScroll);
+      uint8_t scrollRight = CanScrollRight(itemIndexGameB, itemCount, settings.continuousScroll);
+      DisplayGameSelectScreen(display, items[itemIndexGameB].name, items[itemIndexGameB].volume, items[itemIndexGameB].isMuted, "B", scrollLeft, scrollRight, mode, MODE_COUNT);
     }
     else if(stateGame == STATE_GAME_EDIT)
-      DisplayGameEditScreen(display, items[itemIndexA].name, items[itemIndexB].name, items[itemIndexA].volume, items[itemIndexB].volume, mode, MODE_COUNT);
+      DisplayGameEditScreen(display, items[itemIndexGameA].name, items[itemIndexGameB].name, items[itemIndexGameA].volume, items[itemIndexGameB].volume, items[itemIndexGameA].isMuted, items[itemIndexGameB].isMuted, mode, MODE_COUNT);
   }
 }
 
@@ -475,7 +478,7 @@ void UpdateLighting()
    }
    else if(mode == MODE_APPLICATION)
    {
-      uint8_t volumeColor = round(items[itemIndex].volume * 2.55f);
+      uint8_t volumeColor = round(items[itemIndexApp].volume * 2.55f);
       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
    }
    else if(mode == MODE_GAME)
@@ -483,12 +486,12 @@ void UpdateLighting()
      uint8_t volumeColor;
      if(stateGame == STATE_GAME_SELECT_A)
      {
-       volumeColor = round(items[itemIndexA].volume * 2.55f);
+       volumeColor = round(items[itemIndexGameA].volume * 2.55f);
        SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
      }
      else if(stateGame == STATE_GAME_SELECT_B)
      {
-       volumeColor = round(items[itemIndexB].volume * 2.55f);
+       volumeColor = round(items[itemIndexGameB].volume * 2.55f);
        SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
      }
      else
@@ -528,13 +531,21 @@ void CycleGameState()
 
 //---------------------------------------------------------
 //---------------------------------------------------------
+void ToggleMute(int8_t index)
+{
+  items[index].isMuted = !items[index].isMuted;
+  SendItemVolumeCommand(&items[index], sendBuffer, encodeBuffer);
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
 void ResetGameVolume()
 {
-  items[itemIndexA].volume = 50;
-  items[itemIndexB].volume = 50;
+  items[itemIndexGameA].volume = 50;
+  items[itemIndexGameB].volume = 50;
 
-  SendItemVolumeCommand(&items[itemIndexA], sendBuffer, encodeBuffer);
-  SendItemVolumeCommand(&items[itemIndexB], sendBuffer, encodeBuffer);
+  SendItemVolumeCommand(&items[itemIndexGameA], sendBuffer, encodeBuffer);
+  SendItemVolumeCommand(&items[itemIndexGameB], sendBuffer, encodeBuffer);
 }
 
 //---------------------------------------------------------
@@ -557,14 +568,14 @@ int8_t FindItem(uint32_t id)
 //---------------------------------------------------------
 bool IsItemActive(int8_t index)
 {
-  if(mode == MODE_APPLICATION && itemIndex == index)
-  {
+  if(mode == MODE_MASTER && itemIndexMaster == index)
     return true;
-  }
-  else if(mode == MODE_GAME && (itemIndexA == index || itemIndexB == index))
-  {
+
+  else if(mode == MODE_APPLICATION && itemIndexApp == index)
     return true;
-  }
+
+  else if(mode == MODE_GAME && (itemIndexGameA == index || itemIndexGameB == index))
+    return true;
 
   return false;
 }
