@@ -343,8 +343,14 @@ bool ProcessEncoderButton()
   {
     if(itemCount == 0 || stateScreen == STATE_DISPLAY_SLEEP)
       return true;
-      
-    if(mode == MODE_GAME)
+
+    if(mode == MODE_MASTER)
+      ToggleMute(itemIndexMaster);
+
+    else if(mode == MODE_APPLICATION)
+      ToggleMute(itemIndexApp);
+
+    else if(mode == MODE_GAME && stateGame == STATE_GAME_EDIT)
       ResetGameVolume();
 
     return true;
@@ -521,6 +527,14 @@ void CycleGameState()
   stateGame++;
   if(stateGame == STATE_GAME_COUNT)
     stateGame = 0;
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+void ToggleMute(int8_t index)
+{
+  items[index].isMuted = !items[index].isMuted;
+  SendItemVolumeCommand(&items[index], sendBuffer, encodeBuffer);
 }
 
 //---------------------------------------------------------
