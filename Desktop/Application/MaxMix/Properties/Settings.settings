@@ -9,7 +9,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="SleepAfterSeconds" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">15</Value>
+      <Value Profile="(Default)">5</Value>
     </Setting>
     <Setting Name="ContinuousScroll" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
