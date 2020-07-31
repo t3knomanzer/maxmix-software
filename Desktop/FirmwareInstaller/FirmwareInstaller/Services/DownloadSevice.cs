@@ -72,13 +72,16 @@ namespace FirmwareInstaller.Services.Update
                 if (release.Prerelease)
                     continue;
 
-                // Skip if there aren't any assets matching the target file extension.
-                if (!release.Assets.Any(o => o.Name.EndsWith(_targetExtension)))
-                    continue;
+                foreach(var asset in release.Assets.Where(o => o.Name.EndsWith(_targetExtension)))
+                {
+                    var name = asset.Name;
+                    name = name.Replace(_targetExtension, string.Empty);
+                    var suffix = name.Split('_');
 
-                var version = release.TagName;
-                var url = release.Assets.First(o => o.Name.EndsWith(_targetExtension)).BrowserDownloadUrl;
-                _downloadUrls.Add(version, url);
+                    var version = $"{release.TagName} {(suffix.Length > 1 ? suffix.Last() : string.Empty)}";
+                    var url = asset.BrowserDownloadUrl;
+                    _downloadUrls.Add(version, url);
+                }
             }
 
             return _downloadUrls.Keys.ToList();
