@@ -17,15 +17,14 @@
 //********************************************************
 // *** INCLUDES
 //********************************************************
-// Third-party
 #include <Arduino.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#include <Adafruit_NeoPixel.h>
-#include <ButtonEvents.h>
 
-#define HALF_STEP
-#include <Rotary.h>
+// Third-party
+#include "src/Adafruit_GFX/Adafruit_GFX.h"
+#include "src/Adafruit_NeoPixel/Adafruit_NeoPixel.h"
+#include "src/Adafruit_SSD1306/Adafruit_SSD1306.h"
+#include "src/ButtonEvents/ButtonEvents.h"
+#include "src/Rotary/Rotary.h"
 
 // Custom
 #include "Config.h"
