@@ -19,7 +19,7 @@ This repository contains the code for all of the software.
 ## Desktop
 The desktop directory contains the **desktop application**, **driver installer** and **firmware installer** which are all written in C# and WPF.
 
-Development is done using [Visual Studio 2019 Communitty Edition](https://visualstudio.microsoft.com/downloads/).
+Development is done using [Visual Studio 2019 Community Edition](https://visualstudio.microsoft.com/downloads/).
 
 The application installer is made with [Advanced Installer](https://www.advancedinstaller.com/).
 
