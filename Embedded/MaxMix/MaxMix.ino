@@ -254,6 +254,7 @@ bool ProcessPackage()
   else if(command == MSG_COMMAND_SETTINGS)
   {
     UpdateSettingsCommand(decodeBuffer, &settings);
+    stateScreen = STATE_DISPLAY_AWAKE;
     return true;
   }
 
