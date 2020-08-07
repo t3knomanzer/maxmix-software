@@ -48,6 +48,9 @@ namespace MaxMix.Services.Audio
         private IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
         private bool _visibleSystemSounds = false;
         private bool _isNotifyEnabled = true;
+        
+        private int _volume;
+        private bool _isMuted;
         #endregion
 
         #region Properties
@@ -63,13 +66,20 @@ namespace MaxMix.Services.Audio
         /// <inheritdoc/>
         public int Volume
         {
-            get => (int)Math.Round(_endpointVolume.MasterVolumeLevelScalar * 100);
+            get
+            {
+                try { _volume = (int)Math.Round(_endpointVolume.MasterVolumeLevelScalar * 100); }
+                catch { }
+
+                return _volume;
+            }
             set
             {
-                if (Volume == value)
+                if (_volume == value)
                     return;
 
                 _isNotifyEnabled = false;
+                _volume = value;
                 _endpointVolume.MasterVolumeLevelScalar = value / 100f;
             }
         }
@@ -77,13 +87,20 @@ namespace MaxMix.Services.Audio
         /// <inheritdoc/>
         public bool IsMuted
         {
-            get => _endpointVolume.IsMuted;
+            get
+            {
+                try { _isMuted = _endpointVolume.IsMuted; }
+                catch { }
+
+                return _isMuted;
+            }
             set
             {
-                if (IsMuted == value)
+                if (_isMuted == value)
                     return;
 
                 _isNotifyEnabled = false;
+                _isMuted = value;
                 _endpointVolume.IsMuted = value;
             }
         }
