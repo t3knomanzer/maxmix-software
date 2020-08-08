@@ -80,7 +80,8 @@ namespace MaxMix.Services.Audio
 
                 _isNotifyEnabled = false;
                 _volume = value;
-                _endpointVolume.MasterVolumeLevelScalar = value / 100f;
+                try { _endpointVolume.MasterVolumeLevelScalar = value / 100f; }
+                catch { }
             }
         }
 
@@ -101,7 +102,8 @@ namespace MaxMix.Services.Audio
 
                 _isNotifyEnabled = false;
                 _isMuted = value;
-                _endpointVolume.IsMuted = value;
+                try { _endpointVolume.IsMuted = value; }
+                catch { }
             }
         }
         #endregion
