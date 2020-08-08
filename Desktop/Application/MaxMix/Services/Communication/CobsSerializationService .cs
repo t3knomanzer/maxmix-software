@@ -185,6 +185,9 @@ namespace MaxMix.Services.Communication
             // Drop last 0 (packet delimiter)
             var decoded = Decode(bytes.Take(bytes.Length - 1), Delimiter);
 
+            if(decoded.Count == 0)
+                throw new ArgumentException("Error decoding message.");
+
             // Verify message length (last byte)
             byte length = decoded.Last();
             if (decoded.Count != length)
