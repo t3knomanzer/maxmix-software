@@ -36,9 +36,19 @@ static const uint8_t  STATE_GAME_SELECT_B = 1;
 static const uint8_t  STATE_GAME_EDIT = 2;
 static const uint8_t  STATE_GAME_COUNT = 3;
 
-
 static const uint8_t  STATE_DISPLAY_AWAKE = 0;
 static const uint8_t  STATE_DISPLAY_SLEEP = 1;
+
+// --- Rotary Encoder Acceleration
+// The acceleration is computed from a simple line equation (y = mx + b)
+// at 150ms, there should be no acceleration (1 increment)
+static const float ROTARY_ACCELERATION_SLOW_TIME = 150;
+static const float ROTARY_ACCELERATION_SLOW_INC = 1;
+// at 25ms, we want to have maximum acceleration (16 increments)
+static const float ROTARY_ACCELERATION_FAST_TIME = 25;
+static const float ROTARY_ACCELERATION_FAST_INC = 16;
+static const float ROTARY_ACCELERATION_M_SLOPE = (ROTARY_ACCELERATION_FAST_INC - ROTARY_ACCELERATION_SLOW_INC) / (ROTARY_ACCELERATION_FAST_TIME - ROTARY_ACCELERATION_SLOW_TIME);
+static const float ROTARY_ACCELERATION_B_OFFSET = ROTARY_ACCELERATION_SLOW_INC - ROTARY_ACCELERATION_M_SLOPE * ROTARY_ACCELERATION_SLOW_TIME;
 
 // --- Display
 static const uint8_t  DISPLAY_RESET =   4; // Reset pin # (or -1 if sharing Arduino reset pin)
@@ -47,7 +57,7 @@ static const uint8_t  DISPLAY_RESET =   4; // Reset pin # (or -1 if sharing Ardu
 static const uint8_t  PIXELS_NUM = 8; // Number of pixels in ring
 
 // --- Messages
-static const uint8_t ITEM_BUFFER_SIZE = 8;
+static const uint8_t ITEM_MAX_COUNT = 8;
 static const uint8_t ITEM_BUFFER_NAME_SIZE = 36;
 static const uint8_t RECEIVE_BUFFER_SIZE = 128;
 static const uint8_t SEND_BUFFER_SIZE = 8;
@@ -102,4 +112,3 @@ static const uint8_t DISPLAY_WIDGET_DOTGROUP_HEIGHT = DISPLAY_WIDGET_DOT_SIZE_X2
 static const uint8_t DISPLAY_GAME_EDIT_CHAR_MAX = 7;
 static const uint8_t DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH = DISPLAY_GAME_EDIT_CHAR_MAX * DISPLAY_CHAR_WIDTH_X1 + DISPLAY_GAME_EDIT_CHAR_MAX - 1;
 static const uint8_t DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT = 7;
-
