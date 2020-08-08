@@ -157,11 +157,16 @@ namespace MaxMix.Services.Communication
 
                 if (received == _serializationService.Delimiter)
                 {
-                   var message = _serializationService.Deserialize(_buffer.ToArray());
-                    if (message != null)
-                        RaiseMessageReceived(message);
-                    else
+                    try
+                    {
+                        var message = _serializationService.Deserialize(_buffer.ToArray());
+                        if (message != null)
+                            RaiseMessageReceived(message);
+                    }
+                    catch(ArgumentException)
+                    {
                         RaiseError("Deserialization error.");
+                    }
 
                     _buffer.Clear();
                 }

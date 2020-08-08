@@ -140,10 +140,12 @@ namespace MaxMix.Services.Communication
 
                     if (received == _serializationService.Delimiter)
                     {
-                        message = _serializationService.Deserialize(buffer.ToArray());
-
-                        return message != null &&
-                               message.GetType() == typeof(MessageHandShakeResponse);
+                        try
+                        {
+                            message = _serializationService.Deserialize(buffer.ToArray());
+                            return message != null && message.GetType() == typeof(MessageHandShakeResponse);
+                        }
+                        catch(ArgumentException) { }
                     }
                 }
             }
