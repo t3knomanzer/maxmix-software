@@ -1,4 +1,6 @@
 ﻿using MaxMix.ViewModels;
+using Sentry;
+using Sentry.Protocol;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,6 +11,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace MaxMix
 {
@@ -17,12 +20,33 @@ namespace MaxMix
     /// </summary>
     public partial class App : Application
     {
+        IDisposable _errorReporter;
+
+        private void InitErrorReporting()
+        {
+            _errorReporter = SentrySdk.Init("https://54cf266b03ed4ee380b0577653172a98@o431430.ingest.sentry.io/5382488");
+            SentrySdk.ConfigureScope(scope =>
+            {
+                scope.User = new User { Username = Environment.MachineName };
+            });
+
+        }
+
+        void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            SentrySdk.CaptureException(e.Exception);
+            _errorReporter.Dispose();
+        }
+
         private void ApplicationStartup(object sender, StartupEventArgs e)
         {
+            InitErrorReporting();
+            DispatcherUnhandledException += OnDispatcherUnhandledException;
+
             var window = new MainWindow();
 
             var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
-            var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            string assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             window.Title = string.Format("{0} {1}", assemblyName, assemblyVersion);
 
             var dataContext = new MainViewModel();
@@ -41,7 +65,11 @@ namespace MaxMix
             var window = (MainWindow)Application.Current.MainWindow;            
             window.taskbarIcon.Dispose();
 
+            _errorReporter.Dispose();
+
             Application.Current.Shutdown();
         }
+
+
     }
 }
