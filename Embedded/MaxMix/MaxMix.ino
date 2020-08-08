@@ -8,9 +8,9 @@
 //
 //
 // The AVR 328P chip has 2kB of SRAM. 
-// Program uses 819 bytes, leaving 1229 bytes for items.
-// Therefore we can store a maximum of 14 items (2048 / 84 bytes)
-// We limit this to 12 maximum items for safety.
+// Program uses 825 bytes, leaving 1223 bytes for items. Each item is 42 bytes.
+// Therefore we can store a maximum (1223 / 42 bytes) of 29 items.
+// We currently this to 8 maximum items for safety.
 //********************************************************
 
 
@@ -35,10 +35,10 @@
 struct Item
 {
   uint32_t id;                          // 4 Bytes (32 bit)
-  char name[ITEM_BUFFER_NAME_SIZE];     // 36 Bytes (1 Bytes * 36 Chars)
+  char name[ITEM_BUFFER_NAME_SIZE];     // 36 Bytes (36 Chars)
   int8_t volume;                        // 1 Byte
   uint8_t isMuted;                      // 1 Byte
-                                        // 82 Bytes TOTAL
+                                        // 42 Bytes TOTAL
 };
 
 struct Settings
@@ -61,13 +61,13 @@ uint8_t sendBuffer[SEND_BUFFER_SIZE];
 uint8_t encodeBuffer[SEND_BUFFER_SIZE];
 
 // State
-uint8_t mode = 0;
-uint8_t stateApplication = 0;
-uint8_t stateGame = 0;
-uint8_t stateScreen = 0;
+uint8_t mode = MODE_MASTER;
+uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
+uint8_t stateGame = STATE_GAME_SELECT_A;
+uint8_t stateDisplay = STATE_DISPLAY_AWAKE;
 uint8_t isDirty = true;
 
-struct Item items[ITEM_BUFFER_SIZE];
+struct Item items[ITEM_MAX_COUNT];
 int8_t itemIndexMaster = 0;
 int8_t itemIndexApp = -1;
 int8_t itemIndexGameA = 0;
@@ -80,9 +80,10 @@ struct Settings settings;
 // Rotary Encoder
 ButtonEvents encoderButton;
 Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
-int8_t encoderVolumeStep = 5;
+uint32_t encoderLastTransition = 0;
 
-// Sleep
+// Time & Sleep
+uint32_t now = 0;
 uint32_t lastActivityTime = 0;
 
 // Lighting
@@ -119,6 +120,8 @@ void setup()
 //---------------------------------------------------------
 void loop()
 {
+  now = millis();
+
   if(ReceivePackage(receiveBuffer, &receiveIndex, MSG_PACKET_DELIMITER, RECEIVE_BUFFER_SIZE))
   {
     if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
@@ -185,7 +188,7 @@ bool ProcessPackage()
   else if(command == MSG_COMMAND_ADD)
   {
     // Check for buffer overflow first.
-    if(itemCount == ITEM_BUFFER_SIZE)
+    if(itemCount == ITEM_MAX_COUNT)
       return false;
 
     // Check if item exists, add or update accordingly.
@@ -254,12 +257,35 @@ bool ProcessPackage()
   else if(command == MSG_COMMAND_SETTINGS)
   {
     UpdateSettingsCommand(decodeBuffer, &settings);
-    stateScreen = STATE_DISPLAY_AWAKE;
+    stateDisplay = STATE_DISPLAY_AWAKE;
     return true;
   }
 
   return false;
 } 
+
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int8_t volume) {
+  if (!encoderDelta)
+    return volume;
+
+  if (deltaTime < ROTARY_ACCELERATION_SLOW_TIME) {
+    if (deltaTime < ROTARY_ACCELERATION_FAST_TIME) {
+      deltaTime = ROTARY_ACCELERATION_FAST_TIME;
+    }
+
+    float ticks = ROTARY_ACCELERATION_M_SLOPE * deltaTime + ROTARY_ACCELERATION_B_OFFSET;
+    volume += (long)ticks * encoderDelta;
+  }
+  else {
+    volume += encoderDelta;
+  }
+
+  volume = constrain(volume, 0, 100);
+  return volume;
+}
 
 //---------------------------------------------------------
 //---------------------------------------------------------
@@ -275,14 +301,15 @@ bool ProcessEncoderRotation()
   else if(encoderDir == DIR_CCW)
     encoderDelta = -1;
 
-  if(itemCount == 0 || stateScreen == STATE_DISPLAY_SLEEP)
+  uint32_t deltaTime = now - encoderLastTransition;
+  encoderLastTransition = now;
+
+  if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
     return true;
 
   if(mode == MODE_MASTER)
   {
-    items[0].volume += encoderDelta * encoderVolumeStep;
-    items[0].volume = constrain(items[0].volume, 0, 100);
-
+    items[0].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[0].volume);
     SendItemVolumeCommand(&items[0], sendBuffer, encodeBuffer);
   }
   else if(mode == MODE_APPLICATION)
@@ -292,9 +319,7 @@ bool ProcessEncoderRotation()
 
     else if(stateApplication == STATE_APPLICATION_EDIT)
     {
-      items[itemIndexApp].volume += encoderDelta * encoderVolumeStep;
-      items[itemIndexApp].volume = constrain(items[itemIndexApp].volume, 0, 100);
-
+      items[itemIndexApp].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[itemIndexApp].volume);
       SendItemVolumeCommand(&items[itemIndexApp], sendBuffer, encodeBuffer);
     }
   }
@@ -307,11 +332,8 @@ bool ProcessEncoderRotation()
 
     else if(stateGame == STATE_GAME_EDIT)
     {
-      items[itemIndexGameA].volume += encoderDelta * encoderVolumeStep;
-      items[itemIndexGameA].volume = constrain(items[itemIndexGameA].volume, 0, 100);
-
-      items[itemIndexGameB].volume -= encoderDelta * encoderVolumeStep;
-      items[itemIndexGameB].volume = constrain(items[itemIndexGameB].volume, 0, 100);
+      items[itemIndexGameA].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[itemIndexGameA].volume);
+      items[itemIndexGameB].volume = ComputeAcceleratedVolume(-encoderDelta, deltaTime, items[itemIndexGameB].volume);
 
       SendItemVolumeCommand(&items[itemIndexGameA], sendBuffer, encodeBuffer);
       SendItemVolumeCommand(&items[itemIndexGameB], sendBuffer, encodeBuffer);
@@ -327,7 +349,7 @@ bool ProcessEncoderButton()
 {
   if(encoderButton.tapped())
   {
-    if(itemCount == 0 || stateScreen == STATE_DISPLAY_SLEEP)
+    if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
       return true;
     
     if(mode == MODE_APPLICATION)
@@ -341,7 +363,7 @@ bool ProcessEncoderButton()
   
   if(encoderButton.doubleTapped())
   {
-    if(itemCount == 0 || stateScreen == STATE_DISPLAY_SLEEP)
+    if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
       return true;
 
     if(mode == MODE_MASTER)
@@ -358,7 +380,7 @@ bool ProcessEncoderButton()
 
   if(encoderButton.held())
   {
-    if(itemCount == 0 || stateScreen == STATE_DISPLAY_SLEEP)
+    if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
       return true;
       
     CycleMode();      
@@ -375,21 +397,21 @@ bool ProcessSleep()
   if(settings.sleepWhenInactive == 0)
     return false;
 
-  uint32_t activityTimeDelta = millis() - lastActivityTime;
+  uint32_t activityTimeDelta = now - lastActivityTime;
 
-  if(stateScreen == STATE_DISPLAY_AWAKE)
+  if(stateDisplay == STATE_DISPLAY_AWAKE)
   {
     if(activityTimeDelta > settings.sleepAfterSeconds * 1000)
     {
-      stateScreen = STATE_DISPLAY_SLEEP;
+      stateDisplay = STATE_DISPLAY_SLEEP;
       return true;
     }
   }
-  else if(stateScreen == STATE_DISPLAY_SLEEP)
+  else if(stateDisplay == STATE_DISPLAY_SLEEP)
   {
     if(activityTimeDelta < settings.sleepAfterSeconds * 1000)
     {
-      stateScreen = STATE_DISPLAY_AWAKE;
+      stateDisplay = STATE_DISPLAY_AWAKE;
       return true;
     }
   }
@@ -401,14 +423,14 @@ bool ProcessSleep()
 //---------------------------------------------------------
 void UpdateActivityTime()
 {
-  lastActivityTime = millis();
+  lastActivityTime = now;
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 void UpdateDisplay()
 {
-  if(stateScreen == STATE_DISPLAY_SLEEP)
+  if(stateDisplay == STATE_DISPLAY_SLEEP)
   {
     DisplaySleep(display);
     return;
@@ -459,7 +481,7 @@ void UpdateDisplay()
 //---------------------------------------------------------
 void UpdateLighting()
 {
-   if(stateScreen == STATE_DISPLAY_SLEEP)
+   if(stateDisplay == STATE_DISPLAY_SLEEP)
    {
      SetPixelsColor(pixels, 0,0,0);
      return;
@@ -587,4 +609,3 @@ void RequireDisplayUpdate()
   UpdateActivityTime();
   isDirty = true;
 }
-
