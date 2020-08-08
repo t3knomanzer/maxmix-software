@@ -267,7 +267,7 @@ bool ProcessPackage()
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-int8_t computeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int8_t volume) {
+int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int8_t volume) {
   if (!encoderDelta)
     return volume;
 
@@ -309,7 +309,7 @@ bool ProcessEncoderRotation()
 
   if(mode == MODE_MASTER)
   {
-    items[0].volume = computeAcceleratedVolume(encoderDelta, deltaTime, items[0].volume);
+    items[0].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[0].volume);
     SendItemVolumeCommand(&items[0], sendBuffer, encodeBuffer);
   }
   else if(mode == MODE_APPLICATION)
@@ -319,7 +319,7 @@ bool ProcessEncoderRotation()
 
     else if(stateApplication == STATE_APPLICATION_EDIT)
     {
-      items[itemIndexApp].volume = computeAcceleratedVolume(encoderDelta, deltaTime, items[itemIndexApp].volume);
+      items[itemIndexApp].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[itemIndexApp].volume);
       SendItemVolumeCommand(&items[itemIndexApp], sendBuffer, encodeBuffer);
     }
   }
@@ -332,8 +332,8 @@ bool ProcessEncoderRotation()
 
     else if(stateGame == STATE_GAME_EDIT)
     {
-      items[itemIndexGameA].volume = computeAcceleratedVolume(encoderDelta, deltaTime, items[itemIndexGameA].volume);
-      items[itemIndexGameB].volume = computeAcceleratedVolume(-encoderDelta, deltaTime, items[itemIndexGameB].volume);
+      items[itemIndexGameA].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[itemIndexGameA].volume);
+      items[itemIndexGameB].volume = ComputeAcceleratedVolume(-encoderDelta, deltaTime, items[itemIndexGameB].volume);
 
       SendItemVolumeCommand(&items[itemIndexGameA], sendBuffer, encodeBuffer);
       SendItemVolumeCommand(&items[itemIndexGameB], sendBuffer, encodeBuffer);
