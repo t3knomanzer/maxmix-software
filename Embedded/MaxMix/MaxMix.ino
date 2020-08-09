@@ -81,7 +81,7 @@ struct Settings settings;
 ButtonEvents encoderButton;
 Encoder encoder(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
 uint32_t encoderLastTransition = 0;
-int8_t fullStepCounter = 0;
+int16_t fullStepCounter = 0;
 
 // Time & Sleep
 uint32_t now = 0;
@@ -271,13 +271,13 @@ bool ProcessPackage()
 // \param volume - curent volume
 // \returns new adjusted volume
 //---------------------------------------------------------
-int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int8_t volume)
+int8_t ComputeAcceleratedVolume(int16_t encoderDelta, uint32_t deltaTime, int16_t volume)
 {
   if (!encoderDelta)
     return volume;
 
   float speed = (float)encoderDelta*1000/deltaTime;
-  uint8_t step = 1 + abs(speed*speed/ROTARY_ACCELERATION_DIVISOR);
+  uint32_t step = 1 + abs(speed*speed/ROTARY_ACCELERATION_DIVISOR);
   
   if(encoderDelta > 0)
   {
@@ -296,7 +296,7 @@ int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int8_t 
 //---------------------------------------------------------
 bool ProcessEncoderRotation()
 {
-  int8_t encoderDelta;
+  int16_t encoderDelta;
   fullStepCounter += encoder.readAndReset();
   encoderDelta = (int) (fullStepCounter / ROTARY_PULSES_PER_STEP);
   fullStepCounter -= encoderDelta * ROTARY_PULSES_PER_STEP;

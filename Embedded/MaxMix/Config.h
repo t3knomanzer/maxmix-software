@@ -45,7 +45,7 @@ static const uint8_t  STATE_GAME_COUNT = 3;
 static const uint8_t  STATE_DISPLAY_AWAKE = 0;
 static const uint8_t  STATE_DISPLAY_SLEEP = 1;
 
-// --- Rotary Encoder Acceleration
+// --- Rotary Encoder
 // Increasing this will reduce the acceleration effect
 // Values between 100 - 600 work well
 static const uint8_t ROTARY_ACCELERATION_DIVISOR = 400;
