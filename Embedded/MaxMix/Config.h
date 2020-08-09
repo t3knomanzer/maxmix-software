@@ -10,6 +10,12 @@
 //********************************************************
 
 //********************************************************
+// *** CONFIG OPTIONS
+//********************************************************
+// Uncomment if your hardware requires half-stepping
+// #define HALF_STEP
+
+//********************************************************
 // *** CONSTS
 //********************************************************
 // --- Serial Comms
@@ -17,8 +23,8 @@ static const uint32_t BAUD_RATE = 115200;
 
 // --- Pins
 static const uint8_t  PIN_PIXELS = 12; //D12
-static const uint8_t  PIN_ENCODER_OUTA = 15; //A1
-static const uint8_t  PIN_ENCODER_OUTB = 16; //A2
+static const uint8_t  PIN_ENCODER_OUTA = 2; //A1
+static const uint8_t  PIN_ENCODER_OUTB = 3; //A2
 static const uint8_t  PIN_ENCODER_SWITCH = 17; //A3
 
 // --- States
@@ -40,15 +46,16 @@ static const uint8_t  STATE_DISPLAY_AWAKE = 0;
 static const uint8_t  STATE_DISPLAY_SLEEP = 1;
 
 // --- Rotary Encoder Acceleration
-// The acceleration is computed from a simple line equation (y = mx + b)
-// at 150ms, there should be no acceleration (1 increment)
-static const float ROTARY_ACCELERATION_SLOW_TIME = 150;
-static const float ROTARY_ACCELERATION_SLOW_INC = 1;
-// at 25ms, we want to have maximum acceleration (16 increments)
-static const float ROTARY_ACCELERATION_FAST_TIME = 25;
-static const float ROTARY_ACCELERATION_FAST_INC = 16;
-static const float ROTARY_ACCELERATION_M_SLOPE = (ROTARY_ACCELERATION_FAST_INC - ROTARY_ACCELERATION_SLOW_INC) / (ROTARY_ACCELERATION_FAST_TIME - ROTARY_ACCELERATION_SLOW_TIME);
-static const float ROTARY_ACCELERATION_B_OFFSET = ROTARY_ACCELERATION_SLOW_INC - ROTARY_ACCELERATION_M_SLOPE * ROTARY_ACCELERATION_SLOW_TIME;
+// Increasing this will reduce the acceleration effect
+// Values between 100 - 600 work well
+static const uint8_t ROTARY_ACCELERATION_DIVISOR = 400;
+
+// Half Stepping
+#ifdef HALF_STEP
+static const uint8_t ROTARY_PULSES_PER_STEP = 2;
+#else
+static const uint8_t ROTARY_PULSES_PER_STEP = 4;
+#endif
 
 // --- Display
 static const uint8_t  DISPLAY_RESET =   4; // Reset pin # (or -1 if sharing Arduino reset pin)
