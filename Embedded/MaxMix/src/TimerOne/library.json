@@ -1,0 +1,16 @@
+{
+  "name": "TimerOne",
+  "keywords": "timer",
+  "description": "Allow to use the built-in Timer1",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/PaulStoffregen/TimerOne.git"
+  },
+  "frameworks": "arduino",
+  "platforms":
+  [
+    "atmelavr",
+    "teensy"
+  ]
+}

@@ -19,15 +19,16 @@
 //********************************************************
 #include <Arduino.h>
 
+// Custom
+#include "Config.h"
+
 // Third-party
 #include "src/Adafruit_GFX/Adafruit_GFX.h"
 #include "src/Adafruit_NeoPixel/Adafruit_NeoPixel.h"
 #include "src/Adafruit_SSD1306/Adafruit_SSD1306.h"
 #include "src/ButtonEvents/ButtonEvents.h"
-#include "src/Rotary/Rotary.h"
-
-// Custom
-#include "Config.h"
+#include "src/encoder-arduino/ClickEncoder.h"
+#include "src/TimerOne/TimerOne.h"
 
 //********************************************************
 // *** STRUCTS
@@ -79,8 +80,13 @@ struct Settings settings;
 
 // Rotary Encoder
 ButtonEvents encoderButton;
-Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
+ClickEncoder *encoder;
 uint32_t encoderLastTransition = 0;
+
+void timerIsr()
+{
+  encoder->service();
+}
 
 // Time & Sleep
 uint32_t now = 0;
@@ -115,7 +121,9 @@ void setup()
   // --- Encoder
   pinMode(PIN_ENCODER_SWITCH, INPUT_PULLUP);
   encoderButton.attach(PIN_ENCODER_SWITCH);
-  encoderRotary.begin(true);
+  encoder = new ClickEncoder(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA, 0, ROTARY_PULSES_PER_STEP);
+  Timer1.initialize(1000);
+  Timer1.attachInterrupt(timerIsr);
 }
 
 //---------------------------------------------------------
@@ -275,23 +283,28 @@ bool ProcessPackage()
 
 
 //---------------------------------------------------------
+// \brief Encoder acceleration algorithm (Exponential - speed squared)
+// \param encoderDelta - step difference since last check
+// \param deltaTime - time difference since last check (ms)
+// \param volume - curent volume
+// \returns new adjusted volume
 //---------------------------------------------------------
-int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int8_t volume) {
+int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t volume) {
   if (!encoderDelta)
     return volume;
 
-  if (deltaTime < ROTARY_ACCELERATION_SLOW_TIME) {
-    if (deltaTime < ROTARY_ACCELERATION_FAST_TIME) {
-      deltaTime = ROTARY_ACCELERATION_FAST_TIME;
-    }
-
-    float ticks = ROTARY_ACCELERATION_M_SLOPE * deltaTime + ROTARY_ACCELERATION_B_OFFSET;
-    volume += (long)ticks * encoderDelta;
+  float speed = (float)encoderDelta*1000/deltaTime;
+  uint32_t step = 1 + abs(speed*speed/ROTARY_ACCELERATION_DIVISOR);
+  
+  if(encoderDelta > 0)
+  {
+    volume += step;
   }
-  else {
-    volume += encoderDelta;
+  else if(encoderDelta < 0)
+  {
+    volume -= step;
   }
-
+  
   volume = constrain(volume, 0, 100);
   return volume;
 }
@@ -300,15 +313,10 @@ int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int8_t 
 //---------------------------------------------------------
 bool ProcessEncoderRotation()
 {
-  uint8_t encoderDir = encoderRotary.process();  
-  int8_t encoderDelta = 0;
+  int16_t encoderDelta = encoder->getValue();
 
-  if(encoderDir == DIR_NONE)
+  if(encoderDelta == 0)
     return false;
-  else if(encoderDir == DIR_CW)
-    encoderDelta = 1;
-  else if(encoderDir == DIR_CCW)
-    encoderDelta = -1;
 
   uint32_t deltaTime = now - encoderLastTransition;
   encoderLastTransition = now;
