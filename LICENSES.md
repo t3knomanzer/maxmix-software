@@ -25,5 +25,6 @@ Maxmix dependencies and licences
 * Adafruit GFX  - BSD License : https://github.com/adafruit/Adafruit-GFX-Library/blob/master/license.txt
 * Adafruit SSD1306 - BSD License : https://github.com/adafruit/Adafruit_SSD1306/blob/master/license.txt
 * Adafruit NeoPixel - BSD License : https://github.com/adafruit/Adafruit_NeoPixel/blob/master/license.txt
-* Rotary - GNU GPL Version 3 : https://github.com/brianlow/Rotary
 * ButtonEvents - MIT License : https://github.com/fasteddy516/ButtonEvents/blob/master/LICENSE
+* ClickEncoder : https://github.com/0xPIT/encoder/blob/arduino/LICENSING.txt
+* TimerOne - Creative Commons Attribution 3.0 License : https://github.com/PaulStoffregen/TimerOne
