@@ -98,7 +98,6 @@ Adafruit_NeoPixel* pixels;
 // Display
 Adafruit_SSD1306* display;
 uint32_t displayScrollTimer = 0;
-bool displayScrolling = false;
 
 //********************************************************
 // *** MAIN
@@ -161,16 +160,11 @@ void loop()
 
   if(isDirty)
   {
-    UpdateDisplay();
     UpdateLighting();  
     isDirty = false;
   }  
-  if(count > 500){
-    UpdateDisplay();
-    count = 0;
-  }else{
-    count++;
-  }
+
+  UpdateDisplay();
 }
 
 //********************************************************
