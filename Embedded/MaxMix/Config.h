@@ -48,11 +48,8 @@ static const uint8_t  STATE_DISPLAY_SLEEP = 1;
 
 // --- Rotary Encoder
 #define WITHOUT_BUTTON 1
-// Increasing this will reduce the acceleration effect
-// Values between 100 - 600 work well
-static const uint16_t ROTARY_ACCELERATION_DIVISOR = 400;
 
-// Half Stepping
+//- Half Stepping
 #ifdef HALF_STEP
 static const uint8_t ROTARY_PULSES_PER_STEP = 2;
 #else

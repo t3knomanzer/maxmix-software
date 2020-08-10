@@ -9,12 +9,13 @@ namespace MaxMix.Services.Communication
     internal class MessageSettings : IMessage
     {
         #region Constructor
-        public MessageSettings(bool displayNewSession, bool sleepWhenInactive, int sleepAfterSeconds, bool continuousScroll)
+        public MessageSettings(bool displayNewSession, bool sleepWhenInactive, int sleepAfterSeconds, bool continuousScroll, int accelerationDivisor)
         {
             _displayNewSession = displayNewSession;
             _sleepWhenInactive = sleepWhenInactive;
             _sleepAfterSeconds = sleepAfterSeconds;
             _continuousScroll = continuousScroll;
+            _accelerationDivisor = accelerationDivisor;
         }
         #endregion
 
@@ -26,6 +27,7 @@ namespace MaxMix.Services.Communication
         public bool _sleepWhenInactive;
         public int _sleepAfterSeconds;
         public bool _continuousScroll;
+        public int _accelerationDivisor;
         #endregion
 
         #region Properties
@@ -33,6 +35,7 @@ namespace MaxMix.Services.Communication
         public bool SleepWhenInactive { get => _sleepWhenInactive; }
         public int SleepAfterSeconds { get => _sleepAfterSeconds; }
         public bool ContinuousScroll { get => _continuousScroll; }
+        public int AcceleratorDivisor { get => _accelerationDivisor; }
         #endregion
 
         #region Private Methods
@@ -48,6 +51,7 @@ namespace MaxMix.Services.Communication
         * SLEEPWHENINACTIVE         BYTE        1
         * SLEEPAFTERSECONDS         BYTE        1
         * CONTINUOUSSCROLL          BYTE        1
+        * ACCELERATORDIVISOR        BYTE        2
         * ---------------------------------------------------
         */
 
@@ -59,6 +63,8 @@ namespace MaxMix.Services.Communication
             result.Add(Convert.ToByte(SleepWhenInactive));
             result.Add(Convert.ToByte(SleepAfterSeconds));
             result.Add(Convert.ToByte(ContinuousScroll));
+            result.Add(Convert.ToByte(AcceleratorDivisor & 0xFF));
+            result.Add(Convert.ToByte((AcceleratorDivisor >> 8) & 0xFF));
 
             return result.ToArray();
         }

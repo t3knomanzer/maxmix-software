@@ -18,6 +18,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- DisplayNewSession -->
@@ -49,5 +50,13 @@
                Content="Display System Sounds" />
         <CheckBox Grid.Column="1" Grid.Row="4"
                   IsChecked="{Binding SystemSounds}" />
+        
+        <!-- AccelerationDivisor -->
+        <Label Grid.Column="0" Grid.Row="5"
+               Content="Encoder acceleration divisor" />
+        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="5"
+                            Foreground="{StaticResource Brush_White}"
+                            Minimum="1" Maximum="2000"
+                            Value="{Binding AccelerationDivisor}" />
     </Grid>
 </UserControl>
