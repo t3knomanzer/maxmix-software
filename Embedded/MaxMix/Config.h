@@ -112,3 +112,8 @@ static const uint8_t DISPLAY_WIDGET_DOTGROUP_HEIGHT = DISPLAY_WIDGET_DOT_SIZE_X2
 static const uint8_t DISPLAY_GAME_EDIT_CHAR_MAX = 7;
 static const uint8_t DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH = DISPLAY_GAME_EDIT_CHAR_MAX * DISPLAY_CHAR_WIDTH_X1 + DISPLAY_GAME_EDIT_CHAR_MAX - 1;
 static const uint8_t DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT = 7;
+
+// - Item Name Scrolling
+static const uint16_t DISPLAY_SCROLL_DELAY = 3000;  //  in ms
+static const uint8_t DISPLAY_SCROLL_STEP_INTERVAL = 10;  //  in ms
+static const uint8_t DISPLAY_SCROLL_STEP_INTERVAL_GAME = 20;  //  in ms

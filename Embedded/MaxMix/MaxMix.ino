@@ -91,6 +91,8 @@ Adafruit_NeoPixel* pixels;
 
 // Display
 Adafruit_SSD1306* display;
+uint32_t displayScrollTimer = 0;
+bool displayScrolling = false;
 
 //********************************************************
 // *** MAIN
@@ -118,6 +120,7 @@ void setup()
 
 //---------------------------------------------------------
 //---------------------------------------------------------
+int count = 0;
 void loop()
 {
   now = millis();
@@ -154,6 +157,12 @@ void loop()
     UpdateLighting();  
     isDirty = false;
   }  
+  if(count > 500){
+    UpdateDisplay();
+    count = 0;
+  }else{
+    count++;
+  }
 }
 
 //********************************************************
@@ -315,7 +324,10 @@ bool ProcessEncoderRotation()
   else if(mode == MODE_APPLICATION)
   {
     if(stateApplication == STATE_APPLICATION_NAVIGATE)
+    {
       itemIndexApp = GetNextIndex(itemIndexApp, itemCount, encoderDelta, settings.continuousScroll);
+      UpdateScrollTimer(&displayScrollTimer);
+    }
 
     else if(stateApplication == STATE_APPLICATION_EDIT)
     {
@@ -326,9 +338,15 @@ bool ProcessEncoderRotation()
   else if(mode == MODE_GAME)
   {
     if(stateGame == STATE_GAME_SELECT_A)
+    {
       itemIndexGameA = GetNextIndex(itemIndexGameA, itemCount, encoderDelta, settings.continuousScroll);
+      UpdateScrollTimer(&displayScrollTimer);
+    }
     else if(stateGame == STATE_GAME_SELECT_B)
+    {
       itemIndexGameB = GetNextIndex(itemIndexGameB, itemCount, encoderDelta, settings.continuousScroll);
+      UpdateScrollTimer(&displayScrollTimer);
+    }
 
     else if(stateGame == STATE_GAME_EDIT)
     {
@@ -353,10 +371,16 @@ bool ProcessEncoderButton()
       return true;
     
     if(mode == MODE_APPLICATION)
+    {
       CycleApplicationState();
+      UpdateScrollTimer(&displayScrollTimer);
+    }
 
     else if(mode == MODE_GAME)
+    {
       CycleGameState();
+      UpdateScrollTimer(&displayScrollTimer);
+    }
 
     return true;
   }
@@ -383,7 +407,8 @@ bool ProcessEncoderButton()
     if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
       return true;
       
-    CycleMode();      
+    CycleMode();
+    UpdateScrollTimer(&displayScrollTimer);
     return true;
   }
 
@@ -412,6 +437,7 @@ bool ProcessSleep()
     if(activityTimeDelta < settings.sleepAfterSeconds * 1000)
     {
       stateDisplay = STATE_DISPLAY_AWAKE;
+      UpdateScrollTimer(&displayScrollTimer);
       return true;
     }
   }
@@ -444,7 +470,7 @@ void UpdateDisplay()
   
   if(mode == MODE_MASTER)
   {
-    DisplayMasterSelectScreen(display, items[0].volume, items[0].isMuted, mode, MODE_COUNT);
+    DisplayMasterSelectScreen(display, items[0].volume, items[0].isMuted, mode, MODE_COUNT, &displayScrollTimer);
   }
   else if(mode == MODE_APPLICATION)
   {
@@ -452,11 +478,11 @@ void UpdateDisplay()
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexApp, itemCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexApp, itemCount, settings.continuousScroll);
-      DisplayApplicationSelectScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT);
+      DisplayApplicationSelectScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer);
     }
 
     else if(stateApplication == STATE_APPLICATION_EDIT)
-      DisplayApplicationEditScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, mode, MODE_COUNT);
+      DisplayApplicationEditScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, mode, MODE_COUNT, &displayScrollTimer);
   }
   else if(mode == MODE_GAME)
   {
@@ -464,16 +490,16 @@ void UpdateDisplay()
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexGameA, itemCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexGameA, itemCount, settings.continuousScroll);
-      DisplayGameSelectScreen(display, items[itemIndexGameA].name, items[itemIndexGameA].volume, items[itemIndexGameA].isMuted, "A", scrollLeft, scrollRight, mode, MODE_COUNT);
+      DisplayGameSelectScreen(display, items[itemIndexGameA].name, items[itemIndexGameA].volume, items[itemIndexGameA].isMuted, "A", scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer);
     }
     else if(stateGame == STATE_GAME_SELECT_B)
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexGameB, itemCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexGameB, itemCount, settings.continuousScroll);
-      DisplayGameSelectScreen(display, items[itemIndexGameB].name, items[itemIndexGameB].volume, items[itemIndexGameB].isMuted, "B", scrollLeft, scrollRight, mode, MODE_COUNT);
+      DisplayGameSelectScreen(display, items[itemIndexGameB].name, items[itemIndexGameB].volume, items[itemIndexGameB].isMuted, "B", scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer);
     }
     else if(stateGame == STATE_GAME_EDIT)
-      DisplayGameEditScreen(display, items[itemIndexGameA].name, items[itemIndexGameB].name, items[itemIndexGameA].volume, items[itemIndexGameB].volume, items[itemIndexGameA].isMuted, items[itemIndexGameB].isMuted, mode, MODE_COUNT);
+      DisplayGameEditScreen(display, items[itemIndexGameA].name, items[itemIndexGameB].name, items[itemIndexGameA].volume, items[itemIndexGameB].volume, items[itemIndexGameA].isMuted, items[itemIndexGameB].isMuted, mode, MODE_COUNT, displayScrollTimer);
   }
 }
 
