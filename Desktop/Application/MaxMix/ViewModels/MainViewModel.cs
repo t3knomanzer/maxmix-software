@@ -170,7 +170,8 @@ namespace MaxMix.ViewModels
             var message = new MessageSettings(_settingsViewModel.DisplayNewSession,
                                               _settingsViewModel.SleepWhenInactive,
                                               _settingsViewModel.SleepAfterSeconds,
-                                              _settingsViewModel.ContinuousScroll);
+                                              _settingsViewModel.ContinuousScroll,
+                                              _settingsViewModel.AccelerationDivisor);
 
             _communicationService.Send(message);
             _audioSessionService.SetVisibleSystemSounds(_settingsViewModel.SystemSounds);

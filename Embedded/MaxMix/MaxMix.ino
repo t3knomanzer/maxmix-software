@@ -48,6 +48,7 @@ struct Settings
   uint8_t sleepWhenInactive = 1;
   uint8_t sleepAfterSeconds = 5;
   uint8_t continuousScroll = 1;
+  uint16_t accelerationDivisor = 400;
 };
 
 //********************************************************
@@ -288,7 +289,7 @@ int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t
     return volume;
 
   float speed = (float)encoderDelta*1000/deltaTime;
-  uint32_t step = 1 + abs(speed*speed/ROTARY_ACCELERATION_DIVISOR);
+  uint32_t step = 1 + abs(speed*speed/settings.accelerationDivisor);
   
   if(encoderDelta > 0)
   {

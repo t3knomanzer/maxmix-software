@@ -82,5 +82,17 @@ namespace MaxMix.Properties {
                 this["SystemSounds"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("400")]
+        public int AccelerationDivisor {
+            get {
+                return ((int)(this["AccelerationDivisor"]));
+            }
+            set {
+                this["AccelerationDivisor"] = value;
+            }
+        }
     }
 }
