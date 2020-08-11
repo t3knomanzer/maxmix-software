@@ -71,7 +71,7 @@ namespace MaxMix.ViewModels
         /// <summary>
         /// Time for the device to be inactive before is put to sleep.
         /// </summary>
-        public int SleepAfterSeconds
+        public uint SleepAfterSeconds
         {
             get => _settings.SleepAfterSeconds;
             set
@@ -106,12 +106,12 @@ namespace MaxMix.ViewModels
         /// Value used in the acceleration algorithm.
         /// Increasing the divisor will reduce the acceleration effect.
         /// </summary>
-        public int AccelerationDivisor
+        public uint AccelerationPercentage
         {
-            get => _settings.AccelerationDivisor;
+            get => _settings.AccelerationPercentage;
             set
             {
-                _settings.AccelerationDivisor = value;
+                _settings.AccelerationPercentage = value;
                 RaisePropertyChanged();
             }
         }

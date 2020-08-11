@@ -84,5 +84,5 @@ void UpdateSettingsCommand(uint8_t* packageBuffer, Settings* settings)
   settings->sleepWhenInactive = packageBuffer[2];
   settings->sleepAfterSeconds = packageBuffer[3];
   settings->continuousScroll = packageBuffer[4];
-  settings->accelerationDivisor = (packageBuffer[6] << 8 ) | (packageBuffer[5] & 0xff);
+  settings->accelerationPercentage = packageBuffer[5];
 }

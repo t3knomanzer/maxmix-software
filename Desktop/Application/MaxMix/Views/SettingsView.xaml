@@ -50,13 +50,13 @@
                Content="Display System Sounds" />
         <CheckBox Grid.Column="1" Grid.Row="4"
                   IsChecked="{Binding SystemSounds}" />
-        
-        <!-- AccelerationDivisor -->
+
+        <!-- AccelerationPercentage -->
         <Label Grid.Column="0" Grid.Row="5"
-               Content="Encoder acceleration divisor" />
+               Content="Encoder acceleration (percentage)" />
         <xctk:IntegerUpDown Grid.Column="1" Grid.Row="5"
                             Foreground="{StaticResource Brush_White}"
-                            Minimum="1" Maximum="2000"
-                            Value="{Binding AccelerationDivisor}" />
+                            Minimum="1" Maximum="100"
+                            Value="{Binding AccelerationPercentage}" />
     </Grid>
 </UserControl>

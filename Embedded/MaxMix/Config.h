@@ -46,16 +46,6 @@ static const uint8_t  STATE_GAME_COUNT = 3;
 static const uint8_t  STATE_DISPLAY_AWAKE = 0;
 static const uint8_t  STATE_DISPLAY_SLEEP = 1;
 
-// --- Rotary Encoder
-#define WITHOUT_BUTTON 1
-
-//- Half Stepping
-#ifdef HALF_STEP
-static const uint8_t ROTARY_PULSES_PER_STEP = 2;
-#else
-static const uint8_t ROTARY_PULSES_PER_STEP = 4;
-#endif
-
 // --- Display
 static const uint8_t  DISPLAY_RESET =   4; // Reset pin # (or -1 if sharing Arduino reset pin)
 

@@ -27,7 +27,7 @@
 #include "src/Adafruit_NeoPixel/Adafruit_NeoPixel.h"
 #include "src/Adafruit_SSD1306/Adafruit_SSD1306.h"
 #include "src/ButtonEvents/ButtonEvents.h"
-#include "src/encoder-arduino/ClickEncoder.h"
+#include "src/Rotary/Rotary.h"
 #include "src/TimerOne/TimerOne.h"
 
 //********************************************************
@@ -48,7 +48,7 @@ struct Settings
   uint8_t sleepWhenInactive = 1;
   uint8_t sleepAfterSeconds = 5;
   uint8_t continuousScroll = 1;
-  uint16_t accelerationDivisor = 400;
+  uint8_t accelerationPercentage = 60;
 };
 
 //********************************************************
@@ -81,12 +81,18 @@ struct Settings settings;
 
 // Rotary Encoder
 ButtonEvents encoderButton;
-ClickEncoder *encoder;
+Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
 uint32_t encoderLastTransition = 0;
+int8_t prevDir = 0;
+volatile int16_t steps = 0;
 
 void timerIsr()
 {
-  encoder->service();
+  uint16_t encoderDir = encoderRotary.process();
+  if(encoderDir == DIR_CW)
+    steps++;
+  else if(encoderDir == DIR_CCW)
+    steps--;
 }
 
 // Time & Sleep
@@ -120,7 +126,7 @@ void setup()
   // --- Encoder
   pinMode(PIN_ENCODER_SWITCH, INPUT_PULLUP);
   encoderButton.attach(PIN_ENCODER_SWITCH);
-  encoder = new ClickEncoder(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA, 0, ROTARY_PULSES_PER_STEP);
+  encoderRotary.begin(true);
   Timer1.initialize(1000);
   Timer1.attachInterrupt(timerIsr);
 }
@@ -281,13 +287,21 @@ bool ProcessPackage()
 // \param volume - curent volume
 // \returns new adjusted volume
 //---------------------------------------------------------
-int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t volume) {
+int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t volume)
+{
   if (!encoderDelta)
     return volume;
 
   float speed = (float)encoderDelta*1000/deltaTime;
-  uint32_t step = 1 + abs(speed*speed/settings.accelerationDivisor);
-  
+  float accelerationDivisor = max((1-settings.accelerationPercentage/100)*400, 1);
+  uint32_t step = 1 + abs(speed*speed/accelerationDivisor);
+
+  // Direction change detection
+  if((prevDir > 0 && encoderDelta < 0)||(prevDir < 0 && encoderDelta > 0)){
+    //step = 1;
+  }
+  prevDir = encoderDelta;
+
   if(encoderDelta > 0)
   {
     volume += step;
@@ -305,8 +319,13 @@ int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t
 //---------------------------------------------------------
 bool ProcessEncoderRotation()
 {
-  int16_t encoderDelta = encoder->getValue();
-
+  int16_t encoderDelta;
+  cli();
+  encoderDelta = steps;
+  if(encoderDelta !=0)
+    steps = 0;
+  sei();
+  
   if(encoderDelta == 0)
     return false;
 

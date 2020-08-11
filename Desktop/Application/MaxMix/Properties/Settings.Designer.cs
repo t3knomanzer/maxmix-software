@@ -50,9 +50,9 @@ namespace MaxMix.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("5")]
-        public int SleepAfterSeconds {
+        public uint SleepAfterSeconds {
             get {
-                return ((int)(this["SleepAfterSeconds"]));
+                return ((uint)(this["SleepAfterSeconds"]));
             }
             set {
                 this["SleepAfterSeconds"] = value;
@@ -85,13 +85,13 @@ namespace MaxMix.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("400")]
-        public int AccelerationDivisor {
+        [global::System.Configuration.DefaultSettingValueAttribute("60")]
+        public uint AccelerationPercentage {
             get {
-                return ((int)(this["AccelerationDivisor"]));
+                return ((uint)(this["AccelerationPercentage"]));
             }
             set {
-                this["AccelerationDivisor"] = value;
+                this["AccelerationPercentage"] = value;
             }
         }
     }

@@ -171,7 +171,7 @@ namespace MaxMix.ViewModels
                                               _settingsViewModel.SleepWhenInactive,
                                               _settingsViewModel.SleepAfterSeconds,
                                               _settingsViewModel.ContinuousScroll,
-                                              _settingsViewModel.AccelerationDivisor);
+                                              _settingsViewModel.AccelerationPercentage);
 
             _communicationService.Send(message);
             _audioSessionService.SetVisibleSystemSounds(_settingsViewModel.SystemSounds);
