@@ -71,7 +71,7 @@ namespace MaxMix.ViewModels
         /// <summary>
         /// Time for the device to be inactive before is put to sleep.
         /// </summary>
-        public uint SleepAfterSeconds
+        public int SleepAfterSeconds
         {
             get => _settings.SleepAfterSeconds;
             set

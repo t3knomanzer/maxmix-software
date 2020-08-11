@@ -50,9 +50,9 @@ namespace MaxMix.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("5")]
-        public uint SleepAfterSeconds {
+        public int SleepAfterSeconds {
             get {
-                return ((uint)(this["SleepAfterSeconds"]));
+                return ((int)(this["SleepAfterSeconds"]));
             }
             set {
                 this["SleepAfterSeconds"] = value;
