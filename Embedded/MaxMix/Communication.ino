@@ -9,65 +9,6 @@
 //********************************************************
 // *** FUNCTIONS
 //********************************************************
-//---------------------------------------------------------
-// Reads the data from the serial receive buffer.
-//---------------------------------------------------------
-bool ReceivePackage(uint8_t* buffer, uint8_t* index, uint8_t delimiter, uint8_t bufferSize)
-{
-  while(Serial.available() > 0)
-  {
-    uint8_t received = (uint8_t)Serial.read();
-
-    if(*index == bufferSize)
-        return false;
-
-    if(received == delimiter)
-      return true;
-
-    // Otherwise continue filling the buffer    
-    buffer[*index] = received;
-    *index = *index + 1;
-  }
-
-  return false;
-}
-
-//---------------------------------------------------------
-// 
-//---------------------------------------------------------
-uint8_t EncodePackage(uint8_t* inBuffer, uint8_t size, uint8_t* outBuffer)
-{
-    // Add checksum
-    inBuffer[size] = size + 1;
-    size++;
-
-    // Encode message
-    size_t outSize = Encode(inBuffer, size, outBuffer);
-
-    // Add packet delimiter
-    outBuffer[outSize] = 0;
-    outSize++;
-
-    return outSize;
-}
-
-bool DecodePackage(const uint8_t* inBuffer, uint8_t size, uint8_t* outBuffer)
-{
-  // Decode received message
-  uint8_t outSize = Decode(inBuffer, size, outBuffer);
-
-  // Check message size is greater than 0
-  if(outSize == 0)
-    return false;
-
-  // Verify message checksum
-  uint8_t checksum = outBuffer[outSize - 1];
-  if(checksum != outSize)
-    return false;
-
-  return true;
-}
-
 //-----------------------------------------------------------------------------
 // \brief Encode a byte buffer with the COBS encoder.
 // \param inBuffer A pointer to the unencoded buffer to encode.

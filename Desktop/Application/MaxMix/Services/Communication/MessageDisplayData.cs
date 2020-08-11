@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication
 {
-    internal class MessageRemoveSession : IMessage
+    internal class MessageDisplayData : IMessage
     {
         #region Constructor
-        public MessageRemoveSession(int id)
+        public MessageDisplayData(byte[] pixels)
         {
-            _id = id;
+            _pixels = pixels;
         }
         #endregion
 
@@ -19,29 +19,16 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Fields
-        private int _id;
+        private byte[] _pixels;
         #endregion
 
         #region Properties
-        public int Id { get => _id; }
-        #endregion
-
-        #region Private Methods
         #endregion
 
         #region Public Methods
-
-        /*
-        * ---------------------------------------
-        * CHUNK        TYPE        SIZE (BYTES)
-        * ---------------------------------------
-        * ID           INT32       4
-        * ---------------------------------------
-        */
-
         public byte[] GetBytes()
         {
-            return BitConverter.GetBytes(Id);
+            return _pixels;
         }
 
         public bool SetBytes(byte[] bytes)

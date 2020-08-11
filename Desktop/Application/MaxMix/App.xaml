@@ -39,7 +39,7 @@
             <!--====================================================-->
             <!-- Fonts -->
             <!--====================================================-->
-            <FontFamily x:Key="FontFamily_Default">./Resources/#Alien League</FontFamily>
+            <FontFamily x:Key="FontFamily_Device">/Resources/CodersCrux.ttf #Coder's Crux</FontFamily>
             <FontWeight x:Key="FontWeight_Default">Regular</FontWeight>
 
             <!--====================================================-->
@@ -109,6 +109,10 @@
             <!--====================================================-->
             <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
                 <v:SettingsView />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:DeviceViewModel}">
+                <v:DeviceView />
             </DataTemplate>
 
         </ResourceDictionary>

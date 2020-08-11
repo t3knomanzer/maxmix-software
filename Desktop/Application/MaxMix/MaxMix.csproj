@@ -105,6 +105,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DeviceWindow.xaml.cs">
+      <DependentUpon>DeviceWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Framework\AttachedProperties\BalloonMessageProperty.cs" />
     <Compile Include="Framework\Converters\BoolToStringConverter.cs" />
     <Compile Include="Framework\Converters\BoolToVisibilityConverter.cs" />
@@ -142,17 +145,17 @@
     <Compile Include="Services\Communication\IDiscoveryService.cs" />
     <Compile Include="Services\Communication\IMessage.cs" />
     <Compile Include="Services\Communication\ISerializationService.cs" />
-    <Compile Include="Services\Communication\MessageAddSession.cs" />
+    <Compile Include="Services\Communication\MessageDisplayData.cs" />
     <Compile Include="Services\Communication\MessageHandShakeRequest.cs" />
     <Compile Include="Services\Communication\MessageHandShakeResponse.cs" />
-    <Compile Include="Services\Communication\MessageRemoveSession.cs" />
-    <Compile Include="Services\Communication\MessageSettings.cs" />
-    <Compile Include="Services\Communication\MessageUpdateVolumeSession.cs" />
     <Compile Include="Services\Communication\SerializationService.cs" />
-    <Compile Include="Services\Update\UpdateService.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\DeviceViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
+    <Compile Include="Views\DeviceView.xaml.cs">
+      <DependentUpon>DeviceView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
     </Compile>
@@ -160,6 +163,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <Resource Include="..\..\Resources\Fonts\CodersCrux.ttf">
+      <Link>Resources\CodersCrux.ttf</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <None Include="App.config" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -172,9 +179,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="DeviceWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\DeviceView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\SettingsView.xaml">
       <Generator>MSBuild:Compile</Generator>

@@ -16,6 +16,7 @@ using System.Windows;
 using MaxMix.Framework.Mvvm;
 using MaxMix.Services.Communication;
 using MaxMix.Services.Audio;
+using System.Windows.Forms;
 
 namespace MaxMix.ViewModels
 {
@@ -30,15 +31,13 @@ namespace MaxMix.ViewModels
             _serializationService = new CobsSerializationService();
             _serializationService.RegisterType<MessageHandShakeRequest>(0);
             _serializationService.RegisterType<MessageHandShakeResponse>(1);
-            _serializationService.RegisterType<MessageAddSession>(2);
-            _serializationService.RegisterType<MessageRemoveSession>(3);
-            _serializationService.RegisterType<MessageUpdateVolumeSession>(4);
-            _serializationService.RegisterType<MessageSettings>(5);
+            _serializationService.RegisterType<MessageDisplayData>(2);
 
             _settingsViewModel = new SettingsViewModel();
             _settingsViewModel.PropertyChanged += OnSettingsChanged;
 
-            // TODO: pass in SystemSounds
+            _deviceViewModel = new DeviceViewModel();
+
             _audioSessionService = new AudioSessionService(_settingsViewModel.SystemSounds);
             _audioSessionService.SessionCreated += OnAudioSessionCreated;
             _audioSessionService.SessionRemoved += OnAudioSessionRemoved;
@@ -72,6 +71,7 @@ namespace MaxMix.ViewModels
         private bool _isActive;
         private bool _isConnected;
         private SettingsViewModel _settingsViewModel;
+        private DeviceViewModel _deviceViewModel;
         private ICommand _activateCommand;
         private ICommand _deactivateCommand;
         private ICommand _requestExitCommand;
@@ -103,6 +103,15 @@ namespace MaxMix.ViewModels
         {
             get => _settingsViewModel;
             private set => SetProperty(ref _settingsViewModel, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DeviceViewModel DeviceViewModel
+        {
+            get => _deviceViewModel;
+            private set => SetProperty(ref _deviceViewModel, value);
         }
         #endregion
 
@@ -153,6 +162,7 @@ namespace MaxMix.ViewModels
         {
             _discoveryService.Start(_baudRate);
             _settingsViewModel.Start();
+            _deviceViewModel.Start();
         }
 
         public override void Stop()
@@ -161,21 +171,19 @@ namespace MaxMix.ViewModels
             _discoveryService.Stop();
             _communicationService.Stop();
             _settingsViewModel.Stop();
+            _deviceViewModel.Stop();
+        }
+        #endregion
+
+        #region Public Methods
+        byte[] _pixels;
+        public void SetPixels(byte[] pixels)
+        {
+            _pixels = pixels;
         }
         #endregion
 
         #region Private Methods
-        private void SendSettings()
-        {
-            var message = new MessageSettings(_settingsViewModel.DisplayNewSession,
-                                              _settingsViewModel.SleepWhenInactive,
-                                              _settingsViewModel.SleepAfterSeconds,
-                                              _settingsViewModel.ContinuousScroll);
-
-            _communicationService.Send(message);
-            _audioSessionService.SetVisibleSystemSounds(_settingsViewModel.SystemSounds);
-        }
-
         private void RaiseExitRequested()
         {
             ExitRequested?.Invoke(this, EventArgs.Empty);
@@ -185,20 +193,14 @@ namespace MaxMix.ViewModels
         #region EventHandlers
         private void OnAudioSessionCreated(object sender, int id, string displayName, int volume, bool isMuted)
         {
-            var message = new MessageAddSession(id, displayName, volume, isMuted);
-            _communicationService.Send(message);
         }
          
         private void OnAudioSessionRemoved(object sender, int id)
         {
-            var message = new MessageRemoveSession(id);
-            _communicationService.Send(message);
         }
 
         private void OnAudioSessionVolumeChanged(object sender, int id, int volume, bool isMuted)
         {
-            var message = new MessageUpdateVolumeSession(id, volume, isMuted);
-            _communicationService.Send(message);
         }
 
         private void OnDeviceDiscovered(object sender, string portName)
@@ -207,21 +209,17 @@ namespace MaxMix.ViewModels
 
             _communicationService.Start(portName, _baudRate);
             _audioSessionService.Start();
-            SendSettings();
+
+            var msg = new MessageDisplayData(_pixels);
+            _communicationService.Send(msg);
         }
 
         private void OnSettingsChanged(object sender, PropertyChangedEventArgs e)
         {
-            SendSettings();
         }
 
         private void OnMessageReceived(object sender, IMessage message)
         {
-            if (message.GetType() == typeof(MessageUpdateVolumeSession))
-            {
-                var message_ = message as MessageUpdateVolumeSession;
-                _audioSessionService.SetSessionVolume(message_.Id, message_.Volume, message_.IsMuted);
-            }
         }
 
         private void OnCommunicationError(object sender, string e)

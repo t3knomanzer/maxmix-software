@@ -20,39 +20,24 @@ namespace MaxMix
     /// </summary>
     public partial class App : Application
     {
-        IDisposable _errorReporter;
-
-        private void InitErrorReporting()
-        {
-            _errorReporter = SentrySdk.Init("https://54cf266b03ed4ee380b0577653172a98@o431430.ingest.sentry.io/5382488");
-            SentrySdk.ConfigureScope(scope =>
-            {
-                scope.User = new User { Username = Environment.MachineName };
-            });
-
-        }
-
-        void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
-        {
-            SentrySdk.CaptureException(e.Exception);
-            _errorReporter.Dispose();
-        }
-
         private void ApplicationStartup(object sender, StartupEventArgs e)
         {
-            InitErrorReporting();
-            DispatcherUnhandledException += OnDispatcherUnhandledException;
-
-            var window = new MainWindow();
 
             var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
             string assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            window.Title = string.Format("{0} {1}", assemblyName, assemblyVersion);
 
             var dataContext = new MainViewModel();
             dataContext.ExitRequested += OnExitRequested;
 
+            var window = new MainWindow();
+            window.Title = string.Format("{0} {1}", assemblyName, assemblyVersion);
             window.DataContext = dataContext;
+
+            var deviceWindow = new DeviceWindow();
+            deviceWindow.Title = string.Format("{0} {1}", assemblyName, assemblyVersion);
+            deviceWindow.DataContext = dataContext;
+            deviceWindow.Show();
+
             dataContext.Start();
         }
 
@@ -64,8 +49,6 @@ namespace MaxMix
             // Calling dispose explicitly on closing so the icon dissapears from the windows task bar.
             var window = (MainWindow)Application.Current.MainWindow;            
             window.taskbarIcon.Dispose();
-
-            _errorReporter.Dispose();
 
             Application.Current.Shutdown();
         }
