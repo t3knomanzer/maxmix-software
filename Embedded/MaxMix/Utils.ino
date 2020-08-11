@@ -77,23 +77,3 @@ int8_t GetNextIndex(int8_t itemIndex, uint8_t itemCount, int8_t direction, uint8
   return itemIndex;
 }
 
-//---------------------------------------------------------
-//---------------------------------------------------------
-char* TrimItemName(char* name)
-{
-  char* trimmed = name;
-  char prevChar = 0;
-  for(int i=0; i<ITEM_BUFFER_NAME_SIZE; i++)
-  {
-    if(name[i] == ' ' && prevChar == ' ')
-    {
-      trimmed[i-1] = '\0';
-      return trimmed;
-    }else
-    {
-      prevChar = name[i];
-    }
-  }
-  return trimmed;
-}
-
