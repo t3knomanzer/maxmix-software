@@ -293,7 +293,7 @@ int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t
     return volume;
 
   float speed = (float)encoderDelta*1000/deltaTime;
-  float accelerationDivisor = max((1-settings.accelerationPercentage/100)*400, 1);
+  float accelerationDivisor = max((1-(float)settings.accelerationPercentage/100)*400, 1);
   uint32_t step = 1 + abs(speed*speed/accelerationDivisor);
 
   // Direction change detection
