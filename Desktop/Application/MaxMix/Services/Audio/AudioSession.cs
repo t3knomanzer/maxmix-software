@@ -40,6 +40,9 @@ namespace MaxMix.Services.Audio
         private AudioSessionControl2 _session2;
         private SimpleAudioVolume _simpleAudio;
         private bool _isNotifyEnabled = true;
+
+        private int _volume;
+        private bool _isMuted;
         #endregion
 
         #region Properties
@@ -65,28 +68,44 @@ namespace MaxMix.Services.Audio
         /// <inheritdoc/>
         public int Volume
         {
-            get => (int)Math.Round(_simpleAudio.MasterVolume * 100);
+            get
+            {
+                try { _volume = (int)Math.Round(_simpleAudio.MasterVolume * 100); }
+                catch { }
+
+                return _volume;
+            }
             set
             {
-                if (Volume == value)
+                if (_volume == value)
                     return;
 
                 _isNotifyEnabled = false;
-                _simpleAudio.MasterVolume = value / 100f;
+                _volume = value;
+                try { _simpleAudio.MasterVolume = value / 100f; }
+                catch { }
             }
         }
 
         /// <inheritdoc/>
         public bool IsMuted
         {
-            get => _simpleAudio.IsMuted;
+            get
+            {
+                try { _isMuted = _simpleAudio.IsMuted; }
+                catch { }
+
+                return _isMuted;
+            }
             set
             {
-                if (IsMuted == value)
+                if (_isMuted == value)
                     return;
 
                 _isNotifyEnabled = false;
-                _simpleAudio.IsMuted = value;
+                _isMuted = value;
+                try { _simpleAudio.IsMuted = value; }
+                catch { }
             }
         }
         #endregion
