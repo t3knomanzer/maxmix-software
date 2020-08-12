@@ -1,3 +1,5 @@
+<img src=".github/resources/color-dark-2048.png" width="256">
+
 ![release](https://github.com/t3knomanzer/maxmix-software/workflows/release/badge.svg)
 ![tests](https://github.com/t3knomanzer/maxmix-software/workflows/tests/badge.svg?branch=master)
 ![GitHub issues](https://img.shields.io/github/issues/t3knomanzer/maxmix-software)
@@ -9,8 +11,7 @@
 [![Paypal donate](https://img.shields.io/badge/paypal-donate-blue?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=SQS6XJZBCBZA8&currency_code=USD&source=url)
 [![Github sponsor](https://img.shields.io/badge/github-sponsor-blue?logo=github)](https://github.com/sponsors/t3knomanzer)
 
-<img src=".github/resources/color-dark-2048.png" width="256">
-
+## Overview
 **Maxmix** is an open-source volume mixer that allows you to control the volume applications from an external custom controller.  
 It was originally designed to allow to quickly adjust the volume of a game and an external voice chat application like Discord quckly, but it can do so much more...  
 You can find out more about the system in the [project website](https://www.maxmixproject.com).
