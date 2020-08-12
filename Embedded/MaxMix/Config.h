@@ -52,6 +52,9 @@ static const uint8_t  DISPLAY_RESET =   4; // Reset pin # (or -1 if sharing Ardu
 // --- Lighting
 static const uint8_t  PIXELS_NUM = 8; // Number of pixels in ring
 
+// --- Rotary Encoder
+static const uint16_t ROTARY_ACCELERATION_DIVISOR_MAX = 400;
+
 // --- Messages
 static const uint8_t ITEM_MAX_COUNT = 8;
 static const uint8_t ITEM_BUFFER_NAME_SIZE = 36;

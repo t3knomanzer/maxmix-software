@@ -9,7 +9,7 @@ namespace MaxMix.Services.Communication
     internal class MessageSettings : IMessage
     {
         #region Constructor
-        public MessageSettings(bool displayNewSession, bool sleepWhenInactive, uint sleepAfterSeconds, bool continuousScroll, uint accelerationPercentage)
+        public MessageSettings(bool displayNewSession, bool sleepWhenInactive, int sleepAfterSeconds, bool continuousScroll, uint accelerationPercentage)
         {
             _displayNewSession = displayNewSession;
             _sleepWhenInactive = sleepWhenInactive;

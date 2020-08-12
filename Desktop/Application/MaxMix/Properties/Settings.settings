@@ -17,8 +17,8 @@
     <Setting Name="SystemSounds" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-	<Setting Name="AccelerationDivisor" Type="System.Int32" Scope="User">
-		<Value Profile="(Default)">400</Value>
-	</Setting>
+    <Setting Name="AccelerationPercentage" Type="System.UInt32" Scope="User">
+      <Value Profile="(Default)">60</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

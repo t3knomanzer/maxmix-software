@@ -84,11 +84,11 @@ ButtonEvents encoderButton;
 Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
 uint32_t encoderLastTransition = 0;
 int8_t prevDir = 0;
-volatile int16_t steps = 0;
+volatile int8_t steps = 0;
 
 void timerIsr()
 {
-  uint16_t encoderDir = encoderRotary.process();
+  uint8_t encoderDir = encoderRotary.process();
   if(encoderDir == DIR_CW)
     steps++;
   else if(encoderDir == DIR_CCW)
@@ -296,12 +296,12 @@ int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t
     return volume;
 
   float speed = (float)encoderDelta*1000/deltaTime;
-  float accelerationDivisor = max((1-(float)settings.accelerationPercentage/100)*400, 1);
+  float accelerationDivisor = max((1-(float)settings.accelerationPercentage/100)*ROTARY_ACCELERATION_DIVISOR_MAX, 1);
   uint32_t step = 1 + abs(speed*speed/accelerationDivisor);
 
   // Direction change detection
   if((prevDir > 0 && encoderDelta < 0)||(prevDir < 0 && encoderDelta > 0)){
-    //step = 1;
+    step = 1;
   }
   prevDir = encoderDelta;
 
@@ -322,7 +322,7 @@ int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t
 //---------------------------------------------------------
 bool ProcessEncoderRotation()
 {
-  int16_t encoderDelta;
+  int8_t encoderDelta;
   cli();
   encoderDelta = steps;
   if(encoderDelta !=0)
