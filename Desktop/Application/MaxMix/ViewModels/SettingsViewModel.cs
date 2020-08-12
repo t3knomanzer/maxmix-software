@@ -101,6 +101,20 @@ namespace MaxMix.ViewModels
                 RaisePropertyChanged();
             }
         }
+
+        /// <summary>
+        /// Value used in the acceleration algorithm.
+        /// Increasing the divisor will reduce the acceleration effect.
+        /// </summary>
+        public uint AccelerationPercentage
+        {
+            get => _settings.AccelerationPercentage;
+            set
+            {
+                _settings.AccelerationPercentage = value;
+                RaisePropertyChanged();
+            }
+        }
         #endregion
 
         #region Commands

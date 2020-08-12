@@ -82,5 +82,17 @@ namespace MaxMix.Properties {
                 this["SystemSounds"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("60")]
+        public uint AccelerationPercentage {
+            get {
+                return ((uint)(this["AccelerationPercentage"]));
+            }
+            set {
+                this["AccelerationPercentage"] = value;
+            }
+        }
     }
 }
