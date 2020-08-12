@@ -10,27 +10,25 @@
 [![Github sponsor](https://img.shields.io/badge/github-sponsor-blue?logo=github)](https://github.com/sponsors/t3knomanzer)
 
 # Maxmix
-**Maxmix** is an open-source volume mixer that allows you to control the volume of any application running on your Windows PC from an external custom device.  
-It was made to allow to quickly adjust the volume of the game and an external chat application like Discord, without having to bring up the windows volume mixer. But it can do so much more...  
+**Maxmix** is an open-source volume mixer that allows you to control the volume applications from an external custom controller.  
+It was originally designed to allow to quickly adjust the volume of a game and an external voice chat application like Discord quckly, but it can do so much more...  
 You can find out more about the system in the [project website](https://www.maxmixproject.com).
 
 This repository contains the code for all of the software.
 
 ## Desktop
-The desktop directory contains the **desktop application**, **driver installer** and **firmware installer** which are all written in C# and WPF.
-
-Development is done using [Visual Studio 2019 Community Edition](https://visualstudio.microsoft.com/downloads/).
-
+The desktop directory contains the **desktop application**, **driver installer** and **firmware installer** which are all written in C# and WPF.  
+Development is done using [Visual Studio 2019 Community Edition](https://visualstudio.microsoft.com/downloads/).  
 The application installer is made with [Advanced Installer](https://www.advancedinstaller.com/).
 
 ## Embedded
-The embedded directory contains the **device firmware** which uses an Arduino Nano.
-You can use your IDE of choice as long as it compiles for that particular chip.
+The embedded directory contains the **device firmware** which uses an Arduino Nano.  
+You can use your IDE of choice as long as it compiles for that particular chip.  
 
 ## Contributing
 Contributions are *very* welcome!
 
-Refer to the [CONTRIBUTING.md](https://github.com/t3knomanzer/.github/blob/master/CONTRIBUTING.md) file for more details about the workflow,
+Refer to the [CONTRIBUTING.md](https://github.com/t3knomanzer/maxmix-software/blob/master/.github/CONTRIBUTING.md) file for more details about the workflow,
 and general hints on how to prepare your pull request. You can also ask for clarifications or guidance in GitHub issues directly.
 
 ## Community
