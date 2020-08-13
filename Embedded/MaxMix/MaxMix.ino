@@ -71,7 +71,7 @@ uint8_t isDirty = true;
 
 struct Item items[ITEM_MAX_COUNT];
 int8_t itemIndexMaster = 0;
-int8_t itemIndexApp = -1;
+int8_t itemIndexApp = 0;
 int8_t itemIndexGameA = 0;
 int8_t itemIndexGameB = 0;
 uint8_t itemCount = 0;
@@ -192,6 +192,24 @@ void ClearSend()
 }
 
 //---------------------------------------------------------
+//---------------------------------------------------------
+void ResetState()
+{
+  mode = MODE_MASTER;
+  stateApplication = STATE_APPLICATION_NAVIGATE;
+  stateGame = STATE_GAME_SELECT_A;
+  stateDisplay = STATE_DISPLAY_AWAKE;
+  //isDirty = true;
+
+  itemIndexMaster = 0;
+  itemIndexApp = 0;
+  itemIndexGameA = 0;
+  itemIndexGameB = 0;
+  itemCount = 0;
+}
+
+
+//---------------------------------------------------------
 // \brief Handles incoming commands.
 // \returns true if screen update is required.
 //---------------------------------------------------------
@@ -201,7 +219,10 @@ bool ProcessPackage()
   
   if(command == MSG_COMMAND_HS_REQUEST)
   {
+    ResetState();
     SendHandshakeCommand(sendBuffer, encodeBuffer);
+
+    return true;
   }
   else if(command == MSG_COMMAND_ADD)
   {
