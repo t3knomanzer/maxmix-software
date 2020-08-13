@@ -5,6 +5,8 @@
 //
 //********************************************************
 
+#ifndef SCREEN_LCD
+
 //********************************************************
 // *** INCLUDES
 //********************************************************
@@ -335,3 +337,4 @@ void DrawSelectionVolumeBar(Adafruit_SSD1306* display, uint8_t volume, bool isMu
   display->drawLine(x0, y0, x0, y1, WHITE);
   
 }
+#endif

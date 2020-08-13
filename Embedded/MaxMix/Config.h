@@ -49,6 +49,13 @@ static const uint8_t  STATE_DISPLAY_SLEEP = 1;
 // --- Display
 static const uint8_t  DISPLAY_RESET =   4; // Reset pin # (or -1 if sharing Arduino reset pin)
 
+// --- LCD Config
+#define SCREEN_LCD;
+static const uint8_t AMOUNT_OF_COLS = 16; // How many possible columns in the LCD
+static const uint8_t AMOUNT_OF_ROWS = 4;  // How many possible rows in the LCD
+static const uint8_t RS = 7, EN = 8, D4 = 9, D5 = 10, D6 = 11, D7 = 12; //Pins on Arduino to LCD
+static const double VOLUME_ON_SCREEN = 6.25;
+
 // --- Lighting
 static const uint8_t  PIXELS_NUM = 8; // Number of pixels in ring
 

@@ -29,6 +29,7 @@
 #include "src/ButtonEvents/ButtonEvents.h"
 #include "src/Rotary/Rotary.h"
 #include "src/TimerOne/TimerOne.h"
+#include <LiquidCrystal.h>
 
 //********************************************************
 // *** STRUCTS
@@ -103,7 +104,11 @@ uint32_t lastActivityTime = 0;
 Adafruit_NeoPixel* pixels;
 
 // Display
+#ifndef SCREEN_LCD
 Adafruit_SSD1306* display;
+#else
+LiquidCrystal* display;
+#endif
 
 //********************************************************
 // *** MAIN
