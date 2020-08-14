@@ -26,7 +26,7 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Fields
-        private IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
+        private readonly IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
         private int _volume = 100;
         private bool _isMuted = false;
         private bool _isNotifyEnabled = true;
@@ -38,9 +38,6 @@ namespace MaxMix.Services.Audio
 
         /// <inheritdoc/>
         public string DisplayName { get; protected set; }
-
-        /// <inheritdoc/>
-        public bool IsSystemSound { get; protected set; }
 
         /// <inheritdoc/>
         public int Volume
@@ -74,7 +71,6 @@ namespace MaxMix.Services.Audio
             {
                 _volume = session.Volume;
                 _isMuted = session.IsMuted;
-                IsSystemSound |= session.IsSystemSound;
 
                 VolumeChanged?.Invoke(this);
             }

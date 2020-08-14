@@ -66,7 +66,7 @@ void RemoveItemCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t* itemC
 {
   // Re-order items array
   for(uint8_t i = itemIndex; i < *itemCount - 1; i++)
-    items[i] = items[i + 1];
+    itemsBuffer[i] = itemsBuffer[i + 1];
 
   *itemCount = *itemCount - 1;
 }

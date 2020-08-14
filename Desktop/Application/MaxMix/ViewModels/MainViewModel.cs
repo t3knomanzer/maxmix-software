@@ -38,8 +38,11 @@ namespace MaxMix.ViewModels
             _settingsViewModel = new SettingsViewModel();
             _settingsViewModel.PropertyChanged += OnSettingsChanged;
 
-            // TODO: pass in SystemSounds
-            _audioSessionService = new AudioSessionService(_settingsViewModel.SystemSounds);
+            _audioSessionService = new AudioSessionService();
+            _audioSessionService.DefaultDeviceChanged += OnDefaultDeviceChanged;
+            _audioSessionService.DeviceCreated += OnDeviceCreated;
+            _audioSessionService.DeviceRemoved += OnDeviceRemoved;
+            _audioSessionService.DeviceVolumeChanged += OnDeviceVolumeChanged;
             _audioSessionService.SessionCreated += OnAudioSessionCreated;
             _audioSessionService.SessionRemoved += OnAudioSessionRemoved;
             _audioSessionService.SessionVolumeChanged += OnAudioSessionVolumeChanged;
@@ -168,7 +171,6 @@ namespace MaxMix.ViewModels
                                               _settingsViewModel.DoubleTapTime);
 
             _communicationService.Send(message);
-            _audioSessionService.SetVisibleSystemSounds(_settingsViewModel.SystemSounds);
         }
 
         private void RaiseExitRequested()
@@ -178,21 +180,43 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region EventHandlers
+        private void OnDefaultDeviceChanged(object sender, int id)
+        {
+        }
+
+        private void OnDeviceCreated(object sender, int id, string displayName, int volume, bool isMuted)
+        {
+            var message = new MessageAddSession(id, displayName, volume, isMuted, true);
+            _communicationService.Send(message);
+        }
+
+        private void OnDeviceRemoved(object sender, int id)
+        {
+            var message = new MessageRemoveSession(id, true);
+            _communicationService.Send(message);
+        }
+
+        private void OnDeviceVolumeChanged(object sender, int id, int volume, bool isMuted)
+        {
+            var message = new MessageUpdateVolumeSession(id, volume, isMuted, true);
+            _communicationService.Send(message);
+        }
+
         private void OnAudioSessionCreated(object sender, int id, string displayName, int volume, bool isMuted)
         {
-            var message = new MessageAddSession(id, displayName, volume, isMuted);
+            var message = new MessageAddSession(id, displayName, volume, isMuted, false);
             _communicationService.Send(message);
         }
          
         private void OnAudioSessionRemoved(object sender, int id)
         {
-            var message = new MessageRemoveSession(id);
+            var message = new MessageRemoveSession(id, false);
             _communicationService.Send(message);
         }
 
         private void OnAudioSessionVolumeChanged(object sender, int id, int volume, bool isMuted)
         {
-            var message = new MessageUpdateVolumeSession(id, volume, isMuted);
+            var message = new MessageUpdateVolumeSession(id, volume, isMuted, false);
             _communicationService.Send(message);
         }
 

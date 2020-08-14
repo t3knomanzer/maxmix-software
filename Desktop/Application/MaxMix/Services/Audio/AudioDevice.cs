@@ -9,59 +9,74 @@ namespace MaxMix.Services.Audio
     /// <summary>
     /// Provides a facade with a simpler interface over the MMDevice CSCore class.
     /// </summary>
-    public class AudioDevice : IAudioSession
+    public class AudioDevice : IAudioDevice
     {
         #region Constructor
-        public AudioDevice(MMDevice device, bool visibleSystemSounds = false)
+        public AudioDevice(MMDevice device)
         {
-            _device = device;
-            _visibleSystemSounds = visibleSystemSounds;
+            Device = device;
 
-            _sessionManager = AudioSessionManager2.FromMMDevice(_device);
-            _endpointVolume = AudioEndpointVolume.FromDevice(_device);
+            _deviceEnumerator = new MMDeviceEnumerator();
+            _deviceEnumerator.DefaultDeviceChanged += OnDefaultDeviceChanged;
+            _deviceEnumerator.DeviceRemoved += OnDeviceRemoved;
+            _deviceEnumerator.DeviceStateChanged += OnDeviceStateChanged;
 
+            _endpointVolume = AudioEndpointVolume.FromDevice(Device);
             _endpointVolume.RegisterControlChangeNotify(_callback);
             _callback.NotifyRecived += OnEndpointVolumeChanged;
-            _sessionManager.SessionCreated += OnSessionCreated;
         }
         #endregion
 
         #region Events
         /// <inheritdoc/>
-        public event Action<IAudioSession> VolumeChanged;
+        public event Action<IAudioDevice> DeviceDefaultChanged;
 
         /// <inheritdoc/>
-        public event Action<IAudioSession> SessionEnded;
+        public event Action<IAudioDevice> DeviceRemoved;
 
-        /// <summary>
-        /// Occurs when the audio session has been created.
-        /// </summary>
-        public event Action<IAudioSession> SessionCreated;
+        /// <inheritdoc/>
+        public event Action<IAudioDevice> DeviceVolumeChanged;
+
         #endregion
 
         #region Fields
-        private AudioEndpointVolumeCallback _callback = new AudioEndpointVolumeCallback();
-        private MMDevice _device;
-        private AudioSessionManager2 _sessionManager;
+        private MMDeviceEnumerator _deviceEnumerator;
         private AudioEndpointVolume _endpointVolume;
+        private AudioEndpointVolumeCallback _callback = new AudioEndpointVolumeCallback();
 
-        private IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
-        private bool _visibleSystemSounds = false;
         private bool _isNotifyEnabled = true;
-        
+
+        private bool _isDefault;
+        private bool _wasDefault;
         private int _volume;
         private bool _isMuted;
         #endregion
 
         #region Properties
         /// <inheritdoc/>
-        public int ID => _device.DeviceID.GetHashCode();
+        public MMDevice Device { get; private set; }
 
         /// <inheritdoc/>
-        public string DisplayName => "Master";
+        public int ID => Device.DeviceID.GetHashCode();
 
         /// <inheritdoc/>
-        public bool IsSystemSound { get; protected set; }
+        public string DisplayName => Device.FriendlyName;
+
+        /// <inheritdoc/>
+        public bool IsDefault
+        {
+            get
+            {
+                try
+                {
+                    var defaultDevice = _deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+                    _isDefault = defaultDevice.DeviceID.GetHashCode() == Device.DeviceID.GetHashCode();
+                }
+                catch { }
+
+                return _isDefault;
+            }
+        }
 
         /// <inheritdoc/>
         public int Volume
@@ -108,105 +123,38 @@ namespace MaxMix.Services.Audio
         }
         #endregion
 
-        #region Private Methods
-        private void RegisterSession(IAudioSession session)
+        #region Event Handlers
+        private void OnDefaultDeviceChanged(object sender, DefaultDeviceChangedEventArgs e)
         {
-            if (!_visibleSystemSounds && session.IsSystemSound)
-            {
-                session.Dispose();
-                return;
-            }
-
-            var audioSession = session as AudioSession;
-            var fileName = audioSession.Process.GetMainModuleFileName(); // QUESTION: Should we use session.GroupingParam instead?
-
-            // If we are able to grab the fileName for the process, group it with sessions from the same fileName
-            if (!string.IsNullOrEmpty(fileName))
-            {
-                var groupID = fileName.GetHashCode();
-
-                AudioSessionGroup sessionGroup;
-                if (_sessions.TryGetValue(groupID, out var group))
-                {
-                    // We have a previously constrcuted group, so just add this session to that group and early out.
-                    sessionGroup = group as AudioSessionGroup;
-                    sessionGroup.AddSession(session);
-                    return;
-                }
-
-                // Need to create a new group for this session and register it
-                sessionGroup = new AudioSessionGroup(groupID, session.DisplayName);
-                sessionGroup.AddSession(session);
-                session = sessionGroup;
-            }
-
-            _sessions.Add(session.ID, session);
-            session.SessionEnded += OnSessionEnded;
-            session.VolumeChanged += OnSessionVolumeChanged;
-
-            SessionCreated?.Invoke(session);
-        }
-
-        private bool ValidateSession(AudioSessionControl session)
-        {
-            var session2 = session.QueryInterface<AudioSessionControl2>();
-            return session2.Process != null;
-        }
-        #endregion
-
-        #region Public Methods
-        public void InitializeSessions()
-        {
-            using (var sessionEnumerator = _sessionManager.GetSessionEnumerator())
-            {
-                foreach (var session in sessionEnumerator)
+            // For some reason this event triggers twice.
+            // We keep track of the previous state, and only raise the event if
+            // we are now the default device and were not before.
+            if (e.DeviceId.GetHashCode() == Device.DeviceID.GetHashCode())
+                if (!_wasDefault)
                 {
                    if(session != null && ValidateSession(session))
                         RegisterSession(new AudioSession(session));
                 }
-            }
-        }
-
-        public void SetVisibleSystemSounds(bool value)
-        {
-            if (_visibleSystemSounds == value)
-                return;
-
-            _visibleSystemSounds = value;
-            if (_sessions.Count == 0)
-                return;
-
-            if (!_visibleSystemSounds)
-            {
-                // Remove existing sessions
-                var systemSessions = _sessions.Where(x => x.Value.IsSystemSound).Select(x => x.Value).ToArray();
-                foreach (var session in systemSessions)
-                    OnSessionEnded(session);
-            }
             else
+                _wasDefault = false;
+        }
+
+        private void OnDeviceStateChanged(object sender, DeviceStateChangedEventArgs e)
+        {
+            if (e.DeviceState == DeviceState.NotPresent || e.DeviceState == DeviceState.UnPlugged)
             {
-                // Add sessions for system sounds
-                InitializeSessions();
+                e.TryGetDevice(out var device);
+                if (device.DeviceID.GetHashCode() == Device.DeviceID.GetHashCode())
+                    DeviceRemoved?.Invoke(this);
             }
         }
 
-        public void SetSessionVolume(int id, int volume, bool isMuted)
+        private void OnDeviceRemoved(object sender, DeviceNotificationEventArgs e)
         {
-            if (!_sessions.TryGetValue(id, out var session))
-                return;
-
-            session.Volume = volume;
-            session.IsMuted = isMuted;
+            e.TryGetDevice(out var device);
+            if (device.DeviceID.GetHashCode() == Device.DeviceID.GetHashCode())              
+                DeviceRemoved?.Invoke(this);
         }
-        #endregion
-
-        #region Event Handlers
-        private void OnSessionCreated(object sender, SessionCreatedEventArgs e)
-        {
-            if (ValidateSession(e.NewSession))
-                RegisterSession(new AudioSession(e.NewSession));
-        }
-
         private void OnEndpointVolumeChanged(object sender, AudioEndpointVolumeCallbackEventArgs e)
         {
             if (!_isNotifyEnabled)
@@ -215,47 +163,30 @@ namespace MaxMix.Services.Audio
                 return;
             }
 
-            VolumeChanged?.Invoke(this);
-        }
-
-        private void OnSessionVolumeChanged(IAudioSession session)
-        {
-            VolumeChanged?.Invoke(session);
-        }
-
-        private void OnSessionEnded(IAudioSession session)
-        {
-            if (!_sessions.Remove(session.ID))
-                return;
-
-            session.SessionEnded -= OnSessionEnded;
-            session.VolumeChanged -= OnSessionVolumeChanged;
-            session.Dispose();
-
-            SessionEnded?.Invoke(session);
+            DeviceVolumeChanged?.Invoke(this);
         }
         #endregion
 
         #region IDisposable
         public void Dispose()
         {
-            foreach (var session in _sessions.Values)
-            {
-                session.SessionEnded -= OnSessionEnded;
-                session.VolumeChanged -= OnSessionVolumeChanged;
-                session.Dispose();
-            }
-
-            _sessions.Clear();
-
+            _deviceEnumerator.DefaultDeviceChanged -= OnDefaultDeviceChanged;
+            _deviceEnumerator.DeviceRemoved -= OnDeviceRemoved;
+            _endpointVolume?.UnregisterControlChangeNotify(_callback);
             _callback.NotifyRecived -= OnEndpointVolumeChanged;
-            _sessionManager.SessionCreated -= OnSessionCreated;
 
+<<<<<<< HEAD
             _endpointVolume?.UnregisterControlChangeNotify(_callback);
             _endpointVolume = null;
             _callback = null;
             _sessionManager = null;
             _device = null;
+=======
+            _deviceEnumerator = null;
+            _endpointVolume = null;
+            _callback = null;
+            Device = null;
+>>>>>>> 6e0c0f5... Adding support for multiple devices to application
         }
         #endregion
     }
