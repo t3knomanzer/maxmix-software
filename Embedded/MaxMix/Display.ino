@@ -42,7 +42,7 @@ void DisplaySplashScreen(Adafruit_SSD1306* display)
 //---------------------------------------------------------
 // Draws the master mode screen
 //---------------------------------------------------------
-void DisplayMasterSelectScreen(Adafruit_SSD1306* display, uint8_t volume, bool isMuted, uint8_t modeIndex, uint8_t modeCount)
+void DisplayMasterSelectScreen_(Adafruit_SSD1306* display, uint8_t volume, bool isMuted, uint8_t modeIndex, uint8_t modeCount)
 {
   display->clearDisplay();
 

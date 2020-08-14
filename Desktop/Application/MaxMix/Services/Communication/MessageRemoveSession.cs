@@ -9,9 +9,10 @@ namespace MaxMix.Services.Communication
     internal class MessageRemoveSession : IMessage
     {
         #region Constructor
-        public MessageRemoveSession(int id)
+        public MessageRemoveSession(int id, bool isDevice)
         {
             _id = id;
+            _isDevice = isDevice;
         }
         #endregion
 
@@ -20,28 +21,35 @@ namespace MaxMix.Services.Communication
 
         #region Fields
         private int _id;
+        private bool _isDevice;
         #endregion
 
         #region Properties
         public int Id { get => _id; }
+        public bool IsDevice { get => _isDevice; }
         #endregion
 
         #region Private Methods
         #endregion
 
         #region Public Methods
-
         /*
         * ---------------------------------------
         * CHUNK        TYPE        SIZE (BYTES)
         * ---------------------------------------
         * ID           INT32       4
+        * ID           BYTE        1
         * ---------------------------------------
         */
 
         public byte[] GetBytes()
         {
-            return BitConverter.GetBytes(Id);
+            var result = new List<byte>();
+
+            result.AddRange(BitConverter.GetBytes(Id));
+            result.Add(Convert.ToByte(IsDevice));
+
+            return result.ToArray();
         }
 
         public bool SetBytes(byte[] bytes)

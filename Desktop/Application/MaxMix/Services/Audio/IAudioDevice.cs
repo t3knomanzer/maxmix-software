@@ -3,13 +3,23 @@ using System;
 
 namespace MaxMix.Services.Audio
 {
-    public interface IAudioSession : IDisposable
+    public interface IAudioDevice : IDisposable
     {
         #region Properties
+        /// <summary>
+        /// 
+        /// </summary>
+        MMDevice Device { get; }
+
         /// <summary>
         /// The computed Identifier for this session.
         /// </summary>
         int ID { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        bool IsDefault { get; }
 
         /// <summary>
         /// The display name of the process that created this session.
@@ -29,14 +39,19 @@ namespace MaxMix.Services.Audio
 
         #region Events
         /// <summary>
-        /// Raised when the volume for an active session has changed.
+        /// 
         /// </summary>
-        event Action<IAudioSession> VolumeChanged;
+        event Action<IAudioDevice> DeviceDefaultChanged;
 
         /// <summary>
-        /// Raised when a previously active audio session has been removed.
+        /// 
         /// </summary>
-        event Action<IAudioSession> SessionEnded;
+        event Action<IAudioDevice> DeviceRemoved;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        event Action<IAudioDevice> DeviceVolumeChanged;
         #endregion
     }
 }

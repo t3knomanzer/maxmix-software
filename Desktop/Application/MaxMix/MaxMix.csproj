@@ -132,6 +132,7 @@
     <Compile Include="Services\Audio\AudioSessionGroup.cs" />
     <Compile Include="Services\Audio\AudioSessionService.cs" />
     <Compile Include="Services\Audio\AudioSession.cs" />
+    <Compile Include="Services\Audio\IAudioDevice.cs" />
     <Compile Include="Services\Audio\IAudioSession.cs" />
     <Compile Include="Services\Audio\IAudioSessionService.cs" />
     <Compile Include="Services\Communication\CobsSerializationService .cs" />

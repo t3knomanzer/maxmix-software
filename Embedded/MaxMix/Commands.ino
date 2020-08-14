@@ -63,7 +63,7 @@ void RemoveItemCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t* itemC
 {
   // Re-order items array
   for(uint8_t i = itemIndex; i < *itemCount - 1; i++)
-    items[i] = items[i + 1];
+    itemsBuffer[i] = itemsBuffer[i + 1];
 
   *itemCount = *itemCount - 1;
 }
@@ -80,7 +80,7 @@ void UpdateItemVolumeCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t 
 //---------------------------------------------------------
 void UpdateSettingsCommand(uint8_t* packageBuffer, Settings* settings) 
 {
-  settings->displayNewSession = packageBuffer[1];
+  settings->displayNewItem = packageBuffer[1];
   settings->sleepWhenInactive = packageBuffer[2];
   settings->sleepAfterSeconds = packageBuffer[3];
   settings->continuousScroll = packageBuffer[4];

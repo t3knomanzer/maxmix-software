@@ -34,6 +34,10 @@ static const uint8_t  MODE_APPLICATION = 1;
 static const uint8_t  MODE_GAME = 2;
 static const uint8_t  MODE_COUNT = 3;
 
+static const uint8_t  STATE_MASTER_NAVIGATE = 0;
+static const uint8_t  STATE_MASTER_EDIT = 1;
+static const uint8_t  STATE_MASTER_COUNT = 2;
+
 static const uint8_t  STATE_APPLICATION_NAVIGATE = 0;
 static const uint8_t  STATE_APPLICATION_EDIT = 1;
 static const uint8_t  STATE_APPLICATION_COUNT = 2;
@@ -56,7 +60,8 @@ static const uint8_t  PIXELS_NUM = 8; // Number of pixels in ring
 static const uint16_t ROTARY_ACCELERATION_DIVISOR_MAX = 400;
 
 // --- Messages
-static const uint8_t ITEM_MAX_COUNT = 8;
+static const uint8_t DEVICE_MAX_COUNT = 2;
+static const uint8_t SESSION_MAX_COUNT = 6;
 static const uint8_t ITEM_BUFFER_NAME_SIZE = 36;
 static const uint8_t RECEIVE_BUFFER_SIZE = 128;
 static const uint8_t SEND_BUFFER_SIZE = 8;
@@ -68,6 +73,7 @@ static const uint8_t MSG_COMMAND_ADD =  2;
 static const uint8_t MSG_COMMAND_REMOVE =  3;
 static const uint8_t MSG_COMMAND_UPDATE_VOLUME =  4;
 static const uint8_t MSG_COMMAND_SETTINGS =  5;
+static const uint8_t MSG_COMMAND_RESET =  6;
 
 static const uint8_t MSG_PACKET_DELIMITER = 0;
 

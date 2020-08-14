@@ -41,6 +41,27 @@ uint32_t GetIdFromPackage(uint8_t* packageBuffer)
 
 //---------------------------------------------------------
 //---------------------------------------------------------
+bool GetIsDeviceFromAddPackage(uint8_t* packageBuffer)
+{
+    return packageBuffer[43];
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+bool GetIsDeviceFromRemovePackage(uint8_t* packageBuffer)
+{
+    return packageBuffer[5];
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+bool GetIsDeviceFromUpdatePackage(uint8_t* packageBuffer)
+{
+    return packageBuffer[7];
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
 uint8_t CanScrollLeft(uint8_t itemIndex, uint8_t itemCount, uint8_t continuousScroll)
 {
   if((continuousScroll && itemCount > 1) || (itemIndex > 0))
