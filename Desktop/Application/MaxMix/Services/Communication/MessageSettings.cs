@@ -25,7 +25,7 @@ namespace MaxMix.Services.Communication
         #region Fields
         public bool _displayNewSession;
         public bool _sleepWhenInactive;
-        public uint _sleepAfterSeconds;
+        public int _sleepAfterSeconds;
         public bool _continuousScroll;
         public uint _accelerationPercentage;
         #endregion
@@ -33,7 +33,7 @@ namespace MaxMix.Services.Communication
         #region Properties
         public bool DisplayNewSession { get => _displayNewSession; }
         public bool SleepWhenInactive { get => _sleepWhenInactive; }
-        public uint SleepAfterSeconds { get => _sleepAfterSeconds; }
+        public int SleepAfterSeconds { get => _sleepAfterSeconds; }
         public bool ContinuousScroll { get => _continuousScroll; }
         public uint AccelerationPercentage { get => _accelerationPercentage; }
         #endregion
