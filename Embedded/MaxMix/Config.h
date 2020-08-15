@@ -46,6 +46,9 @@ static const uint8_t  STATE_GAME_COUNT = 3;
 static const uint8_t  STATE_DISPLAY_AWAKE = 0;
 static const uint8_t  STATE_DISPLAY_SLEEP = 1;
 
+static const uint8_t  STATE_DISPLAY_NOT_SCROLLING = 0;
+static const uint8_t  STATE_DISPLAY_SCROLLING = 1;
+
 // --- Display
 static const uint8_t  DISPLAY_RESET =   4; // Reset pin # (or -1 if sharing Arduino reset pin)
 
@@ -117,3 +120,4 @@ static const uint16_t DISPLAY_SCROLL_DELAY_INITIAL = 3000;  //  in ms
 static const uint16_t DISPLAY_SCROLL_DELAY_REVERSE = 1000;  //  in ms
 static const uint8_t DISPLAY_SCROLL_STEP_INTERVAL_X1 = 30;  //  in ms
 static const uint8_t DISPLAY_SCROLL_STEP_INTERVAL_X2 = 20;  //  in ms
+static const uint16_t DISPLAY_SCROLL_OFFSET_UNSET = 0xFFFF;

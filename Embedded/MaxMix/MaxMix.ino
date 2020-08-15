@@ -67,6 +67,7 @@ uint8_t mode = MODE_MASTER;
 uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
 uint8_t stateGame = STATE_GAME_SELECT_A;
 uint8_t stateDisplay = STATE_DISPLAY_AWAKE;
+uint8_t prevState = STATE_DISPLAY_NOT_SCROLLING;
 uint8_t isDirty = true;
 
 struct Item items[ITEM_MAX_COUNT];
@@ -105,8 +106,9 @@ Adafruit_NeoPixel* pixels;
 // Display
 Adafruit_SSD1306* display;
 uint32_t displayScrollTimer = 0;
-uint32_t displayScrollTimerGameA = 0;
-uint32_t displayScrollTimerGameB = 0;
+uint16_t prevScrollOffset = 0;
+uint16_t prevScrollOffsetA = 0;
+uint16_t prevScrollOffsetB = 0;
 
 //********************************************************
 // *** MAIN
@@ -167,13 +169,13 @@ void loop()
   ClearSend();
   encoderButton.update();
 
+  UpdateDisplay();
+  
   if (isDirty)
   {
     UpdateLighting();
     isDirty = false;
   }
-
-  UpdateDisplay();
 }
 
 //********************************************************
@@ -201,6 +203,7 @@ void ResetState()
   stateApplication = STATE_APPLICATION_NAVIGATE;
   stateGame = STATE_GAME_SELECT_A;
   stateDisplay = STATE_DISPLAY_AWAKE;
+  prevState = STATE_DISPLAY_NOT_SCROLLING;
   //isDirty = true;
 
   itemIndexMaster = 0;
@@ -250,7 +253,7 @@ bool ProcessPackage()
       if (mode == MODE_APPLICATION)
       {
         stateApplication = STATE_APPLICATION_NAVIGATE;
-        UpdateScrollTimer(&displayScrollTimer);
+        UpdateScrollTimer();
       }
 
       return true;
@@ -281,7 +284,7 @@ bool ProcessPackage()
       if (mode == MODE_APPLICATION)
       {
         stateApplication = STATE_APPLICATION_NAVIGATE;
-        UpdateScrollTimer(&displayScrollTimer);
+        UpdateScrollTimer();
       }
 
       return true;
@@ -304,7 +307,7 @@ bool ProcessPackage()
   else if (command == MSG_COMMAND_SETTINGS)
   {
     UpdateSettingsCommand(decodeBuffer, &settings);
-    UpdateScrollTimer(&displayScrollTimer);
+    UpdateScrollTimer();
     stateDisplay = STATE_DISPLAY_AWAKE;
     return true;
   }
@@ -378,7 +381,7 @@ bool ProcessEncoderRotation()
     if (stateApplication == STATE_APPLICATION_NAVIGATE)
     {
       itemIndexApp = GetNextIndex(itemIndexApp, itemCount, encoderDelta, settings.continuousScroll);
-      UpdateScrollTimer(&displayScrollTimer);
+      UpdateScrollTimer();
     }
 
     else if (stateApplication == STATE_APPLICATION_EDIT)
@@ -392,12 +395,12 @@ bool ProcessEncoderRotation()
     if (stateGame == STATE_GAME_SELECT_A)
     {
       itemIndexGameA = GetNextIndex(itemIndexGameA, itemCount, encoderDelta, settings.continuousScroll);
-      UpdateScrollTimer(&displayScrollTimer);
+      UpdateScrollTimer();
     }
     else if (stateGame == STATE_GAME_SELECT_B)
     {
       itemIndexGameB = GetNextIndex(itemIndexGameB, itemCount, encoderDelta, settings.continuousScroll);
-      UpdateScrollTimer(&displayScrollTimer);
+      UpdateScrollTimer();
     }
 
     else if (stateGame == STATE_GAME_EDIT)
@@ -425,13 +428,13 @@ bool ProcessEncoderButton()
     if (mode == MODE_APPLICATION)
     {
       CycleApplicationState();
-      UpdateScrollTimer(&displayScrollTimer);
+      UpdateScrollTimer();
     }
 
     else if (mode == MODE_GAME)
     {
       CycleGameState();
-      UpdateScrollTimer(&displayScrollTimer);
+      UpdateScrollTimer();
     }
 
     return true;
@@ -460,7 +463,7 @@ bool ProcessEncoderButton()
       return true;
 
     CycleMode();
-    UpdateScrollTimer(&displayScrollTimer);
+    UpdateScrollTimer();
     return true;
   }
 
@@ -481,7 +484,7 @@ bool ProcessSleep()
     if (activityTimeDelta > settings.sleepAfterSeconds * 1000)
     {
       stateDisplay = STATE_DISPLAY_SLEEP;
-      UpdateScrollTimer(&displayScrollTimer);
+      UpdateScrollTimer();
       return true;
     }
   }
@@ -490,7 +493,7 @@ bool ProcessSleep()
     if (activityTimeDelta < settings.sleepAfterSeconds * 1000)
     {
       stateDisplay = STATE_DISPLAY_AWAKE;
-      UpdateScrollTimer(&displayScrollTimer);
+      UpdateScrollTimer();
       return true;
     }
   }
@@ -509,6 +512,9 @@ void UpdateActivityTime()
 //---------------------------------------------------------
 void UpdateDisplay()
 {
+  if (!isDirty && prevState == STATE_DISPLAY_NOT_SCROLLING)
+    return;
+    
   if (stateDisplay == STATE_DISPLAY_SLEEP)
   {
     DisplaySleep(display);
@@ -518,12 +524,14 @@ void UpdateDisplay()
   if (itemCount == 0)
   {
     DisplaySplashScreen(display);
+    prevState = STATE_DISPLAY_NOT_SCROLLING;
     return;
   }
 
   if (mode == MODE_MASTER)
   {
-    DisplayMasterSelectScreen(display, items[0].volume, items[0].isMuted, mode, MODE_COUNT, &displayScrollTimer, now);
+    DisplayMasterSelectScreen(display, items[0].volume, items[0].isMuted, mode, MODE_COUNT, &displayScrollTimer, now, isDirty);
+    prevState = STATE_DISPLAY_NOT_SCROLLING;
   }
   else if (mode == MODE_APPLICATION)
   {
@@ -531,11 +539,13 @@ void UpdateDisplay()
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexApp, itemCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexApp, itemCount, settings.continuousScroll);
-      DisplayApplicationSelectScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer, now);
+      DisplayApplicationSelectScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer, now, &prevScrollOffset, isDirty);
     }
 
     else if (stateApplication == STATE_APPLICATION_EDIT)
-      DisplayApplicationEditScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, mode, MODE_COUNT, &displayScrollTimer, now);
+      DisplayApplicationEditScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, mode, MODE_COUNT, &displayScrollTimer, now, &prevScrollOffset, isDirty);
+  
+    prevState = STATE_DISPLAY_SCROLLING;
   }
   else if (mode == MODE_GAME)
   {
@@ -543,16 +553,18 @@ void UpdateDisplay()
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexGameA, itemCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexGameA, itemCount, settings.continuousScroll);
-      DisplayGameSelectScreen(display, items[itemIndexGameA].name, items[itemIndexGameA].volume, items[itemIndexGameA].isMuted, "A", scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer, now);
+      DisplayGameSelectScreen(display, items[itemIndexGameA].name, items[itemIndexGameA].volume, items[itemIndexGameA].isMuted, "A", scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer, now, &prevScrollOffset, isDirty);
     }
     else if (stateGame == STATE_GAME_SELECT_B)
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexGameB, itemCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexGameB, itemCount, settings.continuousScroll);
-      DisplayGameSelectScreen(display, items[itemIndexGameB].name, items[itemIndexGameB].volume, items[itemIndexGameB].isMuted, "B", scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer, now);
+      DisplayGameSelectScreen(display, items[itemIndexGameB].name, items[itemIndexGameB].volume, items[itemIndexGameB].isMuted, "B", scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer, now, &prevScrollOffset, isDirty);
     }
     else if (stateGame == STATE_GAME_EDIT)
-      DisplayGameEditScreen(display, items[itemIndexGameA].name, items[itemIndexGameB].name, items[itemIndexGameA].volume, items[itemIndexGameB].volume, items[itemIndexGameA].isMuted, items[itemIndexGameB].isMuted, mode, MODE_COUNT, &displayScrollTimer, now);
+      DisplayGameEditScreen(display, items[itemIndexGameA].name, items[itemIndexGameB].name, items[itemIndexGameA].volume, items[itemIndexGameB].volume, items[itemIndexGameA].isMuted, items[itemIndexGameB].isMuted, mode, MODE_COUNT, &displayScrollTimer, now, &prevScrollOffsetA, &prevScrollOffsetB, isDirty);
+    
+    prevState = STATE_DISPLAY_SCROLLING;
   }
 }
 
@@ -609,7 +621,7 @@ void CycleMode()
   mode++;
 
   if (mode == MODE_COUNT)
-    mode = 0;
+    mode = MODE_MASTER;
 }
 
 //---------------------------------------------------------
@@ -618,7 +630,7 @@ void CycleApplicationState()
 {
   stateApplication++;
   if (stateApplication == STATE_APPLICATION_COUNT)
-    stateApplication = 0;
+    stateApplication = STATE_APPLICATION_NAVIGATE;
 }
 
 //---------------------------------------------------------
@@ -627,7 +639,7 @@ void CycleGameState()
 {
   stateGame++;
   if (stateGame == STATE_GAME_COUNT)
-    stateGame = 0;
+    stateGame = STATE_GAME_SELECT_A;
 }
 
 //---------------------------------------------------------
@@ -687,4 +699,15 @@ void RequireDisplayUpdate()
 {
   UpdateActivityTime();
   isDirty = true;
+}
+
+//---------------------------------------------------------
+// Updates Name Scrolling Timer
+//---------------------------------------------------------
+void UpdateScrollTimer()
+{
+  displayScrollTimer = millis();
+  prevScrollOffset = DISPLAY_SCROLL_OFFSET_UNSET;
+  prevScrollOffsetA = DISPLAY_SCROLL_OFFSET_UNSET;
+  prevScrollOffsetB = DISPLAY_SCROLL_OFFSET_UNSET;
 }
