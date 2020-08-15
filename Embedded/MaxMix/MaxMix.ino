@@ -382,10 +382,10 @@ bool ProcessEncoderRotation()
     else if(stateGame == STATE_GAME_EDIT)
     {
       items[itemIndexGameA].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[itemIndexGameA].volume);
-      items[itemIndexGameB].volume = ComputeAcceleratedVolume(-encoderDelta, deltaTime, items[itemIndexGameB].volume);
-
       SendItemVolumeCommand(&items[itemIndexGameA], sendBuffer, encodeBuffer);
-      SendItemVolumeCommand(&items[itemIndexGameB], sendBuffer, encodeBuffer);
+
+      if(itemIndexGameA != itemIndexGameB)
+        RebalanceGameVolume(items[itemIndexGameA].volume, itemIndexGameB);
     } 
   }
   
@@ -617,6 +617,12 @@ void ResetGameVolume()
 
   SendItemVolumeCommand(&items[itemIndexGameA], sendBuffer, encodeBuffer);
   SendItemVolumeCommand(&items[itemIndexGameB], sendBuffer, encodeBuffer);
+}
+
+void RebalanceGameVolume(uint8_t sourceVolume, uint8_t targetIndex)
+{
+  items[targetIndex].volume = 100 - sourceVolume;
+  SendItemVolumeCommand(&items[targetIndex], sendBuffer, encodeBuffer);
 }
 
 //---------------------------------------------------------
