@@ -280,7 +280,7 @@ bool ProcessPackage()
     {
       if(mode == MODE_APPLICATION)
         stateApplication = STATE_APPLICATION_NAVIGATE;
-
+      
       return true;      
     }
   }
@@ -295,7 +295,16 @@ bool ProcessPackage()
     UpdateItemVolumeCommand(decodeBuffer, items, index);
 
     if(IsItemActive(index))
+    {
+      if(mode == MODE_GAME)
+      {
+        if(index == itemIndexGameA && index != itemIndexGameB)
+          RebalanceGameVolume(items[itemIndexGameA].volume, itemIndexGameB);
+        if(index == itemIndexGameB && index != itemIndexGameA)
+          RebalanceGameVolume(items[itemIndexGameB].volume, itemIndexGameA);
+      }
       return true;
+    }
 
   }
   else if(command == MSG_COMMAND_SETTINGS)
