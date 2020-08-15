@@ -4,10 +4,10 @@
 // EMAIL: rhenares0@gmail.com
 //
 // DECRIPTION:
-// 
 //
 //
-// The AVR 328P chip has 2kB of SRAM. 
+//
+// The AVR 328P chip has 2kB of SRAM.
 // Program uses 825 bytes, leaving 1223 bytes for items. Each item is 42 bytes.
 // Therefore we can store a maximum (1223 / 42 bytes) of 29 items.
 // We currently this to 8 maximum items for safety.
@@ -89,9 +89,9 @@ volatile int8_t steps = 0;
 void timerIsr()
 {
   uint8_t encoderDir = encoderRotary.process();
-  if(encoderDir == DIR_CW)
+  if (encoderDir == DIR_CW)
     steps++;
-  else if(encoderDir == DIR_CCW)
+  else if (encoderDir == DIR_CCW)
     steps--;
 }
 
@@ -105,6 +105,8 @@ Adafruit_NeoPixel* pixels;
 // Display
 Adafruit_SSD1306* display;
 uint32_t displayScrollTimer = 0;
+uint32_t displayScrollTimerGameA = 0;
+uint32_t displayScrollTimerGameB = 0;
 
 //********************************************************
 // *** MAIN
@@ -139,37 +141,37 @@ void loop()
 {
   now = millis();
 
-  if(ReceivePackage(receiveBuffer, &receiveIndex, MSG_PACKET_DELIMITER, RECEIVE_BUFFER_SIZE))
+  if (ReceivePackage(receiveBuffer, &receiveIndex, MSG_PACKET_DELIMITER, RECEIVE_BUFFER_SIZE))
   {
-    if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
+    if (DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
     {
-      if(ProcessPackage())
+      if (ProcessPackage())
         RequireDisplayUpdate();
     }
-      
+
     ClearReceive();
   }
 
-  if(ProcessEncoderRotation() || ProcessEncoderButton())
+  if (ProcessEncoderRotation() || ProcessEncoderButton())
   {
     RequireDisplayUpdate();
   }
 
-  if(ProcessSleep())
+  if (ProcessSleep())
     isDirty = true;
 
   // Check for buffer overflow
-  if(receiveIndex == RECEIVE_BUFFER_SIZE)
+  if (receiveIndex == RECEIVE_BUFFER_SIZE)
     ClearReceive();
 
   ClearSend();
   encoderButton.update();
 
-  if(isDirty)
+  if (isDirty)
   {
-    UpdateLighting();  
+    UpdateLighting();
     isDirty = false;
-  }  
+  }
 
   UpdateDisplay();
 }
@@ -181,7 +183,7 @@ void loop()
 //---------------------------------------------------------
 void ClearReceive()
 {
-  receiveIndex = 0;  
+  receiveIndex = 0;
 }
 
 //---------------------------------------------------------
@@ -216,24 +218,24 @@ void ResetState()
 bool ProcessPackage()
 {
   uint8_t command = GetCommandFromPackage(decodeBuffer);
-  
-  if(command == MSG_COMMAND_HS_REQUEST)
+
+  if (command == MSG_COMMAND_HS_REQUEST)
   {
     ResetState();
     SendHandshakeCommand(sendBuffer, encodeBuffer);
 
     return true;
   }
-  else if(command == MSG_COMMAND_ADD)
+  else if (command == MSG_COMMAND_ADD)
   {
     // Check for buffer overflow first.
-    if(itemCount == ITEM_MAX_COUNT)
+    if (itemCount == ITEM_MAX_COUNT)
       return false;
 
     // Check if item exists, add or update accordingly.
     uint32_t id = GetIdFromPackage(decodeBuffer);
     int8_t index = FindItem(id);
-    if(index == -1)
+    if (index == -1)
     {
       AddItemCommand(decodeBuffer, items, &itemCount);
       index = itemCount - 1;
@@ -242,66 +244,73 @@ bool ProcessPackage()
       UpdateItemCommand(decodeBuffer, items, index);
 
     // Switch to newly added item.
-    if(settings.displayNewSession)
+    if (settings.displayNewSession)
     {
       itemIndexApp = index;
-      if(mode == MODE_APPLICATION)
+      if (mode == MODE_APPLICATION)
+      {
         stateApplication = STATE_APPLICATION_NAVIGATE;
+        UpdateScrollTimer(&displayScrollTimer);
+      }
 
       return true;
     }
   }
-  else if(command == MSG_COMMAND_REMOVE)
+  else if (command == MSG_COMMAND_REMOVE)
   {
     // Check if there are any existing items first.
-    if(itemCount == 0)  
+    if (itemCount == 0)
       return false;
 
     // Check if item to be removed exists.
     uint32_t id = GetIdFromPackage(decodeBuffer);
     int8_t index = FindItem(id);
-    if(index == -1)
+    if (index == -1)
       return false;
-      
+
     RemoveItemCommand(decodeBuffer, items, &itemCount, index);
-    
+
     bool isItemActive = IsItemActive(index);
 
     itemIndexApp = GetNextIndex(itemIndexApp, itemCount, 0, settings.continuousScroll);
     itemIndexGameA = GetNextIndex(itemIndexGameA, itemCount, 0, settings.continuousScroll);
     itemIndexGameB = GetNextIndex(itemIndexGameB, itemCount, 0, settings.continuousScroll);
 
-    if(isItemActive)
+    if (isItemActive)
     {
-      if(mode == MODE_APPLICATION)
+      if (mode == MODE_APPLICATION)
+      {
         stateApplication = STATE_APPLICATION_NAVIGATE;
+        UpdateScrollTimer(&displayScrollTimer);
+      }
 
-      return true;      
+      return true;
     }
   }
-  else if(command == MSG_COMMAND_UPDATE_VOLUME)
+  else if (command == MSG_COMMAND_UPDATE_VOLUME)
   {
     // Check that the item exists.
-    uint32_t id = GetIdFromPackage(decodeBuffer);  
+    uint32_t id = GetIdFromPackage(decodeBuffer);
     int8_t index = FindItem(id);
-    if(index == -1)
+    if (index == -1)
       return false;
 
     UpdateItemVolumeCommand(decodeBuffer, items, index);
 
-    if(IsItemActive(index))
+    if (IsItemActive(index))
       return true;
 
   }
-  else if(command == MSG_COMMAND_SETTINGS)
+  else if (command == MSG_COMMAND_SETTINGS)
   {
     UpdateSettingsCommand(decodeBuffer, &settings);
+    UpdateScrollTimer(&displayScrollTimer);
     stateDisplay = STATE_DISPLAY_AWAKE;
     return true;
   }
 
   return false;
-} 
+}
 
 
 //---------------------------------------------------------
@@ -316,25 +325,25 @@ int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t
   if (!encoderDelta)
     return volume;
 
-  float speed = (float)encoderDelta*1000/deltaTime;
-  float accelerationDivisor = max((1-(float)settings.accelerationPercentage/100)*ROTARY_ACCELERATION_DIVISOR_MAX, 1);
-  uint32_t step = 1 + abs(speed*speed/accelerationDivisor);
+  float speed = (float)encoderDelta * 1000 / deltaTime;
+  float accelerationDivisor = max((1 - (float)settings.accelerationPercentage / 100) * ROTARY_ACCELERATION_DIVISOR_MAX, 1);
+  uint32_t step = 1 + abs(speed * speed / accelerationDivisor);
 
   // Direction change detection
-  if((prevDir > 0 && encoderDelta < 0)||(prevDir < 0 && encoderDelta > 0)){
+  if ((prevDir > 0 && encoderDelta < 0) || (prevDir < 0 && encoderDelta > 0)) {
     step = 1;
   }
   prevDir = encoderDelta;
 
-  if(encoderDelta > 0)
+  if (encoderDelta > 0)
   {
     volume += step;
   }
-  else if(encoderDelta < 0)
+  else if (encoderDelta < 0)
   {
     volume -= step;
   }
-  
+
   volume = constrain(volume, 0, 100);
   return volume;
 }
@@ -346,61 +355,61 @@ bool ProcessEncoderRotation()
   int8_t encoderDelta;
   cli();
   encoderDelta = steps;
-  if(encoderDelta !=0)
+  if (encoderDelta != 0)
     steps = 0;
   sei();
-  
-  if(encoderDelta == 0)
+
+  if (encoderDelta == 0)
     return false;
 
   uint32_t deltaTime = now - encoderLastTransition;
   encoderLastTransition = now;
 
-  if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
+  if (itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
     return true;
 
-  if(mode == MODE_MASTER)
+  if (mode == MODE_MASTER)
   {
     items[0].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[0].volume);
     SendItemVolumeCommand(&items[0], sendBuffer, encodeBuffer);
   }
-  else if(mode == MODE_APPLICATION)
+  else if (mode == MODE_APPLICATION)
   {
-    if(stateApplication == STATE_APPLICATION_NAVIGATE)
+    if (stateApplication == STATE_APPLICATION_NAVIGATE)
     {
       itemIndexApp = GetNextIndex(itemIndexApp, itemCount, encoderDelta, settings.continuousScroll);
       UpdateScrollTimer(&displayScrollTimer);
     }
 
-    else if(stateApplication == STATE_APPLICATION_EDIT)
+    else if (stateApplication == STATE_APPLICATION_EDIT)
     {
       items[itemIndexApp].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[itemIndexApp].volume);
       SendItemVolumeCommand(&items[itemIndexApp], sendBuffer, encodeBuffer);
     }
   }
-  else if(mode == MODE_GAME)
+  else if (mode == MODE_GAME)
   {
-    if(stateGame == STATE_GAME_SELECT_A)
+    if (stateGame == STATE_GAME_SELECT_A)
     {
       itemIndexGameA = GetNextIndex(itemIndexGameA, itemCount, encoderDelta, settings.continuousScroll);
       UpdateScrollTimer(&displayScrollTimer);
     }
-    else if(stateGame == STATE_GAME_SELECT_B)
+    else if (stateGame == STATE_GAME_SELECT_B)
     {
       itemIndexGameB = GetNextIndex(itemIndexGameB, itemCount, encoderDelta, settings.continuousScroll);
       UpdateScrollTimer(&displayScrollTimer);
     }
 
-    else if(stateGame == STATE_GAME_EDIT)
+    else if (stateGame == STATE_GAME_EDIT)
     {
       items[itemIndexGameA].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[itemIndexGameA].volume);
       items[itemIndexGameB].volume = ComputeAcceleratedVolume(-encoderDelta, deltaTime, items[itemIndexGameB].volume);
 
       SendItemVolumeCommand(&items[itemIndexGameA], sendBuffer, encodeBuffer);
       SendItemVolumeCommand(&items[itemIndexGameB], sendBuffer, encodeBuffer);
-    } 
+    }
   }
-  
+
   return true;
 }
 
@@ -408,18 +417,18 @@ bool ProcessEncoderRotation()
 //---------------------------------------------------------
 bool ProcessEncoderButton()
 {
-  if(encoderButton.tapped())
+  if (encoderButton.tapped())
   {
-    if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
+    if (itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
       return true;
-    
-    if(mode == MODE_APPLICATION)
+
+    if (mode == MODE_APPLICATION)
     {
       CycleApplicationState();
       UpdateScrollTimer(&displayScrollTimer);
     }
 
-    else if(mode == MODE_GAME)
+    else if (mode == MODE_GAME)
     {
       CycleGameState();
       UpdateScrollTimer(&displayScrollTimer);
@@ -427,29 +436,29 @@ bool ProcessEncoderButton()
 
     return true;
   }
-  
-  if(encoderButton.doubleTapped())
+
+  if (encoderButton.doubleTapped())
   {
-    if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
+    if (itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
       return true;
 
-    if(mode == MODE_MASTER)
+    if (mode == MODE_MASTER)
       ToggleMute(itemIndexMaster);
 
-    else if(mode == MODE_APPLICATION)
+    else if (mode == MODE_APPLICATION)
       ToggleMute(itemIndexApp);
 
-    else if(mode == MODE_GAME && stateGame == STATE_GAME_EDIT)
+    else if (mode == MODE_GAME && stateGame == STATE_GAME_EDIT)
       ResetGameVolume();
 
     return true;
   }
 
-  if(encoderButton.held())
+  if (encoderButton.held())
   {
-    if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
+    if (itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
       return true;
-      
+
     CycleMode();
     UpdateScrollTimer(&displayScrollTimer);
     return true;
@@ -462,22 +471,23 @@ bool ProcessEncoderButton()
 //---------------------------------------------------------
 bool ProcessSleep()
 {
-  if(settings.sleepWhenInactive == 0)
+  if (settings.sleepWhenInactive == 0)
     return false;
 
   uint32_t activityTimeDelta = now - lastActivityTime;
 
-  if(stateDisplay == STATE_DISPLAY_AWAKE)
+  if (stateDisplay == STATE_DISPLAY_AWAKE)
   {
-    if(activityTimeDelta > settings.sleepAfterSeconds * 1000)
+    if (activityTimeDelta > settings.sleepAfterSeconds * 1000)
     {
       stateDisplay = STATE_DISPLAY_SLEEP;
+      UpdateScrollTimer(&displayScrollTimer);
       return true;
     }
   }
-  else if(stateDisplay == STATE_DISPLAY_SLEEP)
+  else if (stateDisplay == STATE_DISPLAY_SLEEP)
   {
-    if(activityTimeDelta < settings.sleepAfterSeconds * 1000)
+    if (activityTimeDelta < settings.sleepAfterSeconds * 1000)
     {
       stateDisplay = STATE_DISPLAY_AWAKE;
       UpdateScrollTimer(&displayScrollTimer);
@@ -499,50 +509,50 @@ void UpdateActivityTime()
 //---------------------------------------------------------
 void UpdateDisplay()
 {
-  if(stateDisplay == STATE_DISPLAY_SLEEP)
+  if (stateDisplay == STATE_DISPLAY_SLEEP)
   {
     DisplaySleep(display);
     return;
   }
 
-  if(itemCount == 0)
+  if (itemCount == 0)
   {
     DisplaySplashScreen(display);
     return;
   }
-  
-  if(mode == MODE_MASTER)
+
+  if (mode == MODE_MASTER)
   {
-    DisplayMasterSelectScreen(display, items[0].volume, items[0].isMuted, mode, MODE_COUNT, &displayScrollTimer);
+    DisplayMasterSelectScreen(display, items[0].volume, items[0].isMuted, mode, MODE_COUNT, &displayScrollTimer, now);
   }
-  else if(mode == MODE_APPLICATION)
+  else if (mode == MODE_APPLICATION)
   {
-    if(stateApplication == STATE_APPLICATION_NAVIGATE)
+    if (stateApplication == STATE_APPLICATION_NAVIGATE)
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexApp, itemCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexApp, itemCount, settings.continuousScroll);
-      DisplayApplicationSelectScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer);
+      DisplayApplicationSelectScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer, now);
     }
 
-    else if(stateApplication == STATE_APPLICATION_EDIT)
-      DisplayApplicationEditScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, mode, MODE_COUNT, &displayScrollTimer);
+    else if (stateApplication == STATE_APPLICATION_EDIT)
+      DisplayApplicationEditScreen(display, items[itemIndexApp].name, items[itemIndexApp].volume, items[itemIndexApp].isMuted, mode, MODE_COUNT, &displayScrollTimer, now);
   }
-  else if(mode == MODE_GAME)
+  else if (mode == MODE_GAME)
   {
-    if(stateGame == STATE_GAME_SELECT_A)
+    if (stateGame == STATE_GAME_SELECT_A)
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexGameA, itemCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexGameA, itemCount, settings.continuousScroll);
-      DisplayGameSelectScreen(display, items[itemIndexGameA].name, items[itemIndexGameA].volume, items[itemIndexGameA].isMuted, "A", scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer);
+      DisplayGameSelectScreen(display, items[itemIndexGameA].name, items[itemIndexGameA].volume, items[itemIndexGameA].isMuted, "A", scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer, now);
     }
-    else if(stateGame == STATE_GAME_SELECT_B)
+    else if (stateGame == STATE_GAME_SELECT_B)
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexGameB, itemCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexGameB, itemCount, settings.continuousScroll);
-      DisplayGameSelectScreen(display, items[itemIndexGameB].name, items[itemIndexGameB].volume, items[itemIndexGameB].isMuted, "B", scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer);
+      DisplayGameSelectScreen(display, items[itemIndexGameB].name, items[itemIndexGameB].volume, items[itemIndexGameB].isMuted, "B", scrollLeft, scrollRight, mode, MODE_COUNT, &displayScrollTimer, now);
     }
-    else if(stateGame == STATE_GAME_EDIT)
-      DisplayGameEditScreen(display, items[itemIndexGameA].name, items[itemIndexGameB].name, items[itemIndexGameA].volume, items[itemIndexGameB].volume, items[itemIndexGameA].isMuted, items[itemIndexGameB].isMuted, mode, MODE_COUNT, displayScrollTimer);
+    else if (stateGame == STATE_GAME_EDIT)
+      DisplayGameEditScreen(display, items[itemIndexGameA].name, items[itemIndexGameB].name, items[itemIndexGameA].volume, items[itemIndexGameB].volume, items[itemIndexGameA].isMuted, items[itemIndexGameB].isMuted, mode, MODE_COUNT, &displayScrollTimer, now);
   }
 }
 
@@ -550,56 +560,56 @@ void UpdateDisplay()
 //---------------------------------------------------------
 void UpdateLighting()
 {
-   if(stateDisplay == STATE_DISPLAY_SLEEP)
-   {
-     SetPixelsColor(pixels, 0,0,0);
-     return;
-   }
- 
-   if(itemCount == 0)
-   {
-     SetPixelsColor(pixels, 128,128,128);
-     return;
-   }
-   
-   if(mode == MODE_MASTER)
-   {
-      uint8_t volumeColor = round(items[0].volume * 2.55f);
+  if (stateDisplay == STATE_DISPLAY_SLEEP)
+  {
+    SetPixelsColor(pixels, 0, 0, 0);
+    return;
+  }
+
+  if (itemCount == 0)
+  {
+    SetPixelsColor(pixels, 128, 128, 128);
+    return;
+  }
+
+  if (mode == MODE_MASTER)
+  {
+    uint8_t volumeColor = round(items[0].volume * 2.55f);
+    SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
+  }
+  else if (mode == MODE_APPLICATION)
+  {
+    uint8_t volumeColor = round(items[itemIndexApp].volume * 2.55f);
+    SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
+  }
+  else if (mode == MODE_GAME)
+  {
+    uint8_t volumeColor;
+    if (stateGame == STATE_GAME_SELECT_A)
+    {
+      volumeColor = round(items[itemIndexGameA].volume * 2.55f);
       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-   }
-   else if(mode == MODE_APPLICATION)
-   {
-      uint8_t volumeColor = round(items[itemIndexApp].volume * 2.55f);
+    }
+    else if (stateGame == STATE_GAME_SELECT_B)
+    {
+      volumeColor = round(items[itemIndexGameB].volume * 2.55f);
       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-   }
-   else if(mode == MODE_GAME)
-   {
-     uint8_t volumeColor;
-     if(stateGame == STATE_GAME_SELECT_A)
-     {
-       volumeColor = round(items[itemIndexGameA].volume * 2.55f);
-       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-     }
-     else if(stateGame == STATE_GAME_SELECT_B)
-     {
-       volumeColor = round(items[itemIndexGameB].volume * 2.55f);
-       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-     }
-     else
-     {
+    }
+    else
+    {
       SetPixelsColor(pixels, 128, 128, 128);
-     }
-   }
+    }
+  }
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 void CycleMode()
 {
-    mode++;
+  mode++;
 
-    if(mode == MODE_COUNT)
-      mode = 0;
+  if (mode == MODE_COUNT)
+    mode = 0;
 }
 
 //---------------------------------------------------------
@@ -607,7 +617,7 @@ void CycleMode()
 void CycleApplicationState()
 {
   stateApplication++;
-  if(stateApplication == STATE_APPLICATION_COUNT)
+  if (stateApplication == STATE_APPLICATION_COUNT)
     stateApplication = 0;
 }
 
@@ -616,7 +626,7 @@ void CycleApplicationState()
 void CycleGameState()
 {
   stateGame++;
-  if(stateGame == STATE_GAME_COUNT)
+  if (stateGame == STATE_GAME_COUNT)
     stateGame = 0;
 }
 
@@ -645,8 +655,8 @@ void ResetGameVolume()
 //---------------------------------------------------------
 int8_t FindItem(uint32_t id)
 {
-  for(int8_t i = 0; i < itemCount; i++)
-    if(items[i].id == id)
+  for (int8_t i = 0; i < itemCount; i++)
+    if (items[i].id == id)
       return i;
 
   return -1;
@@ -659,13 +669,13 @@ int8_t FindItem(uint32_t id)
 //---------------------------------------------------------
 bool IsItemActive(int8_t index)
 {
-  if(mode == MODE_MASTER && itemIndexMaster == index)
+  if (mode == MODE_MASTER && itemIndexMaster == index)
     return true;
 
-  else if(mode == MODE_APPLICATION && itemIndexApp == index)
+  else if (mode == MODE_APPLICATION && itemIndexApp == index)
     return true;
 
-  else if(mode == MODE_GAME && (itemIndexGameA == index || itemIndexGameB == index))
+  else if (mode == MODE_GAME && (itemIndexGameA == index || itemIndexGameB == index))
     return true;
 
   return false;
