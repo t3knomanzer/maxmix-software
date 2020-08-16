@@ -90,29 +90,35 @@ void DisplayGameSelectScreen(Adafruit_SSD1306* display, char* name, uint8_t volu
 void DisplayApplicationEditScreen(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, uint8_t modeIndex, uint8_t modeCount, uint32_t* displayScrollTimer, uint32_t now, uint16_t* prevScrollOffset, bool isDirty)
 {
   uint8_t x0, y0, x1, y1;
+  
+  display->setTextSize(1);
+  display->setTextColor(WHITE);
+  
+  uint16_t maxOffset = GetMaxScrollOffset(display, name);
   uint16_t scrollOffset = 0;
   
   if (strlen(name) > DISPLAY_CHAR_MAX_X1)
   {
-    scrollOffset = ScrollOffset(displayScrollTimer, now, strlen(name), 0, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_CHAR_MAX_WIDTH_X1, DISPLAY_SCROLL_STEP_INTERVAL_X1);
+    scrollOffset = ScrollOffset(displayScrollTimer, now, strlen(name), 0, DISPLAY_SCROLL_STEP_INTERVAL_X1, maxOffset);
     if (*prevScrollOffset == scrollOffset && !isDirty)
       return;
     *prevScrollOffset = scrollOffset;
   }
   
   display->clearDisplay();
-
-  if (strlen(name) <= DISPLAY_CHAR_MAX_X1)
-    scrollOffset = 0;
-
-  display->setTextSize(1);
-  display->setTextColor(WHITE);
   display->setCursor(DISPLAY_AREA_CENTER_MARGIN_SIDE - scrollOffset, 0);
 
-  uint8_t len = min(strlen(name), DISPLAY_CHAR_MAX_X1 + 1 + (scrollOffset / (DISPLAY_CHAR_WIDTH_X1 + DISPLAY_CHAR_SPACING_X1)));
-  for (size_t i = 0; i < len; i++)
-    display->print(name[i]);
+  
+  display->print(name);
 
+  if (strlen(name) > DISPLAY_CHAR_MAX_X1)
+  {
+    for (size_t i = 0; i <strlen(DISPLAY_SCROLL_ITEM_SEPARATOR); i++)
+      display->print((char)pgm_read_byte(DISPLAY_SCROLL_ITEM_SEPARATOR + i));
+
+    display->print(name);
+  }
+  
   // Mask texts
   display->fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1, 0);
   display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE + 1, 0, DISPLAY_WIDTH, DISPLAY_CHAR_HEIGHT_X1, 0);
@@ -167,9 +173,15 @@ void DisplayGameEditScreen(Adafruit_SSD1306* display, char* nameA, char* nameB, 
 {
   uint8_t py;
   bool requireUpdate = false;
+  
+  display->setTextSize(1);
+  display->setTextColor(WHITE);
 
-  uint16_t scrollOffsetA = ScrollOffset(displayScrollTimer, now, strlen(nameA), strlen(nameB), DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH, DISPLAY_SCROLL_STEP_INTERVAL_X1);
-  uint16_t scrollOffsetB = ScrollOffset(displayScrollTimer, now, strlen(nameB), strlen(nameA), DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH, DISPLAY_SCROLL_STEP_INTERVAL_X1);
+  uint16_t maxOffset = GetMaxScrollOffset(display, nameA);
+  uint16_t scrollOffsetA = ScrollOffset(displayScrollTimer, now, strlen(nameA), strlen(nameB), DISPLAY_SCROLL_STEP_INTERVAL_X1, maxOffset);
+  
+  maxOffset = GetMaxScrollOffset(display, nameB);
+  uint16_t scrollOffsetB = ScrollOffset(displayScrollTimer, now, strlen(nameB), strlen(nameA), DISPLAY_SCROLL_STEP_INTERVAL_X1, maxOffset);
 
   if (strlen(nameA) < DISPLAY_GAME_EDIT_CHAR_MAX && strlen(nameB) < DISPLAY_GAME_EDIT_CHAR_MAX && !isDirty)
   {
@@ -217,13 +229,17 @@ void DisplayGameEditScreen(Adafruit_SSD1306* display, char* nameA, char* nameB, 
 bool DrawGameEditItem(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, uint8_t px, uint8_t py, uint16_t scrollOffset)
 {
   // Name
-  display->setTextSize(1);
-  display->setTextColor(WHITE);
   display->setCursor(DISPLAY_AREA_CENTER_MARGIN_SIDE - scrollOffset, py);
 
-  uint8_t len = min(strlen(name), DISPLAY_GAME_EDIT_CHAR_MAX + 1 + scrollOffset / (DISPLAY_CHAR_WIDTH_X1 + DISPLAY_CHAR_SPACING_X1));
-  for (size_t i = 0; i < len; i++)
-    display->print(name[i]);
+  display->print(name);
+
+  if (strlen(name) > DISPLAY_GAME_EDIT_CHAR_MAX)
+  {
+    for (size_t i = 0; i <strlen(DISPLAY_SCROLL_ITEM_SEPARATOR); i++)   
+      display->print((char)pgm_read_byte(DISPLAY_SCROLL_ITEM_SEPARATOR + i));
+      
+    display->print(name);
+  }
 
   // Mask texts
   display->fillRect(0, py, DISPLAY_AREA_CENTER_MARGIN_SIDE, py + DISPLAY_CHAR_HEIGHT_X1, 0);
@@ -316,25 +332,33 @@ void DrawSelectionArrows(Adafruit_SSD1306* display, uint8_t leftArrow, uint8_t r
 //---------------------------------------------------------
 bool DrawSelectionItemName(Adafruit_SSD1306* display, char* name, uint32_t* displayScrollTimer, uint32_t now, uint16_t* prevScrollOffset, bool isDirty)
 {
+  display->setTextSize(2);
+  display->setTextColor(WHITE);
+  
+  uint16_t maxOffset = GetMaxScrollOffset(display, name);
   uint16_t scrollOffset = 0;
+  
   if (strlen(name) > DISPLAY_CHAR_MAX_X2)
   {
-    scrollOffset = ScrollOffset(displayScrollTimer, now, strlen(name), 0, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_CHAR_MAX_WIDTH_X2, DISPLAY_SCROLL_STEP_INTERVAL_X2);
+    scrollOffset = ScrollOffset(displayScrollTimer, now, strlen(name), 0, DISPLAY_SCROLL_STEP_INTERVAL_X2, maxOffset);
     if (*prevScrollOffset == scrollOffset && !isDirty)
       return false;
     *prevScrollOffset = scrollOffset;
   }
   
   display->clearDisplay();
-
-  display->setTextSize(2);
-  display->setTextColor(WHITE);
   display->setCursor(DISPLAY_AREA_CENTER_MARGIN_SIDE - scrollOffset, 0);
-
-  uint8_t len = min(strlen(name), DISPLAY_CHAR_MAX_X2 + 1 + scrollOffset / (DISPLAY_CHAR_WIDTH_X2 + DISPLAY_CHAR_SPACING_X2));
-  for (size_t i = 0; i < len; i++)
-    display->print(name[i]);
-
+  
+  display->print(name);
+  
+  if (strlen(name) > DISPLAY_CHAR_MAX_X2)
+  {
+    for (size_t i = 0; i <strlen(DISPLAY_SCROLL_ITEM_SEPARATOR); i++)
+      display->print((char)pgm_read_byte(DISPLAY_SCROLL_ITEM_SEPARATOR + i));
+      
+    display->print(name);
+  }
+  
   // Mask texts
   display->fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, 0);
   display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_WIDTH, DISPLAY_CHAR_HEIGHT_X2, 0);
@@ -412,7 +436,7 @@ void DrawSelectionVolumeBar(Adafruit_SSD1306* display, uint8_t volume, bool isMu
 //---------------------------------------------------------
 // Calculates Offset to print scrolling text
 //---------------------------------------------------------
-uint16_t ScrollOffset(uint32_t* displayScrollTimer, uint32_t now, size_t nameLength, size_t nameLengthOther, uint8_t charWidth, uint8_t charSpacing, uint8_t maxDrawWidth, uint8_t stepDelay)
+uint16_t ScrollOffset(uint32_t* displayScrollTimer, uint32_t now, size_t nameLength, size_t nameLengthOther, uint8_t stepDelay, uint16_t maxOffset)
 {
   uint32_t scrollTimerDelta = now - *displayScrollTimer;
 
@@ -422,20 +446,10 @@ uint16_t ScrollOffset(uint32_t* displayScrollTimer, uint32_t now, size_t nameLen
   }
 
   uint16_t currentOffset = (scrollTimerDelta - DISPLAY_SCROLL_DELAY_INITIAL) / stepDelay;
-  uint16_t maxOffset = (nameLength * (charWidth + charSpacing)) - maxDrawWidth;
-  uint32_t maxOffsetTime = (maxOffset * stepDelay) + DISPLAY_SCROLL_DELAY_INITIAL;
-
-  if (currentOffset < maxOffset) // Initial Scroll
+  
+  if (currentOffset < maxOffset) //  Scroll
   {
     return currentOffset;
-  }
-  else if (scrollTimerDelta < maxOffsetTime + DISPLAY_SCROLL_DELAY_REVERSE) // Pause
-  {
-    return maxOffset;
-  }
-  else if (scrollTimerDelta < maxOffsetTime + DISPLAY_SCROLL_DELAY_REVERSE + maxOffsetTime - DISPLAY_SCROLL_DELAY_INITIAL) // Reverse Scroll
-  {
-    return (maxOffset - ((scrollTimerDelta - maxOffsetTime - DISPLAY_SCROLL_DELAY_REVERSE) / stepDelay));
   }
   else // Reset Scroll
   {
@@ -450,3 +464,17 @@ uint16_t ScrollOffset(uint32_t* displayScrollTimer, uint32_t now, size_t nameLen
     return 0;
   }
 }
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+uint16_t GetMaxScrollOffset(Adafruit_SSD1306* display, char* name)
+{
+  char displayName[strlen(name) + strlen(DISPLAY_SCROLL_ITEM_SEPARATOR) + strlen(name) + 1] = "";
+  strcpy(displayName, name);
+  strcat_P(displayName, DISPLAY_SCROLL_ITEM_SEPARATOR);
+  
+  uint16_t maxOffset;
+  display->getTextBounds(displayName, 0, 0, NULL, NULL, &maxOffset, NULL);
+  return maxOffset;
+}
+
