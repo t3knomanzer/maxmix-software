@@ -97,6 +97,7 @@ void timerIsr()
 
 // Time & Sleep
 uint32_t now = 0;
+uint32_t last = 0;
 uint32_t lastActivityTime = 0;
 
 // Lighting
@@ -135,6 +136,7 @@ void setup()
 //---------------------------------------------------------
 void loop()
 {
+  last = now;
   now = millis();
 
   if(ReceivePackage(receiveBuffer, &receiveIndex, MSG_PACKET_DELIMITER, RECEIVE_BUFFER_SIZE))
@@ -142,15 +144,18 @@ void loop()
     if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
     {
       if(ProcessPackage())
-        RequireDisplayUpdate();
-    }
-      
+      {
+        UpdateActivityTime();
+        isDirty = true;
+      }
+    }      
     ClearReceive();
   }
 
   if(ProcessEncoderRotation() || ProcessEncoderButton())
   {
-    RequireDisplayUpdate();
+      UpdateActivityTime();
+      isDirty = true;
   }
 
   if(ProcessSleep())
@@ -163,12 +168,15 @@ void loop()
   ClearSend();
   encoderButton.update();
 
-  if(isDirty)
-  {
+
+  if(isDirty || ProcessDisplayScroll())
     UpdateDisplay();
+
+  if(isDirty)
     UpdateLighting();  
-    isDirty = false;
-  }  
+
+  TimerDisplayUpdate(now - last);
+  isDirty = false;
 }
 
 //********************************************************
@@ -364,7 +372,10 @@ bool ProcessEncoderRotation()
   else if(mode == MODE_APPLICATION)
   {
     if(stateApplication == STATE_APPLICATION_NAVIGATE)
+    {
       itemIndexApp = GetNextIndex(itemIndexApp, itemCount, encoderDelta, settings.continuousScroll);
+      TimerDisplayReset();
+    }
 
     else if(stateApplication == STATE_APPLICATION_EDIT)
     {
@@ -375,9 +386,15 @@ bool ProcessEncoderRotation()
   else if(mode == MODE_GAME)
   {
     if(stateGame == STATE_GAME_SELECT_A)
+    {
       itemIndexGameA = GetNextIndex(itemIndexGameA, itemCount, encoderDelta, settings.continuousScroll);
+      TimerDisplayReset();
+    }
     else if(stateGame == STATE_GAME_SELECT_B)
+    {
       itemIndexGameB = GetNextIndex(itemIndexGameB, itemCount, encoderDelta, settings.continuousScroll);
+      TimerDisplayReset();
+    }
 
     else if(stateGame == STATE_GAME_EDIT)
     {
@@ -399,13 +416,21 @@ bool ProcessEncoderButton()
   if(encoderButton.tapped())
   {
     if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
+    {
+      TimerDisplayReset();
       return true;
+    }
     
     if(mode == MODE_APPLICATION)
+    {
       CycleApplicationState();
-
+      TimerDisplayReset();
+    }
     else if(mode == MODE_GAME)
+    {
       CycleGameState();
+      TimerDisplayReset();
+    }
 
     return true;
   }
@@ -432,7 +457,9 @@ bool ProcessEncoderButton()
     if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
       return true;
       
-    CycleMode();      
+    CycleMode();
+    TimerDisplayReset();
+
     return true;
   }
 
@@ -466,6 +493,28 @@ bool ProcessSleep()
   }
 
   return false;
+}
+
+bool ProcessDisplayScroll()
+{
+  bool result = false;
+
+  if(mode == MODE_APPLICATION)
+    result = strlen(items[itemIndexApp].name) > DISPLAY_CHAR_MAX_X2;
+  else if(mode == MODE_GAME)
+  {
+    if(stateGame == STATE_GAME_SELECT_A)
+      result = strlen(items[itemIndexGameA].name) > DISPLAY_CHAR_MAX_X2;
+    else if(stateGame == STATE_GAME_SELECT_B)
+      result = strlen(items[itemIndexGameB].name) > DISPLAY_CHAR_MAX_X2;
+    else if(stateGame == STATE_GAME_EDIT)
+    {
+      result = strlen(items[itemIndexGameA].name) > DISPLAY_CHAR_MAX_X1 ||
+               strlen(items[itemIndexGameB].name) > DISPLAY_CHAR_MAX_X1;
+    }
+  }
+
+  return result;
 }
 
 //---------------------------------------------------------
@@ -649,12 +698,4 @@ bool IsItemActive(int8_t index)
     return true;
 
   return false;
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void RequireDisplayUpdate()
-{
-  UpdateActivityTime();
-  isDirty = true;
 }
