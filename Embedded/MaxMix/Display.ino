@@ -11,14 +11,50 @@
 #include <Wire.h>
 #include "Logo.h"
 
+float timerDisplayA = 0;
+float timerDisplayB = 0;
+
 //********************************************************
 // *** FUNCTIONS
 //********************************************************
+void TimerDisplayUpdate(uint32_t delta)
+{
+  timerDisplayA += delta / 1000.0f;
+  timerDisplayB += delta / 1000.0f;
+}
+
+void ResetTimerDisplayA()
+{
+  timerDisplayA = 0;
+}
+
+void ResetTimerDisplayB()
+{
+  timerDisplayB = 0;
+}
+
+void TimerDisplayReset()
+{
+  ResetTimerDisplayA();
+  ResetTimerDisplayB();
+}
+
+float GetTimerDisplayA()
+{
+  return max(0, timerDisplayA - DISPLAY_SCROLL_IDLE_TIME);
+}
+
+float GetTimerDisplayB()
+{
+  return max(0, timerDisplayB - DISPLAY_SCROLL_IDLE_TIME);
+}
+
 Adafruit_SSD1306* InitializeDisplay()
 {
   Adafruit_SSD1306* display = new Adafruit_SSD1306(DISPLAY_WIDTH, DISPLAY_HEIGHT, &Wire, DISPLAY_RESET);
   display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS);
   display->setRotation(2);
+  display->setTextWrap(false);
 
   return display;
 }
@@ -47,7 +83,7 @@ void DisplayMasterSelectScreen(Adafruit_SSD1306* display, uint8_t volume, bool i
   display->clearDisplay();
 
   DrawDotGroup(display, modeIndex, modeCount);
-  DrawSelectionItemName(display, "VOL");
+  DrawItemName(display, "VOL", 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, GetTimerDisplayA, ResetTimerDisplayA, DISPLAY_SCROLL_SPEED_X2);
   DrawSelectionItemVolume(display, volume);
   DrawSelectionVolumeBar(display, volume, isMuted);
 
@@ -62,8 +98,13 @@ void DisplayApplicationSelectScreen(Adafruit_SSD1306* display, char* name, uint8
   display->clearDisplay();
 
   DrawDotGroup(display, modeIndex, modeCount);
+  
+  DrawItemName(display, name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, GetTimerDisplayA, ResetTimerDisplayA, DISPLAY_SCROLL_SPEED_X2);
+  // Clear sides
+  display->fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, BLACK);
+  display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, BLACK);
+
   DrawSelectionArrows(display, leftArrow, rightArrow);
-  DrawSelectionItemName(display, name);
   DrawSelectionVolumeBar(display, volume, isMuted);
 
   display->display();
@@ -77,8 +118,13 @@ void DisplayGameSelectScreen(Adafruit_SSD1306* display, char* name, uint8_t volu
   display->clearDisplay();
 
   DrawDotGroup(display, modeIndex, modeCount);
+  
+  DrawItemName(display, name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, GetTimerDisplayA, ResetTimerDisplayA, DISPLAY_SCROLL_SPEED_X2);
+  // Clear sides
+  display->fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, BLACK);
+  display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, BLACK);
+  
   DrawSelectionArrows(display, leftArrow, rightArrow);
-  DrawSelectionItemName(display, name);
   DrawSelectionVolumeBar(display, volume, isMuted);
   DrawSelectionChannelName(display, channel);
 
@@ -97,13 +143,11 @@ void DisplayApplicationEditScreen(Adafruit_SSD1306* display, char* name, uint8_t
   uint8_t x0, y0, x1, y1;
 
   // Item name
-  display->setTextSize(1);
-  display->setTextColor(WHITE);
-  display->setCursor(DISPLAY_AREA_CENTER_MARGIN_SIDE, 0);
+  DrawItemName(display, name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, GetTimerDisplayA, ResetTimerDisplayA, DISPLAY_SCROLL_SPEED_X1);
 
-  x0 = min(DISPLAY_CHAR_MAX_X1, strlen(name)); // Name length
-  for(size_t i = 0; i < x0; i++)
-    display->print(name[i]);
+  // Clear sides
+  display->fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1, BLACK);
+  display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1, BLACK);
 
   // Volume bar min
   x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE;
@@ -158,28 +202,30 @@ void DisplayGameEditScreen(Adafruit_SSD1306* display, char* nameA, char* nameB, 
   DrawDotGroup(display, modeIndex, modeCount);
 
   py = DISPLAY_MARGIN_X2;
-  DrawGameEditItem(display, nameA, volumeA, isMutedA, DISPLAY_AREA_CENTER_MARGIN_SIDE, py);
+  DrawGameEditItem(display, nameA, volumeA, isMutedA, DISPLAY_AREA_CENTER_MARGIN_SIDE, py, GetTimerDisplayA, ResetTimerDisplayA);
 
   py = DISPLAY_MARGIN_X2 + DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2 + DISPLAY_MARGIN_X1;
-  DrawGameEditItem(display, nameB, volumeB, isMutedB, DISPLAY_AREA_CENTER_MARGIN_SIDE, py);
+  DrawGameEditItem(display, nameB, volumeB, isMutedB, DISPLAY_AREA_CENTER_MARGIN_SIDE, py, GetTimerDisplayB, ResetTimerDisplayB);
 
   display->display();
 }
 
-
 //---------------------------------------------------------
 // Draws a row of the Game mode screen
 //---------------------------------------------------------
-void DrawGameEditItem(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, uint8_t px, uint8_t py)
+void DrawGameEditItem(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, uint8_t px, uint8_t py, float (*getTime)(), void (*resetTime)())
 {
   // Name 
   display->setTextSize(1);             
   display->setTextColor(WHITE);
   display->setCursor(px, py);
 
-  uint8_t length = min(DISPLAY_GAME_EDIT_CHAR_MAX, strlen(name));
-  for(size_t i = 0; i < length; i++)
-    display->print(name[i]);
+  // Item name
+  DrawItemName(display, name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, px, py, getTime, resetTime, DISPLAY_SCROLL_SPEED_X1);
+
+  // Clear sides
+  display->fillRect(0, py, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1, BLACK);
+  display->fillRect(DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH, py, DISPLAY_WIDTH, DISPLAY_CHAR_HEIGHT_X1, BLACK);
 
   // Volume bar min indicator
   px += DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH + DISPLAY_MARGIN_X2;
@@ -264,15 +310,32 @@ void DrawSelectionArrows(Adafruit_SSD1306* display, uint8_t leftArrow, uint8_t r
 //---------------------------------------------------------
 // Draw Selection Arrows
 //---------------------------------------------------------
-void DrawSelectionItemName(Adafruit_SSD1306* display, char* name)
+void DrawItemName(Adafruit_SSD1306* display, char* name, uint8_t fontSize, uint8_t charWidth, uint8_t charHeight, uint8_t charSpacing,
+                  uint8_t x, uint8_t y, float (*getTime)(), void (*resetTime)(), float scrollSpeed)
 {
-  display->setTextSize(2);
-  display->setTextColor(WHITE);
-  display->setCursor(DISPLAY_AREA_CENTER_MARGIN_SIDE, 0);
+  uint8_t nameCopies = 1;
+  uint8_t nameLength = strlen(name);
+  int16_t scrollMin = 0;
+  int16_t scrollMax = (nameLength + 1) * (charWidth + charSpacing);
+  int16_t scroll = Scroll(name, (*getTime)(), scrollMin, scrollMax, scrollSpeed); 
 
-  int length = min(DISPLAY_CHAR_MAX_X2, strlen(name));  
-  for(size_t i = 0; i < length; i++)
-    display->print(name[i]);
+  if(abs(scroll) >= abs(scrollMax))
+    (*resetTime)();
+
+  if(abs(scroll) > 0)
+    nameCopies = 2;
+
+  display->setTextSize(fontSize);
+  display->setTextColor(WHITE);  
+  display->setCursor(x - scroll, y);
+  while(nameCopies > 0)
+  {
+    for(size_t i = 0; i < nameLength; i++)
+      display->print(name[i]);
+
+    display->print(' ');
+    nameCopies--;
+  }
 }
 
 //---------------------------------------------------------
@@ -334,4 +397,17 @@ void DrawSelectionVolumeBar(Adafruit_SSD1306* display, uint8_t volume, bool isMu
 
   display->drawLine(x0, y0, x0, y1, WHITE);
   
+}
+
+int16_t Scroll(char* name, float time, float scrollMin, float scrollMax, float speed)
+{
+  uint8_t nameLength = strlen(name);
+  if(nameLength <= DISPLAY_CHAR_MAX_X2)
+    return 0;
+
+  // Value mapping: (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+  float timeMax = nameLength / speed;
+  int16_t scroll = (time - 0.0f) * (scrollMax - scrollMin) / (timeMax - 0.0f) + scrollMin;
+
+  return scroll;
 }
