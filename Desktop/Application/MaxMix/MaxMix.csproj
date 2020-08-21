@@ -135,7 +135,6 @@
     <Compile Include="Services\Audio\IAudioSession.cs" />
     <Compile Include="Services\Audio\IAudioSessionService.cs" />
     <Compile Include="Services\Communication\Serial\CobsSerializationService .cs" />
-    <Compile Include="Services\Communication\Common.cs" />
     <Compile Include="Services\Communication\CommunicationService.cs" />
     <Compile Include="Services\Communication\Discovery\DiscoveryService.cs" />
     <Compile Include="Services\Communication\ICommunicationService.cs" />
