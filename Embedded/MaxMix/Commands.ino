@@ -9,6 +9,7 @@
 //
 //********************************************************
 
+
 //********************************************************
 // *** FUNCTIONS
 //********************************************************
@@ -16,8 +17,9 @@
 //---------------------------------------------------------
 void SendHandshakeCommand(uint8_t* rawBuffer, uint8_t* packageBuffer)
 {
-  rawBuffer[0] = MSG_COMMAND_HS_RESPONSE;
-  uint8_t encodeSize =  EncodePackage(rawBuffer, 1, packageBuffer);
+  rawBuffer[0] = packageRevision++;
+  rawBuffer[1] = MSG_COMMAND_HS_RESPONSE;
+  uint8_t encodeSize =  EncodePackage(rawBuffer, 2, packageBuffer);
   Serial.write(packageBuffer, encodeSize);
 }
 
@@ -25,17 +27,18 @@ void SendHandshakeCommand(uint8_t* rawBuffer, uint8_t* packageBuffer)
 //---------------------------------------------------------
 void SendItemVolumeCommand(Item* item, uint8_t* rawBuffer, uint8_t* packageBuffer)
 {
-  rawBuffer[0] = MSG_COMMAND_UPDATE_VOLUME;
+  rawBuffer[0] = packageRevision++;
+  rawBuffer[1] = MSG_COMMAND_UPDATE_VOLUME;
   
-  rawBuffer[1] = (uint8_t)(item->id >> 24) & 0xFF;
-  rawBuffer[2] = (uint8_t)(item->id >> 16) & 0xFF;
-  rawBuffer[3] = (uint8_t)(item->id >> 8) & 0xFF;
-  rawBuffer[4] = (uint8_t)item->id & 0xFF;
+  rawBuffer[2] = (uint8_t)(item->id >> 24) & 0xFF;
+  rawBuffer[3] = (uint8_t)(item->id >> 16) & 0xFF;
+  rawBuffer[4] = (uint8_t)(item->id >> 8) & 0xFF;
+  rawBuffer[5] = (uint8_t)item->id & 0xFF;
 
-  rawBuffer[5] = item->volume;
-  rawBuffer[6] = item->isMuted;
+  rawBuffer[6] = item->volume;
+  rawBuffer[7] = item->isMuted;
   
-  uint8_t encodeSize =  EncodePackage(rawBuffer, 7, packageBuffer);
+  uint8_t encodeSize =  EncodePackage(rawBuffer, 8, packageBuffer);
   Serial.write(packageBuffer, encodeSize);
 }
 
@@ -52,9 +55,9 @@ void AddItemCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t* itemCoun
 void UpdateItemCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t itemIndex)
 {
   itemsBuffer[itemIndex].id = GetIdFromPackage(packageBuffer);
-  memcpy(itemsBuffer[itemIndex].name, &packageBuffer[5], ITEM_BUFFER_NAME_SIZE);
-  itemsBuffer[itemIndex].volume = (uint8_t)packageBuffer[41];
-  itemsBuffer[itemIndex].isMuted = (uint8_t)packageBuffer[42];
+  memcpy(itemsBuffer[itemIndex].name, &packageBuffer[6], ITEM_BUFFER_NAME_SIZE);
+  itemsBuffer[itemIndex].volume = (uint8_t)packageBuffer[42];
+  itemsBuffer[itemIndex].isMuted = (uint8_t)packageBuffer[43];
 }
 
 //---------------------------------------------------------
@@ -72,17 +75,17 @@ void RemoveItemCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t* itemC
 //---------------------------------------------------------
 void UpdateItemVolumeCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t index) 
 {
-    itemsBuffer[index].volume = packageBuffer[5];
-    itemsBuffer[index].isMuted = packageBuffer[6];
+    itemsBuffer[index].volume = packageBuffer[6];
+    itemsBuffer[index].isMuted = packageBuffer[7];
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 void UpdateSettingsCommand(uint8_t* packageBuffer, Settings* settings) 
 {
-  settings->displayNewSession = packageBuffer[1];
-  settings->sleepWhenInactive = packageBuffer[2];
-  settings->sleepAfterSeconds = packageBuffer[3];
-  settings->continuousScroll = packageBuffer[4];
-  settings->accelerationPercentage = packageBuffer[5];
+  settings->displayNewSession = packageBuffer[2];
+  settings->sleepWhenInactive = packageBuffer[3];
+  settings->sleepAfterSeconds = packageBuffer[4];
+  settings->continuousScroll = packageBuffer[5];
+  settings->accelerationPercentage = packageBuffer[6];
 }

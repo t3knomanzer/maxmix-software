@@ -40,7 +40,7 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Fields
-        private ISerializationService _serializationService;
+        private readonly ISerializationService _serializationService;
         private int _baudRate;
         private bool _isRunning;
         #endregion
