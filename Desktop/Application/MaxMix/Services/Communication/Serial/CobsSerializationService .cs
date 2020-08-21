@@ -44,6 +44,8 @@ namespace MaxMix.Services.Communication
         public byte Delimiter { get => _delimiter; }
         #endregion
 
+        public byte revision = 0;
+
         #region Private Methods
         private IList<byte> Encode(IEnumerable<byte> Input, byte delimiter)
         {
@@ -150,6 +152,8 @@ namespace MaxMix.Services.Communication
 
             var packet = new List<byte>();
 
+            //packet.Add(revision);
+
             var command = (byte)_registeredTypes.First(o => o.Value == message.GetType()).Key;
             packet.Add(command);
 
@@ -193,8 +197,11 @@ namespace MaxMix.Services.Communication
             if (decoded.Count != length)
                 throw new ArgumentException("Message length missmatch.");
 
+            // Extract message version
+            //byte version = decoded[0];
+
             // Extract message index
-            byte command = decoded.First();
+            byte command = decoded[0];
             if (!_registeredTypes.ContainsKey(command))
                 throw new ArgumentException("Message type not registered.");
 
