@@ -57,6 +57,7 @@ struct Settings
 // Serial Communication
 uint8_t receiveIndex = 0;
 uint8_t sendIndex = 0;
+uint8_t packageRevision = 0;
 uint8_t receiveBuffer[RECEIVE_BUFFER_SIZE];
 uint8_t decodeBuffer[RECEIVE_BUFFER_SIZE];
 uint8_t sendBuffer[SEND_BUFFER_SIZE];

@@ -152,7 +152,7 @@ namespace MaxMix.Services.Communication
 
             var packet = new List<byte>();
 
-            //packet.Add(revision);
+            packet.Add(revision++);
 
             var command = (byte)_registeredTypes.First(o => o.Value == message.GetType()).Key;
             packet.Add(command);
@@ -198,15 +198,15 @@ namespace MaxMix.Services.Communication
                 throw new ArgumentException("Message length missmatch.");
 
             // Extract message version
-            //byte version = decoded[0];
+            byte version = decoded[0];
 
             // Extract message index
-            byte command = decoded[0];
+            byte command = decoded[1];
             if (!_registeredTypes.ContainsKey(command))
                 throw new ArgumentException("Message type not registered.");
 
             // Extract payload (everything except first and last bytes)
-            byte[] payload = decoded.Skip(1).Take(length - 2).ToArray();
+            byte[] payload = decoded.Skip(2).Take(length - 3).ToArray();
 
             // Deserialize payload with message type instance
             Type type = _registeredTypes[command];
