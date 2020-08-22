@@ -719,4 +719,3 @@ bool IsItemActive(int8_t index)
 
   return false;
 }
-
