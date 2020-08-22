@@ -43,6 +43,7 @@ namespace MaxMix.Services.Communication
         private readonly ISerializationService _serializationService;
         private int _baudRate;
         private bool _isRunning;
+        private byte _revision;
         #endregion
 
         #region Public Methods
@@ -54,6 +55,7 @@ namespace MaxMix.Services.Communication
         {
             _baudRate = baudRate;
             _isRunning = true;
+            _revision = 0;
 
             string portName = string.Empty;
             while (portName == string.Empty && _isRunning)
@@ -121,7 +123,7 @@ namespace MaxMix.Services.Communication
 
         private void Send(SerialPort serialPort)
         {
-            var message = _serializationService.Serialize(new MessageHandShakeRequest());
+            var message = _serializationService.Serialize(new MessageHandShakeRequest(), _revision);
             serialPort.Write(message, 0, message.Length);
         }
 
@@ -143,7 +145,8 @@ namespace MaxMix.Services.Communication
                         try
                         {
                             message = _serializationService.Deserialize(buffer.ToArray());
-                            return message != null && message.GetType() == typeof(MessageHandShakeResponse);
+                            // Here we voluntarily don't check the message's revision, we just want to connect as fast as possible.
+                            return message != null && message.GetType() == typeof(MessageAcknowledgment);
                         }
                         catch(ArgumentException) { }
                     }

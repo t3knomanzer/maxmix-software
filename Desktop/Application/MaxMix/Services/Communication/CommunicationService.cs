@@ -28,6 +28,7 @@ namespace MaxMix.Services.Communication
         #region Consts
         private const int _checkPortInterval = 500;
         private const int _timeout = 1000;
+        private const int _ackTimeout = 100;
         #endregion
 
         #region Fields
@@ -41,8 +42,11 @@ namespace MaxMix.Services.Communication
         private Thread _portStateThread;
         private bool _isCheckPortState;
         private SynchronizationContext _synchronizationContext;
+
+        private byte _revision;
+        private bool _waitingAck;
         #endregion
-         
+
         #region Properties
         #endregion
 
@@ -68,6 +72,8 @@ namespace MaxMix.Services.Communication
         {
             _portName = portName;
             _baudRate = baudRate;
+            _revision = 0;
+            _waitingAck = false;
 
             Connect(_portName, _baudRate);
 
@@ -95,14 +101,23 @@ namespace MaxMix.Services.Communication
         {
             try
             {
-                var message_ = _serializationService.Serialize(message);
+                var message_ = _serializationService.Serialize(message, _revision);
+                var sendTime = DateTime.Now;
+                _waitingAck = true;
                 _serialPort.Write(message_, 0, message_.Length);
 
-                // TODO: Temporary hack to prevent messages being sent too quickly.
-                // When the application is first run or the device is first connected, if there are
-                // multiple audio sessions active, the device does only receive the first message.
-                // Serial communication on the device side needs to be made more robust.
-                Thread.Sleep(50);
+                // Wait until the device confirmed proper reception.
+                while (_waitingAck) {
+                    if ((DateTime.Now - sendTime).TotalMilliseconds > _ackTimeout)
+                    {
+                        // The device did not answer in a timely manner.
+                        RaiseError("ACK time out.");
+                        break;
+                    }
+                }
+
+                // Now we can increment the revision number for the next message.
+                _revision++;
             }
             catch(Exception e)
             {
@@ -163,7 +178,25 @@ namespace MaxMix.Services.Communication
                     {
                         var message = _serializationService.Deserialize(_buffer.ToArray());
                         if (message != null)
-                            RaiseMessageReceived(message);
+                        {
+                            // If it's an ACK message, process it immediately.
+                            if (message.GetType() == typeof(MessageAcknowledgment))
+                            {
+                                MessageAcknowledgment ack = (MessageAcknowledgment) message;
+                                if (ack.Revision == _revision)
+                                {
+                                    _waitingAck = false;
+                                }
+                                else
+                                {
+                                    RaiseError("ACK revision error.");
+                                }
+                            }
+                            else
+                            {
+                                RaiseMessageReceived(message);
+                            }
+                        }
                     }
                     catch(ArgumentException)
                     {

@@ -7,7 +7,7 @@ namespace MaxMix.Services.Communication
         byte Delimiter { get; }
 
         void RegisterType<T>(int id) where T : IMessage;
-        byte[] Serialize(IMessage message);
+        byte[] Serialize(IMessage message, byte revision);
         IMessage Deserialize(byte[] bytes);
     }
 }

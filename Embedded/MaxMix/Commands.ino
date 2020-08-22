@@ -13,12 +13,12 @@
 //********************************************************
 // *** FUNCTIONS
 //********************************************************
+
 //---------------------------------------------------------
-//---------------------------------------------------------
-void SendHandshakeCommand(uint8_t* rawBuffer, uint8_t* packageBuffer)
+void SendAcknowledgment(uint8_t* rawBuffer, uint8_t* packageBuffer, uint8_t revision)
 {
-  rawBuffer[0] = packageRevision++;
-  rawBuffer[1] = MSG_COMMAND_HS_RESPONSE;
+  rawBuffer[0] = revision;
+  rawBuffer[1] = MSG_COMMAND_ACKNOWLEDGMENT;
   uint8_t encodeSize =  EncodePackage(rawBuffer, 2, packageBuffer);
   Serial.write(packageBuffer, encodeSize);
 }
@@ -88,4 +88,28 @@ void UpdateSettingsCommand(uint8_t* packageBuffer, Settings* settings)
   settings->sleepAfterSeconds = packageBuffer[4];
   settings->continuousScroll = packageBuffer[5];
   settings->accelerationPercentage = packageBuffer[6];
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+uint8_t GetRevisionFromPackage(uint8_t* packageBuffer)
+{
+    return packageBuffer[0];
+}
+//---------------------------------------------------------
+//---------------------------------------------------------
+uint8_t GetCommandFromPackage(uint8_t* packageBuffer)
+{
+    return packageBuffer[1];
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+uint32_t GetIdFromPackage(uint8_t* packageBuffer)
+{
+    uint32_t id = ((uint32_t)packageBuffer[2]) |
+                  ((uint32_t)packageBuffer[3] << 8)  |
+                  ((uint32_t)packageBuffer[4] << 16) |
+                  ((uint32_t)packageBuffer[5] << 24);
+    return id;
 }
