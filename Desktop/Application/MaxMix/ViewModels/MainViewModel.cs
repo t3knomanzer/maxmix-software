@@ -29,7 +29,7 @@ namespace MaxMix.ViewModels
         {
             _serializationService = new CobsSerializationService();
             _serializationService.RegisterType<MessageHandShakeRequest>(0);
-            _serializationService.RegisterType<MessageHandShakeResponse>(1);
+            _serializationService.RegisterType<MessageAcknowledgment>(1);
             _serializationService.RegisterType<MessageAddSession>(2);
             _serializationService.RegisterType<MessageRemoveSession>(3);
             _serializationService.RegisterType<MessageUpdateVolumeSession>(4);

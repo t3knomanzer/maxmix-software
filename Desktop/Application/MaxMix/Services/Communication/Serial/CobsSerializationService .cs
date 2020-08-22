@@ -44,8 +44,6 @@ namespace MaxMix.Services.Communication
         public byte Delimiter { get => _delimiter; }
         #endregion
 
-        public byte revision = 0;
-
         #region Private Methods
         private IList<byte> Encode(IEnumerable<byte> Input, byte delimiter)
         {
@@ -145,14 +143,14 @@ namespace MaxMix.Services.Communication
         /// </summary>
         /// <param name="message">The message to encode.</param>
         /// <returns>The message encoded as a byte array.</returns>
-        public byte[] Serialize(IMessage message)
+        public byte[] Serialize(IMessage message, byte revision)
         {
             if (!_registeredTypes.ContainsValue(message.GetType()))
                 throw new ArgumentException("Message type not registered");
 
             var packet = new List<byte>();
 
-            packet.Add(revision++);
+            packet.Add(revision);
 
             var command = (byte)_registeredTypes.First(o => o.Value == message.GetType()).Key;
             packet.Add(command);
@@ -198,7 +196,7 @@ namespace MaxMix.Services.Communication
                 throw new ArgumentException("Message length missmatch.");
 
             // Extract message version
-            byte version = decoded[0];
+            byte revision = decoded[0];
 
             // Extract message index
             byte command = decoded[1];
@@ -210,7 +208,14 @@ namespace MaxMix.Services.Communication
 
             // Deserialize payload with message type instance
             Type type = _registeredTypes[command];
-            IMessage message = Activator.CreateInstance(type) as IMessage;
+            IMessage message;
+            if (type == typeof(MessageAcknowledgment))
+            {
+                message = Activator.CreateInstance(type, revision) as MessageAcknowledgment;
+            }
+            else {
+                message = Activator.CreateInstance(type) as IMessage;
+            }
 
             if (!message.SetBytes(payload))
                 throw new ArgumentException("Incorrect payload for message type.");
