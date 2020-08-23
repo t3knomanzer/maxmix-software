@@ -29,6 +29,8 @@
 #include "src/ButtonEvents/ButtonEvents.h"
 #include "src/Rotary/Rotary.h"
 #include "src/TimerOne/TimerOne.h"
+#include "src/FixedPoints/FixedPoints.h"
+#include "src/FixedPoints/FixedPointsCommon.h"
 
 //********************************************************
 // *** STRUCTS
@@ -330,14 +332,22 @@ int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t
   if (!encoderDelta)
     return volume;
 
-  float speed = (float)encoderDelta*1000/deltaTime;
-  float accelerationDivisor = max((1-(float)settings.accelerationPercentage/100)*ROTARY_ACCELERATION_DIVISOR_MAX, 1);
-  uint32_t step = 1 + abs(speed*speed/accelerationDivisor);
+  bool dirChanged = ((prevDir > 0) && (encoderDelta < 0)) || ((prevDir < 0) && (encoderDelta > 0));
 
-  // Direction change detection
-  if((prevDir > 0 && encoderDelta < 0)||(prevDir < 0 && encoderDelta > 0)){
-    step = 1;
+  uint32_t step;
+  if (dirChanged)
+  {
+     step = 1;
   }
+  else
+  {
+    // Compute acceleration using fixed point maths.
+    SQ15x16 speed = (SQ15x16)encoderDelta*1000/deltaTime;
+    SQ15x16 accelerationDivisor = max((1-(SQ15x16)settings.accelerationPercentage/100)*ROTARY_ACCELERATION_DIVISOR_MAX, 1);
+    SQ15x16 fstep = 1 + absFixed(speed*speed/accelerationDivisor);
+    step = fstep.getInteger();
+  }
+
   prevDir = encoderDelta;
 
   if(encoderDelta > 0)
@@ -349,8 +359,7 @@ int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t
     volume -= step;
   }
   
-  volume = constrain(volume, 0, 100);
-  return volume;
+  return constrain(volume, 0, 100);
 }
 
 //---------------------------------------------------------

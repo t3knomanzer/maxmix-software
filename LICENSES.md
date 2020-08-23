@@ -26,5 +26,6 @@ Maxmix dependencies and licences
 * Adafruit SSD1306 - BSD License : https://github.com/adafruit/Adafruit_SSD1306/blob/master/license.txt
 * Adafruit NeoPixel - BSD License : https://github.com/adafruit/Adafruit_NeoPixel/blob/master/license.txt
 * ButtonEvents - MIT License : https://github.com/fasteddy516/ButtonEvents/blob/master/LICENSE
+* FixedPoints - Apache 2 license : https://github.com/Pharap/FixedPointsArduino/blob/master/LICENSE
 * Rotary - GNU GPL Version 3 : https://github.com/brianlow/Rotary
 * TimerOne - Creative Commons Attribution 3.0 License : https://github.com/PaulStoffregen/TimerOne
