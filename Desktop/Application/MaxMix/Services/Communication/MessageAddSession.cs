@@ -50,7 +50,7 @@ namespace MaxMix.Services.Communication
             else if(_encodedName.Length < _nameLength)
                 while(_encodedName.Length < _nameLength)
                 {
-                    _encodedName += " ";
+                    _encodedName += "\0";
                 }
         }
         #endregion
