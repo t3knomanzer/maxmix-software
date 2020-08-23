@@ -12,7 +12,7 @@
 //---------------------------------------------------------
 // Reads the data from the serial receive buffer.
 //---------------------------------------------------------
-bool ReceivePackage(uint8_t* buffer, uint8_t* index, uint8_t delimiter, uint8_t bufferSize)
+bool ReceiveData(uint8_t* buffer, uint8_t* index, uint8_t delimiter, uint8_t bufferSize)
 {
   while(Serial.available() > 0)
   {

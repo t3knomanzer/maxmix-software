@@ -59,6 +59,7 @@ struct Settings
 // Serial Communication
 uint8_t receiveIndex = 0;
 uint8_t sendIndex = 0;
+uint8_t packageRevision = 0;
 uint8_t receiveBuffer[RECEIVE_BUFFER_SIZE];
 uint8_t decodeBuffer[RECEIVE_BUFFER_SIZE];
 uint8_t sendBuffer[SEND_BUFFER_SIZE];
@@ -141,10 +142,14 @@ void loop()
   last = now;
   now = millis();
 
-  if(ReceivePackage(receiveBuffer, &receiveIndex, MSG_PACKET_DELIMITER, RECEIVE_BUFFER_SIZE))
+  if(ReceiveData(receiveBuffer, &receiveIndex, MSG_PACKET_DELIMITER, RECEIVE_BUFFER_SIZE))
   {
     if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
     {
+      // Immediately send ACK
+      uint8_t revision = GetRevisionFromPackage(decodeBuffer);
+      SendAcknowledgment(sendBuffer, encodeBuffer, revision);
+
       if(ProcessPackage())
       {
         UpdateActivityTime();
@@ -224,11 +229,9 @@ bool ProcessPackage()
 {
   uint8_t command = GetCommandFromPackage(decodeBuffer);
   
-  if(command == MSG_COMMAND_HS_REQUEST)
+  if(command == MSG_COMMAND_HANDSHAKE_REQUEST)
   {
     ResetState();
-    SendHandshakeCommand(sendBuffer, encodeBuffer);
-
     return true;
   }
   else if(command == MSG_COMMAND_ADD)
@@ -246,7 +249,9 @@ bool ProcessPackage()
       index = itemCount - 1;
     }
     else
+    {
       UpdateItemCommand(decodeBuffer, items, index);
+    }
 
     // Switch to newly added item.
     if(settings.displayNewSession)

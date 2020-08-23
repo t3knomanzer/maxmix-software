@@ -60,11 +60,11 @@ static const uint16_t ROTARY_ACCELERATION_DIVISOR_MAX = 400;
 static const uint8_t ITEM_MAX_COUNT = 8;
 static const uint8_t ITEM_BUFFER_NAME_SIZE = 36;
 static const uint8_t RECEIVE_BUFFER_SIZE = 128;
-static const uint8_t SEND_BUFFER_SIZE = 8;
+static const uint8_t SEND_BUFFER_SIZE = 9;
 
 // These values match exactly the ones in the C# application.
-static const uint8_t MSG_COMMAND_HS_REQUEST =  0;
-static const uint8_t MSG_COMMAND_HS_RESPONSE =  1;
+static const uint8_t MSG_COMMAND_HANDSHAKE_REQUEST =  0;
+static const uint8_t MSG_COMMAND_ACKNOWLEDGMENT =  1;
 static const uint8_t MSG_COMMAND_ADD =  2;
 static const uint8_t MSG_COMMAND_REMOVE =  3;
 static const uint8_t MSG_COMMAND_UPDATE_VOLUME =  4;

@@ -6,19 +6,20 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication
 {
-    internal class MessageHandShakeResponse : IMessage
+    internal class MessageAcknowledgment : IMessage
     {
         #region Constructor
-        public MessageHandShakeResponse() { }
-        #endregion
-
-        #region Consts
+        public MessageAcknowledgment(byte revision) {
+            _revision = revision;
+        }
         #endregion
 
         #region Fields
+        private byte _revision;
         #endregion
 
         #region Properties
+        public byte Revision { get => _revision; }
         #endregion
 
         #region Public Methods

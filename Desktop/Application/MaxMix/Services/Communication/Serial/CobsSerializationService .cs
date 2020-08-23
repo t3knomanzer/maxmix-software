@@ -143,12 +143,14 @@ namespace MaxMix.Services.Communication
         /// </summary>
         /// <param name="message">The message to encode.</param>
         /// <returns>The message encoded as a byte array.</returns>
-        public byte[] Serialize(IMessage message)
+        public byte[] Serialize(IMessage message, byte revision)
         {
             if (!_registeredTypes.ContainsValue(message.GetType()))
                 throw new ArgumentException("Message type not registered");
 
             var packet = new List<byte>();
+
+            packet.Add(revision);
 
             var command = (byte)_registeredTypes.First(o => o.Value == message.GetType()).Key;
             packet.Add(command);
@@ -193,17 +195,27 @@ namespace MaxMix.Services.Communication
             if (decoded.Count != length)
                 throw new ArgumentException("Message length missmatch.");
 
+            // Extract message version
+            byte revision = decoded[0];
+
             // Extract message index
-            byte command = decoded.First();
+            byte command = decoded[1];
             if (!_registeredTypes.ContainsKey(command))
                 throw new ArgumentException("Message type not registered.");
 
             // Extract payload (everything except first and last bytes)
-            byte[] payload = decoded.Skip(1).Take(length - 2).ToArray();
+            byte[] payload = decoded.Skip(2).Take(length - 3).ToArray();
 
             // Deserialize payload with message type instance
             Type type = _registeredTypes[command];
-            IMessage message = Activator.CreateInstance(type) as IMessage;
+            IMessage message;
+            if (type == typeof(MessageAcknowledgment))
+            {
+                message = Activator.CreateInstance(type, revision) as MessageAcknowledgment;
+            }
+            else {
+                message = Activator.CreateInstance(type) as IMessage;
+            }
 
             if (!message.SetBytes(payload))
                 throw new ArgumentException("Incorrect payload for message type.");
