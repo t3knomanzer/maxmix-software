@@ -97,13 +97,7 @@ namespace MaxMix.Services.Communication
 
                     Send(serialPort);
                 }
-                catch
-                {
-                    if(serialPort != null && serialPort.IsOpen)
-                        serialPort.Close();
-
-                    continue;
-                }
+                catch { continue; }
 
                 try
                 {
