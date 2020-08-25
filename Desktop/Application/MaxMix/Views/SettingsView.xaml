@@ -19,6 +19,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- DisplayNewSession -->
@@ -58,5 +59,13 @@
                             Foreground="{StaticResource Brush_White}"
                             Minimum="1" Maximum="100"
                             Value="{Binding AccelerationPercentage}" />
+
+        <!-- Double Tap Time -->
+        <Label Grid.Column="0" Grid.Row="6"
+               Content="Double Tap Time (ms)" />
+        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="6"
+                            Foreground="{StaticResource Brush_White}"
+                            Minimum="1" Maximum="2000"
+                            Value="{Binding DoubleTapTime}" />
     </Grid>
 </UserControl>

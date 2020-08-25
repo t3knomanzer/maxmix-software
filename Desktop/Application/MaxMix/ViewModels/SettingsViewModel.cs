@@ -115,6 +115,19 @@ namespace MaxMix.ViewModels
                 RaisePropertyChanged();
             }
         }
+
+        /// <summary>
+        /// Value used to detect a double click from the encoder switch.
+        /// </summary>
+        public ushort DoubleTapTime
+        {
+            get => _settings.DoubleTapTime;
+            set
+            {
+                _settings.DoubleTapTime = value;
+                RaisePropertyChanged();
+            }
+        }
         #endregion
 
         #region Commands
