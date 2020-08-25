@@ -384,9 +384,6 @@ bool ProcessEncoderRotation()
   uint32_t deltaTime = now - encoderLastTransition;
   encoderLastTransition = now;
 
-  if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
-    return true;
-
   if(mode == MODE_MASTER)
   {
     items[0].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[0].volume);
@@ -438,12 +435,6 @@ bool ProcessEncoderButton()
 {
   if(encoderButton.tapped())
   {
-    if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
-    {
-      TimerDisplayReset();
-      return true;
-    }
-    
     if(mode == MODE_APPLICATION)
     {
       CycleApplicationState();
@@ -454,15 +445,15 @@ bool ProcessEncoderButton()
       CycleGameState();
       TimerDisplayReset();
     }
+    else if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
+    {
+      TimerDisplayReset();
+    }
 
     return true;
   }
-  
-  if(encoderButton.doubleTapped())
+  else if(encoderButton.doubleTapped())
   {
-    if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
-      return true;
-
     if(mode == MODE_MASTER)
       ToggleMute(itemIndexMaster);
 
@@ -474,12 +465,8 @@ bool ProcessEncoderButton()
 
     return true;
   }
-
-  if(encoderButton.held())
+  else if(encoderButton.held())
   {
-    if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
-      return true;
-      
     CycleMode();
     TimerDisplayReset();
 
