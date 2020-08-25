@@ -20,7 +20,7 @@
     <Setting Name="AccelerationPercentage" Type="System.UInt32" Scope="User">
       <Value Profile="(Default)">60</Value>
     </Setting>
-    <Setting Name="DoubleTapTime" Type="System.UInt32" Scope="User">
+    <Setting Name="DoubleTapTime" Type="System.UInt16" Scope="User">
       <Value Profile="(Default)">150</Value>
     </Setting>
   </Settings>
