@@ -88,6 +88,11 @@ void UpdateSettingsCommand(uint8_t* packageBuffer, Settings* settings)
   settings->sleepAfterSeconds = packageBuffer[4];
   settings->continuousScroll = packageBuffer[5];
   settings->accelerationPercentage = packageBuffer[6];
+
+  uint16_t dblTapTime = ((uint32_t)packageBuffer[7]) |
+                        ((uint32_t)packageBuffer[8] << 8);
+
+  encoderButton.doubleTapTime(dblTapTime);
 }
 
 //---------------------------------------------------------
