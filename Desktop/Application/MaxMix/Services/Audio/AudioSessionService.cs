@@ -109,13 +109,11 @@ namespace MaxMix.Services.Audio
         {
             using (var enumerator = new MMDeviceEnumerator())
             {
-                var device = new AudioDevice(enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia), _visibleSystemSounds);
-                
-                _devices.TryGetValue(device.ID, out var tmp);
-                if (tmp != null)
+                var device = new AudioDevice(enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia), _visibleSystemSounds);                   
+                if(_devices.ContainsKey(device.ID))
                 {
-                    _devices.Remove(tmp.ID);
-                    tmp.Dispose();
+                    _devices[device.ID].Dispose();
+                    _devices.Remove(device.ID);
                 }
 
                 _devices.Add(device.ID, device);

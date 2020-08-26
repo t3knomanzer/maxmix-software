@@ -153,13 +153,8 @@ namespace MaxMix.Services.Audio
             _events.SimpleVolumeChanged -= OnVolumeChanged;
 
             _session?.UnregisterAudioSessionNotification(_events);
-            _session?.Dispose();
             _session = null;
-
-            _session2?.Dispose();
             _session2 = null;
-
-            // Disposing of SimpleAudioVolume causes it to freeze.
             _simpleAudio = null;
         }
         #endregion

@@ -252,14 +252,9 @@ namespace MaxMix.Services.Audio
             _sessionManager.SessionCreated -= OnSessionCreated;
 
             _endpointVolume?.UnregisterControlChangeNotify(_callback);
-            _endpointVolume?.Dispose();
             _endpointVolume = null;
             _callback = null;
-
-            _sessionManager?.Dispose();
             _sessionManager = null;
-
-            _device?.Dispose();
             _device = null;
         }
         #endregion
