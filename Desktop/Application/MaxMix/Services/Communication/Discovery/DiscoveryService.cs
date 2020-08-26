@@ -81,11 +81,13 @@ namespace MaxMix.Services.Communication
 
         private string Discover()
         {
-            var portNames = SerialPort.GetPortNames();
-            
+            string[] portNames;
             var result = string.Empty;
-            SerialPort serialPort = null;
 
+            try { portNames = SerialPort.GetPortNames(); }
+            catch { return result; }
+            
+            SerialPort serialPort = null;
             foreach (var portName in portNames)
             {
                 try
