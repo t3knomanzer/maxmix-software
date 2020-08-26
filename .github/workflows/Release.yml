@@ -19,18 +19,18 @@ jobs:
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       shell: bash
 
-    - name: Update AUTHORS
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+    # - name: Update AUTHORS
+    #   run: |
+    #     git config --local user.email "action@github.com"
+    #     git config --local user.name "GitHub Action"
         
-        git shortlog -se -n --all --no-merges > AUTHORS
+    #     git shortlog -se -n --all --no-merges > AUTHORS
         
-        git add AUTHORS
-        git commit -m "Updating authors"
-        git push origin HEAD:master
-        exit 0
-      shell: bash
+    #     git add AUTHORS
+    #     git commit -m "Updating authors"
+    #     git push origin HEAD:master
+    #     exit 0
+    #   shell: bash
 
     - name: Setup NuGet.exe
       uses: NuGet/setup-nuget@v1.0.2
