@@ -104,12 +104,11 @@ namespace MaxMix.Services.Communication
                     if (Receive(serialPort))
                     {
                         result = portName;
+                        serialPort.Close();
                         break;
                     }
                 }
                 catch { continue; }
-                finally { serialPort.Close(); }
-
             }
 
             return result;
