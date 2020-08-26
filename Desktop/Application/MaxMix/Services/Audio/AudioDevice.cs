@@ -161,7 +161,7 @@ namespace MaxMix.Services.Audio
             {
                 foreach (var session in sessionEnumerator)
                 {
-                   if(ValidateSession(session))
+                   if(session != null && ValidateSession(session))
                         RegisterSession(new AudioSession(session));
                 }
             }
