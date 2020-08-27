@@ -56,8 +56,13 @@ namespace MaxMix.Services.Audio
         /// </summary>
         public void Stop()
         {
-            foreach (var session in _devices.Values)
-                session.Dispose();
+            foreach (AudioDevice device in _devices.Values)
+            {
+                device.SessionCreated -= OnSessionCreated;
+                device.SessionEnded -= OnSessionRemoved;
+                device.VolumeChanged -= OnSessionVolumeChanged;
+                device.Dispose();
+            }
 
             _devices.Clear();
         }
@@ -110,11 +115,11 @@ namespace MaxMix.Services.Audio
             using (var enumerator = new MMDeviceEnumerator())
             {
                 var device = new AudioDevice(enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia), _visibleSystemSounds);                   
+
+                // TODO: We are getting crashes sometimes caused by the key already existing. This should never happen since Stop should always be called
+                // before Start but for some reason it is happening.
                 if(_devices.ContainsKey(device.ID))
-                {
-                    _devices[device.ID].Dispose();
-                    _devices.Remove(device.ID);
-                }
+                    Stop();
 
                 _devices.Add(device.ID, device);
                 OnSessionCreated(device);
