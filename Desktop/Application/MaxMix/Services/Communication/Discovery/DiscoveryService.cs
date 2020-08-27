@@ -82,10 +82,9 @@ namespace MaxMix.Services.Communication
         private string Discover()
         {
             string[] portNames;
-            var result = string.Empty;
 
             try { portNames = SerialPort.GetPortNames(); }
-            catch { return result; }
+            catch { return string.Empty; }
             
             SerialPort serialPort = null;
             foreach (var portName in portNames)
@@ -98,22 +97,19 @@ namespace MaxMix.Services.Communication
                     serialPort.Open();
 
                     Send(serialPort);
-                }
-                catch { continue; }
 
-                try
-                {
                     if (Receive(serialPort))
                     {
-                        result = portName;
                         serialPort.Close();
-                        break;
+                        return portName;
                     }
+
+                    serialPort.Close();
                 }
-                catch { continue; }
+                catch { }
             }
 
-            return result;
+            return string.Empty;
         }
 
         private void Send(SerialPort serialPort)
