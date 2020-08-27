@@ -441,10 +441,8 @@ bool ProcessEncoderButton()
     if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
     {
       TimerDisplayReset();
-      return true;
     }
-    
-    if(mode == MODE_APPLICATION)
+    else if(mode == MODE_APPLICATION)
     {
       CycleApplicationState();
       TimerDisplayReset();
@@ -457,12 +455,8 @@ bool ProcessEncoderButton()
 
     return true;
   }
-  
-  if(encoderButton.doubleTapped())
+  else if(encoderButton.doubleTapped())
   {
-    if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
-      return true;
-
     if(mode == MODE_MASTER)
       ToggleMute(itemIndexMaster);
 
@@ -474,12 +468,11 @@ bool ProcessEncoderButton()
 
     return true;
   }
-
-  if(encoderButton.held())
+  else if(encoderButton.held())
   {
     if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
       return true;
-      
+
     CycleMode();
     TimerDisplayReset();
 
