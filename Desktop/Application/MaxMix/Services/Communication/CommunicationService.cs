@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
+
 namespace MaxMix.Services.Communication
 {
     /// <summary>
@@ -41,14 +42,16 @@ namespace MaxMix.Services.Communication
         private SerialPort _serialPort;
         private volatile int _discoveryDelay;
 
-        private Thread _thread;
         private SynchronizationContext _synchronizationContext;
+        private Thread _thread;
+        private readonly object _lock = new object();
 
-        private DateTime _messageLastSent;
-        private DateTime _portLastCheck;
         private byte _messageRevision;
         private bool _waitingAck;
-        private readonly object _lock = new object();
+
+        private Stopwatch _watch;
+        private TimeSpan _messageLastSent;
+        private TimeSpan _portLastCheck;
 
         #endregion
 
@@ -85,6 +88,9 @@ namespace MaxMix.Services.Communication
             _waitingAck = false;
             _discoveryDelay = _initialDiscoveryDelay;
 
+            _watch = new Stopwatch();
+            _watch.Start();
+
             _thread = new Thread(() => runThread());
             _thread.Start();
         }
@@ -97,6 +103,8 @@ namespace MaxMix.Services.Communication
             Debug.WriteLine("CommunicationService Stopping");
 
             Disconnect();
+
+            _watch.Stop();
         }
 
         /// <summary>
@@ -116,13 +124,12 @@ namespace MaxMix.Services.Communication
 
                         Debug.WriteLine("Sent message. Type:" + message.GetType() + " Revision: " + _messageRevision);
 
-                        _messageLastSent = DateTime.Now;
+                        _messageLastSent = _watch.Elapsed;
                         _waitingAck = true;
-
 
                         while (_waitingAck)
                         {
-                            if ((DateTime.Now - _messageLastSent).TotalMilliseconds > _ackTimeout)
+                            if ((_watch.Elapsed - _messageLastSent).TotalMilliseconds > _ackTimeout)
                             {
                                 // The device did not answer in a timely manner.
                                 if (_portName != String.Empty)
@@ -192,7 +199,7 @@ namespace MaxMix.Services.Communication
                                     {
                                         Debug.WriteLine("MaxMix Device identified on port: " + portName);
                                         _portName = portName;
-                                        _portLastCheck = DateTime.Now;
+                                        _portLastCheck = _watch.Elapsed;
                                         RaiseDeviceDiscovered(portName);
                                     }
                                     else
@@ -215,13 +222,14 @@ namespace MaxMix.Services.Communication
                     else
                     {
                         // ----------------------------------------------
-                        // Check if the port is still open
-                        if ((DateTime.Now - _portLastCheck).TotalMilliseconds > _checkPortInterval)
+                        // Check that the port is still open
+                        TimeSpan now = _watch.Elapsed;
+                        if ((now - _portLastCheck).TotalMilliseconds > _checkPortInterval)
                         {
-                            _portLastCheck = DateTime.Now;
+                            _portLastCheck = now;
                             if (!_serialPort.IsOpen)
                             {
-                                RaiseError("COM port is no longer open.");
+                                RaiseError("com port is no longer open.");
                             }
                         }
 
@@ -290,6 +298,7 @@ namespace MaxMix.Services.Communication
                 }
             }
         }
+
         #endregion
 
         #region EventHandlers
