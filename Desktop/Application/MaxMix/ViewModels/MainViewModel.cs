@@ -42,6 +42,7 @@ namespace MaxMix.ViewModels
             _audioSessionService = new AudioSessionService(_settingsViewModel.SystemSounds);
             _audioSessionService.SessionCreated += OnAudioSessionCreated;
             _audioSessionService.SessionRemoved += OnAudioSessionRemoved;
+            _audioSessionService.SessionVolumeChanged += OnAudioSessionVolumeChanged;
 
             _communicationService = new CommunicationService(_serializationService);
             _communicationService.MessageReceived += OnMessageReceived;
