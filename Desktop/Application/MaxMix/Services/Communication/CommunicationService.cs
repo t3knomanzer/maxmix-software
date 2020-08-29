@@ -30,8 +30,7 @@ namespace MaxMix.Services.Communication
         private const int _timeout = 1000;
         private const int _checkPortInterval = 1000;
         private const int _ackTimeout = 500;
-        private const int _initialDiscoveryDelay = 200;
-        private const int _maxDiscoveryDelay = 2000;
+        private const int _discoveryDelay = 200;
         #endregion
 
         #region Fields
@@ -40,7 +39,6 @@ namespace MaxMix.Services.Communication
 
         private string _portName;
         private SerialPort _serialPort;
-        private volatile int _discoveryDelay;
 
         private SynchronizationContext _synchronizationContext;
         private Thread _thread;
@@ -86,7 +84,6 @@ namespace MaxMix.Services.Communication
             _portName = String.Empty;
             _messageRevision = 0;
             _waitingAck = false;
-            _discoveryDelay = _initialDiscoveryDelay;
 
             _watch = new Stopwatch();
             _watch.Start();
@@ -145,6 +142,9 @@ namespace MaxMix.Services.Communication
                                 _messageRevision++;
                                 return false;
                             }
+
+                            // Don't hog the CPU while waiting for ACK.
+                            Thread.Sleep(5);
                         }
 
                         _messageRevision++;
@@ -180,11 +180,11 @@ namespace MaxMix.Services.Communication
                         try { portNames = SerialPort.GetPortNames(); }
                         catch { }
 
-                        Debug.WriteLine("Discovery of COM ports with a delay of " + _discoveryDelay + "ms");
                         foreach (var portName in portNames)
                         {
                             try
                             {
+                                Debug.WriteLine("Probing port: " + portName);
                                 _serialPort = new SerialPort(portName, _baudRate);
                                 _serialPort.ReadTimeout = _timeout;
                                 _serialPort.WriteTimeout = _timeout;
@@ -207,17 +207,13 @@ namespace MaxMix.Services.Communication
                                         _serialPort.Close();
                                         _serialPort.Dispose();
                                         _serialPort = null;
+                                        Thread.Sleep(_discoveryDelay);
                                     }
                                 }
                             }
                             catch { }
-                            finally
-                            {
-                                Thread.Sleep(_discoveryDelay);
-                            }
                         }
 
-                        _discoveryDelay = Math.Min(_discoveryDelay + 20, _maxDiscoveryDelay);
                     }
                     else
                     {
@@ -236,7 +232,7 @@ namespace MaxMix.Services.Communication
                     }
 
                     // Need to sleep a bit so we don't hog the CPU.
-                    Thread.Sleep(1);
+                    Thread.Sleep(5);
                 }
             }
         }
@@ -250,7 +246,7 @@ namespace MaxMix.Services.Communication
                 _serialPort.Dispose();
                 _serialPort = null;
                 _portName = String.Empty;
-                _discoveryDelay = _initialDiscoveryDelay;
+                _messageRevision = 0;
             }
             catch { }
         }
