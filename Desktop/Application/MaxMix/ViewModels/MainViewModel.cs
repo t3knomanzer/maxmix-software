@@ -42,14 +42,11 @@ namespace MaxMix.ViewModels
             _audioSessionService = new AudioSessionService(_settingsViewModel.SystemSounds);
             _audioSessionService.SessionCreated += OnAudioSessionCreated;
             _audioSessionService.SessionRemoved += OnAudioSessionRemoved;
-            _audioSessionService.SessionVolumeChanged += OnAudioSessionVolumeChanged;
-            
-            _discoveryService = new DiscoveryService(_serializationService);
-            _discoveryService.DeviceDiscovered += OnDeviceDiscovered;
 
             _communicationService = new CommunicationService(_serializationService);
             _communicationService.MessageReceived += OnMessageReceived;
             _communicationService.Error += OnCommunicationError;
+            _communicationService.DeviceDiscovered += OnDeviceDiscovered;
         }
         #endregion
 
@@ -60,14 +57,11 @@ namespace MaxMix.ViewModels
         public event EventHandler ExitRequested;
         #endregion
 
-        #region Consts
-        private const int _baudRate = 115200;
-        #endregion
+
          
         #region Fields
         private ISerializationService _serializationService;
         private IAudioSessionService _audioSessionService;
-        private IDiscoveryService _discoveryService;
         private ICommunicationService _communicationService;
         private bool _isActive;
         private bool _isConnected;
@@ -151,14 +145,12 @@ namespace MaxMix.ViewModels
 
         public override void Start()
         {
-            _discoveryService.Start(_baudRate);
+            _communicationService.Start();
             _settingsViewModel.Start();
         }
 
         public override void Stop()
         {
-            _audioSessionService.Stop();
-            _discoveryService.Stop();
             _communicationService.Stop();
             _settingsViewModel.Stop();
         }
@@ -207,8 +199,8 @@ namespace MaxMix.ViewModels
         {
             IsConnected = true;
 
-            _communicationService.Start(portName, _baudRate);
             _audioSessionService.Start();
+            
             SendSettings();
         }
 
@@ -230,8 +222,8 @@ namespace MaxMix.ViewModels
         {
             IsConnected = false;
 
-            Stop();
-            Start();
+            _audioSessionService.Stop();
+
         }
         #endregion
     }
