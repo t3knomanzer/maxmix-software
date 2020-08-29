@@ -30,7 +30,7 @@ namespace MaxMix.Services.Communication
         private const int _timeout = 1000;
         private const int _checkPortInterval = 1000;
         private const int _ackTimeout = 500;
-        private const int _discoveryDelay = 200;
+        private const int _discoveryDelay = 250;
         #endregion
 
         #region Fields
@@ -138,6 +138,7 @@ namespace MaxMix.Services.Communication
                                 {
                                     // In discovery mode, simply try again next time.
                                     _waitingAck = false;
+                                    Debug.WriteLine("No handshake received.");
                                 }
                                 _messageRevision++;
                                 return false;
