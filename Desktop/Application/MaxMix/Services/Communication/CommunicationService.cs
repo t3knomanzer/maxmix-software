@@ -41,7 +41,7 @@ namespace MaxMix.Services.Communication
         private SerialPort _serialPort;
 
         private SynchronizationContext _synchronizationContext;
-        private Thread _thread;
+        private Thread _reconnectionThread;
         private readonly object _lock = new object();
 
         private byte _messageRevision;
@@ -88,8 +88,8 @@ namespace MaxMix.Services.Communication
             _watch = new Stopwatch();
             _watch.Start();
 
-            _thread = new Thread(() => runThread());
-            _thread.Start();
+            _reconnectionThread = new Thread(() => handleReconnection());
+            _reconnectionThread.Start();
         }
 
         /// <summary>
@@ -99,9 +99,10 @@ namespace MaxMix.Services.Communication
         {
             Debug.WriteLine("CommunicationService Stopping");
 
-            Disconnect();
-
+            _reconnectionThread.Abort();
             _watch.Stop();
+
+            Disconnect();
         }
 
         /// <summary>
@@ -167,7 +168,7 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Private Methods
-        private void runThread()
+        private void handleReconnection()
         {
             while (true)
             {
@@ -242,12 +243,15 @@ namespace MaxMix.Services.Communication
         {
             try
             {
-                _serialPort.DataReceived -= OnDataReceived;
-                _serialPort.Close();
-                _serialPort.Dispose();
-                _serialPort = null;
-                _portName = String.Empty;
-                _messageRevision = 0;
+                if (_serialPort != null)
+                {
+                    _serialPort.DataReceived -= OnDataReceived;
+                    _serialPort.Close();
+                    _serialPort.Dispose();
+                    _serialPort = null;
+                    _portName = String.Empty;
+                    _messageRevision = 0;
+                }
             }
             catch { }
         }
