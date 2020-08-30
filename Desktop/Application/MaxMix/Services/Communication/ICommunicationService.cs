@@ -6,9 +6,10 @@ namespace MaxMix.Services.Communication
     {
         event EventHandler<IMessage> MessageReceived;
         event EventHandler<string> Error;
+        event EventHandler<string> DeviceDiscovered;
 
-        void Start(string portName, int baudRate);
+        void Start();
         void Stop();
-        void Send(IMessage payload);
+        bool Send(IMessage message);
     }
 }
