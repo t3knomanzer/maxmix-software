@@ -1,6 +1,7 @@
-Desktop/Application/MaxMix/bin
-Desktop/Application/MaxMix/obj
-Desktop/Application/packages
+.vs
+Desktop/**/bin
+Desktop/**/obj
+Desktop/**/packages
 Embedded/MaxMix/build
 BuildSystem/build
 BuildSystem/release
