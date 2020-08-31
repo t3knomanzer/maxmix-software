@@ -1,10 +1,17 @@
 # IDE
+.vs
 .vs/
+Desktop/**/bin
 .vscode/
+Desktop/**/obj
 
+Desktop/**/packages
 # Build
+Embedded/MaxMix/build
 bin/
+BuildSystem/build
 obj/
+BuildSystem/release
 packages/
 
 # Advanced Installer
@@ -15,3 +22,7 @@ Desktop/Installer/*.back.aip
 
 # Excludes
 !Desktop/Resources/bin/
+
+# Build System
+BuildSystem/build
+BuildSystem/release

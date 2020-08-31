@@ -19,18 +19,16 @@ jobs:
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       shell: bash
 
-    # - name: Update AUTHORS
-    #   run: |
-    #     git config --local user.email "action@github.com"
-    #     git config --local user.name "GitHub Action"
-        
-    #     git shortlog -se -n --all --no-merges > AUTHORS
-        
-    #     git add AUTHORS
-    #     git commit -m "Updating authors"
-    #     git push origin HEAD:${{ steps.get_branch.outputs.BRANCH }}
-    #     exit 0
-    #   shell: bash
+    - name: Setup Arduino CLI
+      run: choco install arduino-cli --version=0.12.1 -y    
+    - name: Install Arduino core
+      run: arduino-cli core install arduino:avr
+
+    - name: Build Firmware - Full step
+      run: arduino-cli.exe compile -b arduino:avr:nano:cpu=atmega328 -v --build-path ${{ github.workspace }}\Embedded\Builds\FullStep\ ${{ github.workspace }}\Embedded\MaxMix\MaxMix.ino
+
+    - name: Build Firmware - Half step
+      run: arduino-cli.exe compile -b arduino:avr:nano:cpu=atmega328 -v --build-path ${{ github.workspace }}\Embedded\Builds\HalfStep\ --build-properties build.extra_flags=-DHALF_STEP ${{ github.workspace }}\Embedded\MaxMix\MaxMix.ino
 
     - name: Setup NuGet.exe
       uses: NuGet/setup-nuget@v1.0.2
@@ -79,8 +77,8 @@ jobs:
         draft: false
         prerelease: true
 
-    - name: Upload Release Assets
-      id: upload-release-assets 
+    - name: Upload Release Assets - Installer
+      id: upload-release-assets-installer
       uses: actions/upload-release-asset@v1.0.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -90,4 +88,24 @@ jobs:
         asset_name: Maxmix.${{ steps.get_version.outputs.VERSION }}.msi
         asset_content_type: application/zip
 
-    
+    - name: Upload Release Assets - Firmware (FullStep)
+      id: upload-release-assets-firmware-fullstep
+      uses: actions/upload-release-asset@v1.0.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: Embedded\Builds\FullStep\MaxMix.ino.hex
+        asset_name: Maxmix.${{ steps.get_version.outputs.VERSION }}.hex
+        asset_content_type: application/zip
+
+    - name: Upload Release Assets - Firmware (HalfStep)
+      id: upload-release-assets-firmware-halfstep
+      uses: actions/upload-release-asset@v1.0.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: Embedded\Builds\HalfStep\MaxMix.ino.hex
+        asset_name: Maxmix.${{ steps.get_version.outputs.VERSION }}_Half-step.hex
+        asset_content_type: application/zip
