@@ -255,10 +255,12 @@ namespace MaxMix.Services.Communication
             }
             catch { }
         }
+        #endregion
 
-        private void Receive()
+        #region EventHandlers
+        private void OnDataReceived(object sender, SerialDataReceivedEventArgs args)
         {
-            while (_serialPort.BytesToRead > 0)
+            while ((_serialPort != null) && (_serialPort.BytesToRead > 0))
             {
                 byte received = (byte)_serialPort.ReadByte();
                 _buffer.Add(received);
@@ -298,14 +300,6 @@ namespace MaxMix.Services.Communication
                     _buffer.Clear();
                 }
             }
-        }
-
-        #endregion
-
-        #region EventHandlers
-        private void OnDataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            Receive();
         }
         #endregion
 
