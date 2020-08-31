@@ -211,7 +211,7 @@ namespace MaxMix.Services.Communication
             Type type = _registeredTypes[command];
             if (type == null)
             {
-                // Message if from a non existing type, simply discard it.
+                // Message from an unregistered type, simply ignore it.
                 return null;
             }
             else if (type == typeof(MessageAcknowledgment))
