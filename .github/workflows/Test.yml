@@ -12,9 +12,22 @@ jobs:
   build:
     runs-on: windows-latest
 
+    defaults:
+      run:
+        shell: cmd
+
     steps:
     - name: Checkout Repo
       uses: actions/checkout@v2
+
+    - name: Setup Arduino CLI
+      run: choco install arduino-cli --version=0.12.1 -y    
+    - name: Install Arduino core
+      run: arduino-cli core install arduino:avr
+
+    - name: Build Firmware
+      run: arduino-cli.exe compile -b arduino:avr:nano:cpu=atmega328 -v --build-path ${{ github.workspace }}\Build\Firmware\ ${{ github.workspace }}\Embedded\MaxMix\MaxMix.ino
+
     - name: Setup NuGet.exe
       uses: NuGet/setup-nuget@v1.0.2
     - name: Setup MSBuild.exe
