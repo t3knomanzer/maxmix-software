@@ -1,17 +1,6 @@
-# IDE
-.vs/
-.vscode/
-
-# Build
-bin/
-obj/
-packages/
-
-# Advanced Installer
-Desktop/Installer/*-cache/
-Desktop/Installer/Setup Files/
-Desktop/Installer/Builds/
-Desktop/Installer/*.back.aip
-
-# Excludes
-!Desktop/Resources/bin/
+Desktop/Application/MaxMix/bin
+Desktop/Application/MaxMix/obj
+Desktop/Application/packages
+Embedded/MaxMix/build
+BuildSystem/build
+BuildSystem/release
