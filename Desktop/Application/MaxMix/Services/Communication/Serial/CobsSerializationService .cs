@@ -207,9 +207,14 @@ namespace MaxMix.Services.Communication
             byte[] payload = decoded.Skip(2).Take(length - 3).ToArray();
 
             // Deserialize payload with message type instance
-            Type type = _registeredTypes[command];
             IMessage message;
-            if (type == typeof(MessageAcknowledgment))
+            Type type = _registeredTypes[command];
+            if (type == null)
+            {
+                // Message if from a non existing type, simply discard it.
+                return null;
+            }
+            else if (type == typeof(MessageAcknowledgment))
             {
                 message = Activator.CreateInstance(type, revision) as MessageAcknowledgment;
             }
