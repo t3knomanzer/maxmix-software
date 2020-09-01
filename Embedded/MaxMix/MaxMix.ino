@@ -607,8 +607,8 @@ bool ProcessDisplayScroll()
       result = strlen(sessions[itemIndexGameB].name) > DISPLAY_CHAR_MAX_X2;
     else if(stateGame == STATE_GAME_EDIT)
     {
-      result = strlen(sessions[itemIndexGameA].name) > DISPLAY_CHAR_MAX_X1 ||
-               strlen(sessions[itemIndexGameB].name) > DISPLAY_CHAR_MAX_X1;
+      result = strlen(sessions[itemIndexGameA].name) > DISPLAY_GAME_EDIT_CHAR_MAX ||
+               strlen(sessions[itemIndexGameB].name) > DISPLAY_GAME_EDIT_CHAR_MAX;
     }
   }
 
