@@ -83,15 +83,16 @@ void UpdateItemVolumeCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t 
 //---------------------------------------------------------
 void UpdateSettingsCommand(uint8_t* packageBuffer, Settings* settings) 
 {
-  // settings->displayNewSession = packageBuffer[2];
-  // settings->sleepWhenInactive = packageBuffer[3];
-  // settings->sleepAfterSeconds = packageBuffer[4];
-  // settings->continuousScroll = packageBuffer[5];
-  // settings->accelerationPercentage = packageBuffer[6];
+  settings->displayNewItem = packageBuffer[2];
+  settings->sleepWhenInactive = packageBuffer[3];
+  settings->sleepAfterSeconds = packageBuffer[4];
+  settings->continuousScroll = packageBuffer[5];
+  settings->accelerationPercentage = packageBuffer[6];
 
-  // uint16_t dblTapTime = ((uint16_t)packageBuffer[7]) |
-  //                       ((uint16_t)packageBuffer[8] << 8);
-  // encoderButton.doubleTapTime(dblTapTime);
+  uint16_t dblTapTime = ((uint16_t)packageBuffer[7]) |
+                        ((uint16_t)packageBuffer[8] << 8);
+
+  encoderButton.doubleTapTime(dblTapTime);
 }
 
 //---------------------------------------------------------
@@ -120,18 +121,15 @@ uint32_t GetIdFromPackage(uint8_t* packageBuffer)
 
 bool GetIsDeviceFromAddPackage(uint8_t* packageBuffer)
 {
-  // TODO: Get correct byte.
-    return packageBuffer[1];
+    return packageBuffer[44] > 0;
 }
 
 bool GetIsDeviceFromRemovePackage(uint8_t* packageBuffer)
 {
-  // TODO: Get correct byte.
-    return packageBuffer[1];
+    return packageBuffer[6] > 0;
 }
 
 bool GetIsDeviceFromUpdatePackage(uint8_t* packageBuffer)
 {
-  // TODO: Get correct byte.
-    return packageBuffer[1];
+    return packageBuffer[8] > 0;
 }

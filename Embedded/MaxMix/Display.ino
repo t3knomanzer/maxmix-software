@@ -84,7 +84,7 @@ void DisplayMasterSelectScreen(Adafruit_SSD1306* display, char* name, uint8_t vo
 
   DrawDotGroup(display, modeIndex, modeCount);
   DrawSelectionArrows(display, leftArrow, rightArrow);
-  DrawItemName(display, "VOL", 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, GetTimerDisplayA, ResetTimerDisplayA, DISPLAY_SCROLL_SPEED_X2);
+  DrawItemName(display, name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, GetTimerDisplayA, ResetTimerDisplayA, DISPLAY_SCROLL_SPEED_X2);
   DrawSelectionVolumeBar(display, volume, isMuted);
 
   display->display();
@@ -95,7 +95,7 @@ void DisplayMasterEditScreen(Adafruit_SSD1306* display, char* name, uint8_t volu
   display->clearDisplay();
 
   DrawDotGroup(display, modeIndex, modeCount);
-  DrawItemName(display, "VOL", 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, GetTimerDisplayA, ResetTimerDisplayA, DISPLAY_SCROLL_SPEED_X2);
+  DrawItemName(display, name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, GetTimerDisplayA, ResetTimerDisplayA, DISPLAY_SCROLL_SPEED_X2);
   DrawSelectionItemVolume(display, volume);
   DrawSelectionVolumeBar(display, volume, isMuted);
 
@@ -408,7 +408,6 @@ void DrawSelectionVolumeBar(Adafruit_SSD1306* display, uint8_t volume, bool isMu
   x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - 1;
 
   display->drawLine(x0, y0, x0, y1, WHITE);
-  
 }
 
 

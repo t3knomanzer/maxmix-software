@@ -223,9 +223,7 @@ namespace MaxMix.ViewModels
         private void OnDeviceDiscovered(object sender, string portName)
         {
             IsConnected = true;
-
-            _audioSessionService.Start();
-            
+            _audioSessionService.Start();            
             SendSettings();
         }
 
@@ -246,9 +244,7 @@ namespace MaxMix.ViewModels
         private void OnCommunicationError(object sender, string e)
         {
             IsConnected = false;
-
             _audioSessionService.Stop();
-
         }
         #endregion
     }

@@ -153,7 +153,6 @@ void loop()
   {
     if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
     {
-      // Immediately send ACK
       uint8_t revision = GetRevisionFromPackage(decodeBuffer);
       SendAcknowledgment(sendBuffer, encodeBuffer, revision);
 
@@ -269,7 +268,6 @@ bool ProcessPackage()
 
         return true;
       }
-
     }
     else
     {
@@ -516,14 +514,19 @@ bool ProcessEncoderButton()
     if(stateDisplay == STATE_DISPLAY_SLEEP)
       return true;
 
+    if(mode == MODE_MASTER)
+    {
+      stateMaster = CycleState(stateMaster, STATE_MASTER_COUNT);
+      TimerDisplayReset();
+    }
     else if(mode == MODE_APPLICATION)
     {
-      CycleState(stateApplication, STATE_APPLICATION_COUNT);
+      stateApplication = CycleState(stateApplication, STATE_APPLICATION_COUNT);
       TimerDisplayReset();
     }
     else if(mode == MODE_GAME)
     {
-      CycleState(stateGame, STATE_GAME_COUNT);
+      stateGame = CycleState(stateGame, STATE_GAME_COUNT);
       TimerDisplayReset();
     }
 

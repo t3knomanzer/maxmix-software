@@ -38,7 +38,7 @@ namespace MaxMix.Services.Communication
         * CHUNK        TYPE        SIZE (BYTES)
         * ---------------------------------------
         * ID           INT32       4
-        * ID           BYTE        1
+        * ISDEVICE     BYTE        1
         * ---------------------------------------
         */
 
