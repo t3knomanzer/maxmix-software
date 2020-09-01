@@ -29,8 +29,7 @@ namespace MaxMix.Services.Communication
         private const int _baudRate = 115200;
         private const int _timeout = 1000;
         private const int _checkPortInterval = 1000;
-        private const int _ackTimeout = 500;
-        private const int _discoveryDelay = 250;
+        private const int _ackTimeout = 1000;
         #endregion
 
         #region Fields
