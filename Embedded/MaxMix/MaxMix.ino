@@ -235,8 +235,7 @@ void ResetState()
 //---------------------------------------------------------
 bool ProcessPackage()
 {
-  uint8_t command = GetCommandFromPackage(decodeBuffer);
-  
+  uint8_t command = GetCommandFromPackage(decodeBuffer);  
   if(command == MSG_COMMAND_HANDSHAKE_REQUEST)
   {
     ResetState();
@@ -245,26 +244,22 @@ bool ProcessPackage()
   else if(command == MSG_COMMAND_ADD)
   {
     uint32_t id = GetIdFromPackage(decodeBuffer);
-    bool isDevice = GetIsDeviceFromAddPackage(decodeBuffer);
-    
-    int8_t index;
+    bool isDevice = GetIsDeviceFromAddPackage(decodeBuffer);    
+
+    int8_t index;  
     if(isDevice)
     {
-      AddItemCommand(decodeBuffer, items, &itemCount);
-      index = itemCount - 1;
-    }
-    else
-    {
-      UpdateItemCommand(decodeBuffer, items, index);
-    }
+      if(deviceCount == DEVICE_MAX_COUNT)
+        return false;
 
-     index = FindItem(id, devices, deviceCount);
-     if(index == -1)
+      index = FindItem(id, devices, deviceCount);
+      if(index == -1)
+      {
         AddItemCommand(decodeBuffer, devices, &deviceCount);
+        index = deviceCount - 1;   
+      }
       else
         UpdateItemCommand(decodeBuffer, devices, index);
-
-      index = deviceCount - 1;      
 
       if(settings.displayNewItem)
       {
@@ -274,6 +269,7 @@ bool ProcessPackage()
 
         return true;
       }
+
     }
     else
     {
@@ -282,11 +278,12 @@ bool ProcessPackage()
 
       index = FindItem(id, sessions, sessionCount);
       if(index == -1)
+      {
         AddItemCommand(decodeBuffer, sessions, &sessionCount);
+        index = sessionCount - 1;
+      }
       else
         UpdateItemCommand(decodeBuffer, sessions, index);
-
-      index = sessionCount - 1;
 
       if(settings.displayNewItem)
       {
@@ -300,15 +297,15 @@ bool ProcessPackage()
   }
   else if(command == MSG_COMMAND_REMOVE)
   {
-    if(sessionCount == 0)  
-      return false;
-
     uint32_t id = GetIdFromPackage(decodeBuffer);
     bool isDevice = GetIsDeviceFromRemovePackage(decodeBuffer);
 
     int8_t index;
     if(isDevice)
     {
+      if(deviceCount == 0)
+        return false;
+
       index = FindItem(id, devices, deviceCount);
       if(index == -1)
         return false;
@@ -326,10 +323,23 @@ bool ProcessPackage()
     }
     else
     {
-      if(mode == MODE_APPLICATION)
-        stateApplication = STATE_APPLICATION_NAVIGATE;
+      if(sessionCount == 0)
+        return false;
+
+      index = FindItem(id, sessions, sessionCount);
+      if(index == -1)
+        return false;
+
+      RemoveItemCommand(decodeBuffer, sessions, &sessionCount, index);
       
-      return true;      
+      bool isItemActive = IsItemActive(index);
+      itemIndexApp = GetNextIndex(itemIndexApp, sessionCount, 0, settings.continuousScroll);
+      if(isItemActive)
+      {
+        if(mode == MODE_APPLICATION)
+          stateApplication = STATE_APPLICATION_NAVIGATE;
+        return true;      
+      }    
     }
   }
   else if(command == MSG_COMMAND_UPDATE_VOLUME)
@@ -344,23 +354,35 @@ bool ProcessPackage()
       if(index == -1)
         return false;
 
-    if(IsItemActive(index))
-    {
-      if(mode == MODE_GAME)
-      {
-        if(index == itemIndexGameA && index != itemIndexGameB)
-          RebalanceGameVolume(items[itemIndexGameA].volume, itemIndexGameB);
-        if(index == itemIndexGameB && index != itemIndexGameA)
-          RebalanceGameVolume(items[itemIndexGameB].volume, itemIndexGameA);
-      }
-      return true;
+      UpdateItemVolumeCommand(decodeBuffer, sessions, index);
+
+      if(IsItemActive(index))
+        return true;
+
+      return false;
     }
+    else
+    {
+      index = FindItem(id, devices, deviceCount);
+      if(index == -1)
+        return false;
+
+      if(IsItemActive(index))
+      {
+        if(mode == MODE_GAME)
+        {
+          if(index == itemIndexGameA && index != itemIndexGameB)
+            RebalanceGameVolume(sessions[itemIndexGameA].volume, itemIndexGameB);
+
+          if(index == itemIndexGameB && index != itemIndexGameA)
+            RebalanceGameVolume(sessions[itemIndexGameB].volume, itemIndexGameA);
+        }
+        return true;
+      }
 
       UpdateItemVolumeCommand(decodeBuffer, sessions, index);
-    }
-
-    if(IsItemActive(index))
-      return true; 
+      return false;
+    }    
   }
   else if(command == MSG_COMMAND_SETTINGS)
   {
@@ -450,7 +472,7 @@ bool ProcessEncoderRotation()
   {
     if(stateApplication == STATE_APPLICATION_NAVIGATE)
     {
-      itemIndexApp = GetNextIndex(itemIndexApp, itemCount, encoderDelta, settings.continuousScroll);
+      itemIndexApp = GetNextIndex(itemIndexApp, sessionCount, encoderDelta, settings.continuousScroll);
       TimerDisplayReset();
     }
     else if(stateApplication == STATE_APPLICATION_EDIT)
@@ -463,22 +485,22 @@ bool ProcessEncoderRotation()
   {
     if(stateGame == STATE_GAME_SELECT_A)
     {
-      itemIndexGameA = GetNextIndex(itemIndexGameA, itemCount, encoderDelta, settings.continuousScroll);
+      itemIndexGameA = GetNextIndex(itemIndexGameA, sessionCount, encoderDelta, settings.continuousScroll);
       TimerDisplayReset();
     }
     else if(stateGame == STATE_GAME_SELECT_B)
     {
-      itemIndexGameB = GetNextIndex(itemIndexGameB, itemCount, encoderDelta, settings.continuousScroll);
+      itemIndexGameB = GetNextIndex(itemIndexGameB, sessionCount, encoderDelta, settings.continuousScroll);
       TimerDisplayReset();
     }
 
     else if(stateGame == STATE_GAME_EDIT)
     {
-      items[itemIndexGameA].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, items[itemIndexGameA].volume);
-      SendItemVolumeCommand(&items[itemIndexGameA], sendBuffer, encodeBuffer);
+      sessions[itemIndexGameA].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, sessions[itemIndexGameA].volume);
+      SendItemVolumeCommand(&sessions[itemIndexGameA], sendBuffer, encodeBuffer);
 
       if(itemIndexGameA != itemIndexGameB)
-        RebalanceGameVolume(items[itemIndexGameA].volume, itemIndexGameB);
+        RebalanceGameVolume(sessions[itemIndexGameA].volume, itemIndexGameB);
     } 
   }
   
@@ -491,18 +513,17 @@ bool ProcessEncoderButton()
 {
   if(encoderButton.tapped())
   {
-    if(itemCount == 0 || stateDisplay == STATE_DISPLAY_SLEEP)
-    {
-      TimerDisplayReset();
-    }
+    if(stateDisplay == STATE_DISPLAY_SLEEP)
+      return true;
+
     else if(mode == MODE_APPLICATION)
     {
-      CycleApplicationState();
+      CycleState(stateApplication, STATE_APPLICATION_COUNT);
       TimerDisplayReset();
     }
     else if(mode == MODE_GAME)
     {
-      CycleGameState();
+      CycleState(stateGame, STATE_GAME_COUNT);
       TimerDisplayReset();
     }
 
@@ -510,9 +531,6 @@ bool ProcessEncoderButton()
   }
   else if(encoderButton.doubleTapped())
   {
-    if(stateDisplay == STATE_DISPLAY_SLEEP)
-      return true;
-
     if(mode == MODE_MASTER)
       ToggleMute(devices, itemIndexMaster);
 
@@ -572,17 +590,17 @@ bool ProcessDisplayScroll()
   bool result = false;
 
   if(mode == MODE_APPLICATION)
-    result = strlen(items[itemIndexApp].name) > DISPLAY_CHAR_MAX_X2;
+    result = strlen(sessions[itemIndexApp].name) > DISPLAY_CHAR_MAX_X2;
   else if(mode == MODE_GAME)
   {
     if(stateGame == STATE_GAME_SELECT_A)
-      result = strlen(items[itemIndexGameA].name) > DISPLAY_CHAR_MAX_X2;
+      result = strlen(sessions[itemIndexGameA].name) > DISPLAY_CHAR_MAX_X2;
     else if(stateGame == STATE_GAME_SELECT_B)
-      result = strlen(items[itemIndexGameB].name) > DISPLAY_CHAR_MAX_X2;
+      result = strlen(sessions[itemIndexGameB].name) > DISPLAY_CHAR_MAX_X2;
     else if(stateGame == STATE_GAME_EDIT)
     {
-      result = strlen(items[itemIndexGameA].name) > DISPLAY_CHAR_MAX_X1 ||
-               strlen(items[itemIndexGameB].name) > DISPLAY_CHAR_MAX_X1;
+      result = strlen(sessions[itemIndexGameA].name) > DISPLAY_CHAR_MAX_X1 ||
+               strlen(sessions[itemIndexGameB].name) > DISPLAY_CHAR_MAX_X1;
     }
   }
 
@@ -659,55 +677,55 @@ void UpdateDisplay()
 //---------------------------------------------------------
 void UpdateLighting()
 {
-   if(stateDisplay == STATE_DISPLAY_SLEEP)
-   {
-     SetPixelsColor(pixels, 0,0,0);
-     return;
-   }
- 
-   if(sessionCount == 0)
-   {
-     SetPixelsColor(pixels, 128,128,128);
-     return;
-   }
-   
-   if(mode == MODE_MASTER)
-   {
-      uint8_t volumeColor = round(sessions[0].volume * 2.55f);
+  if(stateDisplay == STATE_DISPLAY_SLEEP)
+  {
+    SetPixelsColor(pixels, 0,0,0);
+    return;
+  }
+
+  if(sessionCount == 0)
+  {
+    SetPixelsColor(pixels, 128,128,128);
+    return;
+  }
+  
+  if(mode == MODE_MASTER)
+  {
+    uint8_t volumeColor = round(sessions[0].volume * 2.55f);
+    SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
+  }
+  else if(mode == MODE_APPLICATION)
+  {
+    uint8_t volumeColor = round(sessions[itemIndexApp].volume * 2.55f);
+    SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
+  }
+  else if(mode == MODE_GAME)
+  {
+    uint8_t volumeColor;
+    if(stateGame == STATE_GAME_SELECT_A)
+    {
+      volumeColor = round(sessions[itemIndexGameA].volume * 2.55f);
       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-   }
-   else if(mode == MODE_APPLICATION)
-   {
-      uint8_t volumeColor = round(sessions[itemIndexApp].volume * 2.55f);
+    }
+    else if(stateGame == STATE_GAME_SELECT_B)
+    {
+      volumeColor = round(sessions[itemIndexGameB].volume * 2.55f);
       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-   }
-   else if(mode == MODE_GAME)
-   {
-     uint8_t volumeColor;
-     if(stateGame == STATE_GAME_SELECT_A)
-     {
-       volumeColor = round(sessions[itemIndexGameA].volume * 2.55f);
-       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-     }
-     else if(stateGame == STATE_GAME_SELECT_B)
-     {
-       volumeColor = round(sessions[itemIndexGameB].volume * 2.55f);
-       SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-     }
-     else
-     {
+    }
+    else
+    {
       SetPixelsColor(pixels, 128, 128, 128);
-     }
-   }
+    }
+  }
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 void CycleMode()
 {
-    mode++;
-    if(mode == MODE_COUNT)
-      mode = 0;
+  mode++;
+  if(mode == MODE_COUNT)
+    mode = 0;
 }
 
 //---------------------------------------------------------
@@ -725,8 +743,8 @@ uint8_t CycleState(uint8_t state, uint8_t count)
 //---------------------------------------------------------
 void ToggleMute(Item* items, int8_t index)
 {
-  items[index].isMuted = !items[index].isMuted;
-  SendItemVolumeCommand(&items[index], sendBuffer, encodeBuffer);
+  sessions[index].isMuted = !sessions[index].isMuted;
+  SendItemVolumeCommand(&sessions[index], sendBuffer, encodeBuffer);
 }
 
 //---------------------------------------------------------
@@ -742,8 +760,8 @@ void ResetGameVolume()
 
 void RebalanceGameVolume(uint8_t sourceVolume, uint8_t targetIndex)
 {
-  items[targetIndex].volume = 100 - sourceVolume;
-  SendItemVolumeCommand(&items[targetIndex], sendBuffer, encodeBuffer);
+  sessions[targetIndex].volume = 100 - sourceVolume;
+  SendItemVolumeCommand(&sessions[targetIndex], sendBuffer, encodeBuffer);
 }
 
 //---------------------------------------------------------
@@ -753,7 +771,7 @@ void RebalanceGameVolume(uint8_t sourceVolume, uint8_t targetIndex)
 int8_t FindItem(uint32_t id, Item* items, uint8_t itemCount)
 {  
   for(int8_t i = 0; i < itemCount; i++)
-    if(items[i].id == id)
+    if(sessions[i].id == id)
       return i;
 
   return -1;

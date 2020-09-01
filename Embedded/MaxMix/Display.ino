@@ -78,7 +78,19 @@ void DisplaySplashScreen(Adafruit_SSD1306* display)
 //---------------------------------------------------------
 // Draws the master mode screen
 //---------------------------------------------------------
-void DisplayMasterSelectScreen_(Adafruit_SSD1306* display, uint8_t volume, bool isMuted, uint8_t modeIndex, uint8_t modeCount)
+void DisplayMasterSelectScreen(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex, uint8_t modeCount)
+{
+  display->clearDisplay();
+
+  DrawDotGroup(display, modeIndex, modeCount);
+  DrawSelectionArrows(display, leftArrow, rightArrow);
+  DrawItemName(display, "VOL", 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, GetTimerDisplayA, ResetTimerDisplayA, DISPLAY_SCROLL_SPEED_X2);
+  DrawSelectionVolumeBar(display, volume, isMuted);
+
+  display->display();
+}
+
+void DisplayMasterEditScreen(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, uint8_t modeIndex, uint8_t modeCount)
 {
   display->clearDisplay();
 
@@ -398,6 +410,7 @@ void DrawSelectionVolumeBar(Adafruit_SSD1306* display, uint8_t volume, bool isMu
   display->drawLine(x0, y0, x0, y1, WHITE);
   
 }
+
 
 int16_t Scroll(char* name, float time, float scrollMin, float scrollMax, float speed)
 {
