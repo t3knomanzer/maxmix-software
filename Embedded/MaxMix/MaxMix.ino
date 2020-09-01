@@ -458,7 +458,10 @@ bool ProcessEncoderRotation()
   if(mode == MODE_MASTER)
   {
     if(stateMaster == STATE_MASTER_NAVIGATE)
+    {
       itemIndexMaster = GetNextIndex(itemIndexMaster, deviceCount, encoderDelta, settings.continuousScroll);
+      TimerDisplayReset();
+    }
 
     else if(stateMaster == STATE_MASTER_EDIT)
     {
@@ -592,7 +595,9 @@ bool ProcessDisplayScroll()
 {
   bool result = false;
 
-  if(mode == MODE_APPLICATION)
+  if(mode == MODE_MASTER)
+    result = strlen(devices[itemIndexMaster].name) > DISPLAY_CHAR_MAX_X2;
+  else if(mode == MODE_APPLICATION)
     result = strlen(sessions[itemIndexApp].name) > DISPLAY_CHAR_MAX_X2;
   else if(mode == MODE_GAME)
   {

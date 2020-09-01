@@ -27,9 +27,9 @@ namespace MaxMix.Services.Communication
 
         #region Consts
         private const int _baudRate = 115200;
-        private const int _timeout = 1000;
+        private const int _timeout = 500;
         private const int _checkPortInterval = 1000;
-        private const int _ackTimeout = 1000;
+        private const int _ackTimeout = 500;
         #endregion
 
         #region Fields
@@ -76,7 +76,7 @@ namespace MaxMix.Services.Communication
         /// </summary>
         public void Start()
         {
-            Debug.WriteLine("CommunicationService Starting");
+            Debug.WriteLine("[CommunicationService] Start");
 
             _portName = String.Empty;
             _messageRevision = 0;
@@ -94,7 +94,7 @@ namespace MaxMix.Services.Communication
         /// </summary>
         public void Stop()
         {
-            Debug.WriteLine("CommunicationService Stopping");
+            Debug.WriteLine("[CommunicationService] Stop");
 
             _reconnectionThread.Abort();
             _watch.Stop();
@@ -108,11 +108,13 @@ namespace MaxMix.Services.Communication
         /// <param name="message">The message object to send.</param>
         public bool Send(IMessage message)
         {
+            Debug.WriteLine("[CommunicationService] Send");
+
             lock (_lock)
             {
                 if (_serialPort == null || !_serialPort.IsOpen)
                 {
-                    RaiseError("Port Disconnected");
+                    RaiseError("Port is closed");
                     return false;
                 }
 
@@ -120,7 +122,8 @@ namespace MaxMix.Services.Communication
                 {
                     var messageBytes = _serializationService.Serialize(message, _messageRevision);
                     _serialPort.Write(messageBytes, 0, messageBytes.Length);
-                    Debug.WriteLine("Sent message. Type:" + message.GetType() + " Revision: " + _messageRevision);
+
+                    Debug.WriteLine($"[CommunicationService] Message sent: {message.GetType()} Revision: {_messageRevision}");
                     _messageLastSent = _watch.Elapsed;
                 }
                 catch (Exception e)
@@ -147,12 +150,13 @@ namespace MaxMix.Services.Communication
                                 // In discovery mode, simply try again next time.
                                 // TODO: We should find a more explicit way of handling this.
                                 _waitingAck = false;
-                                Debug.WriteLine("No handshake received.");
+                                Debug.WriteLine("[CommunicationService] No handshake received");
                             }
 
                             _messageRevision++;
                             return false;
                         }
+
                         Thread.Sleep(5);
                     }
 
@@ -177,16 +181,17 @@ namespace MaxMix.Services.Communication
                 {
                     if (_serialPort == null)
                     {
-                        // Scan all COM ports for a Maxmix Device
                         string[] portNames = { };
                         try { portNames = SerialPort.GetPortNames(); }
                         catch { }
+
+                        Debug.WriteLine("[CommunicationService] Discovering devices");
 
                         foreach (var portName in portNames)
                         {
                             try
                             {
-                                Debug.WriteLine("Probing port: " + portName);
+                                Debug.WriteLine($"[CommunicationService] Probing port {portName}");
                                 _serialPort = new SerialPort(portName, _baudRate);
                                 _serialPort.ReadTimeout = _timeout;
                                 _serialPort.WriteTimeout = _timeout;
@@ -195,11 +200,10 @@ namespace MaxMix.Services.Communication
 
                                 if (_serialPort.IsOpen)
                                 {
-                                    // Send the initial connection HandShake Request
                                     var message = new MessageHandShakeRequest();
                                     if (Send(message))
                                     {
-                                        Debug.WriteLine("MaxMix Device identified on port: " + portName);
+                                        Debug.WriteLine($"[CommunicationService] Device found in port {portName}");
                                         _portName = portName;
                                         RaiseDeviceDiscovered(portName);
                                     }
@@ -218,7 +222,7 @@ namespace MaxMix.Services.Communication
                     else
                     {
                         if (!_serialPort.IsOpen)
-                            RaiseError("com port is no longer open.");
+                            RaiseError("COM port is no longer open.");
                     }
                 }
                 Thread.Sleep(_checkPortInterval);
@@ -293,9 +297,7 @@ namespace MaxMix.Services.Communication
 
         private void RaiseError(string error)
         {
-            Debug.WriteLine("Error Raised: " + error);
-
-            Disconnect();
+            Debug.WriteLine($"[CommunicationService] Error Raised: {error}");
 
             if (_synchronizationContext != SynchronizationContext.Current)
                 _synchronizationContext.Post(o => Error?.Invoke(this, error), null);
