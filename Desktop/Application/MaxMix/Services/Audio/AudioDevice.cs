@@ -132,8 +132,8 @@ namespace MaxMix.Services.Audio
             if (e.DeviceId.GetHashCode() == Device.DeviceID.GetHashCode())
                 if (!_wasDefault)
                 {
-                   if(session != null && ValidateSession(session))
-                        RegisterSession(new AudioSession(session));
+                    _wasDefault = true;
+                    DeviceDefaultChanged?.Invoke(this);
                 }
             else
                 _wasDefault = false;
@@ -175,18 +175,14 @@ namespace MaxMix.Services.Audio
             _endpointVolume?.UnregisterControlChangeNotify(_callback);
             _callback.NotifyRecived -= OnEndpointVolumeChanged;
 
-<<<<<<< HEAD
             _endpointVolume?.UnregisterControlChangeNotify(_callback);
             _endpointVolume = null;
             _callback = null;
-            _sessionManager = null;
-            _device = null;
-=======
+
             _deviceEnumerator = null;
             _endpointVolume = null;
             _callback = null;
             Device = null;
->>>>>>> 6e0c0f5... Adding support for multiple devices to application
         }
         #endregion
     }

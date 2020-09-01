@@ -154,8 +154,8 @@ namespace MaxMix.Services.Audio
             _events.StateChanged -= OnStateChanged;
             _events.SimpleVolumeChanged -= OnVolumeChanged;
 
-            _session?.UnregisterAudioSessionNotification(_events);
-            _session = null;
+            Session.UnregisterAudioSessionNotification(_events);
+            Session = null;
             _session2 = null;
             _simpleAudio = null;
         }

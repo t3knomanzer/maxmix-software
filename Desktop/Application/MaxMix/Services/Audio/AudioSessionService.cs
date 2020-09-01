@@ -62,36 +62,11 @@ namespace MaxMix.Services.Audio
         public void Stop()
         {
             foreach (AudioDevice device in _devices.Values)
-            {
-                device.SessionCreated -= OnSessionCreated;
-                device.SessionEnded -= OnSessionRemoved;
-                device.VolumeChanged -= OnSessionVolumeChanged;
                 device.Dispose();
-            }
 
             _devices.Clear();
         }
 
-        /// <summary>
-        /// Toggles the displaying of the System Sounds audio session.
-        /// </summary>
-        /// <param name="value">The desiered visibility of system sounds.</param>
-        public void SetVisibleSystemSounds(bool value)
-        {
-            if (_visibleSystemSounds == value)
-                return;
-
-                _deviceEnumerator = null;
-            }
-
-            if(_sessionManager != null)
-            {
-                _sessionManager.SessionCreated -= OnSessionCreated;
-                _sessionManager.Dispose();
-
-                _sessionManager = null;
-            }
-        }
 
         /// <summary>
         /// Sets the volume of an audio session.
@@ -141,30 +116,11 @@ namespace MaxMix.Services.Audio
             var session = session_ as AudioSession;
             var fileName = session.Process.GetMainModuleFileName();
 
-            // If we are able to grab the fileName for the process, group it with sessions from the same fileName
-            if (!string.IsNullOrEmpty(fileName))
-            {
-                var device = new AudioDevice(enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia), _visibleSystemSounds);                   
+            _sessions.Add(session.ID, session);
+            session.SessionEnded += OnSessionEnded;
+            session.VolumeChanged += OnSessionVolumeChanged;
 
-                // TODO: We are getting crashes sometimes caused by the key already existing. This should never happen since Stop should always be called
-                // before Start but for some reason it is happening.
-                if(_devices.ContainsKey(device.ID))
-                    Stop();
-
-                _devices.Add(device.ID, device);
-                OnSessionCreated(device);
-
-                device.SessionCreated += OnSessionCreated;
-                device.SessionEnded += OnSessionRemoved;
-                device.VolumeChanged += OnSessionVolumeChanged;
-                device.InitializeSessions();
-            }
-
-            _sessions.Add(session_.ID, session_);
-            session_.SessionEnded += OnSessionEnded;
-            session_.VolumeChanged += OnSessionVolumeChanged;
-
-            RaiseSessionCreated(session_.ID, session_.DisplayName, session_.Volume, session_.IsMuted);
+            RaiseSessionCreated(session.ID, session.DisplayName, session.Volume, session.IsMuted);
         }
         #endregion
 
