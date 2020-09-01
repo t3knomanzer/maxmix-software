@@ -222,6 +222,7 @@ namespace MaxMix.Services.Communication
                 message = Activator.CreateInstance(type) as IMessage;
             }
 
+            message.SetRevision(revision);
             if (!message.SetBytes(payload))
                 throw new ArgumentException("Incorrect payload for message type.");
 

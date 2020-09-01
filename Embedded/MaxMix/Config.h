@@ -70,6 +70,8 @@ static const uint8_t MSG_COMMAND_SETTINGS =  5;
 
 static const uint8_t MSG_PACKET_DELIMITER = 0;
 
+static const uint16_t ACK_TIMEOUT = 200; // in ms
+
 // --- Screen Drawing
 static const uint8_t DISPLAY_WIDTH = 128;
 static const uint8_t DISPLAY_HEIGHT = 32;

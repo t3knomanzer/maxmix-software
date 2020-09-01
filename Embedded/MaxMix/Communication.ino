@@ -33,6 +33,18 @@ bool ReceiveData(uint8_t* buffer, uint8_t* index, uint8_t delimiter, uint8_t buf
 }
 
 //---------------------------------------------------------
+//=
+//---------------------------------------------------------
+void SendData(uint8_t* rawBuffer, uint8_t* packageBuffer, bool* waitingAck, uint32_t* ackTimer, uint32_t now)
+{
+  uint8_t encodeSize =  EncodePackage(rawBuffer, 8, packageBuffer);
+  Serial.write(packageBuffer, encodeSize);
+
+  *waitingAck = true;
+  *ackTimer = now;
+}
+
+//---------------------------------------------------------
 // 
 //---------------------------------------------------------
 uint8_t EncodePackage(uint8_t* inBuffer, uint8_t size, uint8_t* outBuffer)

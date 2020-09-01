@@ -18,6 +18,7 @@
 // *** INCLUDES
 //********************************************************
 #include <Arduino.h>
+#include <avr/wdt.h>
 
 // Custom
 #include "Config.h"
@@ -59,7 +60,9 @@ struct Settings
 // Serial Communication
 uint8_t receiveIndex = 0;
 uint8_t sendIndex = 0;
-uint8_t packageRevision = 0;
+uint8_t messageRevision = 0;
+bool waitingAck = false;
+uint32_t ackTimer = millis();
 uint8_t receiveBuffer[RECEIVE_BUFFER_SIZE];
 uint8_t decodeBuffer[RECEIVE_BUFFER_SIZE];
 uint8_t sendBuffer[SEND_BUFFER_SIZE];
@@ -104,6 +107,13 @@ Adafruit_NeoPixel* pixels;
 // Display
 Adafruit_SSD1306* display;
 
+// Watchdog Trigger
+void reboot() {
+  wdt_disable();
+  wdt_enable(WDTO_15MS);
+  while(1) {}
+}
+
 //********************************************************
 // *** INTERRUPTS
 //********************************************************
@@ -123,6 +133,9 @@ void timerIsr()
 //---------------------------------------------------------
 void setup()
 {
+  // Clear Watchdog Flags
+  MCUSR = 0;
+  
   // --- Comms
   Serial.begin(BAUD_RATE);
 
@@ -153,8 +166,13 @@ void loop()
   {
     if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
     {
-      uint8_t revision = GetRevisionFromPackage(decodeBuffer);
-      SendAcknowledgment(sendBuffer, encodeBuffer, revision);
+      // Immediately send ACK
+      uint8_t command = GetCommandFromPackage(decodeBuffer);
+      if(command != MSG_COMMAND_ACKNOWLEDGMENT)
+      {
+        uint8_t revision = GetRevisionFromPackage(decodeBuffer);
+        SendAcknowledgment(sendBuffer, encodeBuffer, revision);
+      }
 
       if(ProcessPackage())
       {
@@ -163,6 +181,13 @@ void loop()
       }
     }      
     ClearReceive();
+  }
+
+  // Trigger WatchDog if ack timed-out
+  if(waitingAck)
+  {
+    if(now - ackTimer > ACK_TIMEOUT)
+      reboot();
   }
 
   if(ProcessEncoderRotation() || ProcessEncoderButton())
@@ -234,8 +259,15 @@ void ResetState()
 //---------------------------------------------------------
 bool ProcessPackage()
 {
-  uint8_t command = GetCommandFromPackage(decodeBuffer);  
-  if(command == MSG_COMMAND_HANDSHAKE_REQUEST)
+  uint8_t command = GetCommandFromPackage(decodeBuffer);
+  
+  if(command == MSG_COMMAND_ACKNOWLEDGMENT)
+  {
+    if (ProcessAcknowledgment(decodeBuffer, messageRevision))
+      waitingAck = false;
+    return false;
+  }
+  else if(command == MSG_COMMAND_HANDSHAKE_REQUEST)
   {
     ResetState();
     return true;
@@ -466,7 +498,7 @@ bool ProcessEncoderRotation()
     else if(stateOutput == STATE_OUTPUT_EDIT)
     {
       devices[itemIndexOutput].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, devices[itemIndexOutput].volume);
-      SendItemVolumeCommand(&devices[itemIndexOutput], sendBuffer, encodeBuffer);
+      SendItemVolumeCommand(&devices[itemIndexOutput], sendBuffer, encodeBuffer, &waitingAck, &ackTimer, now);
     }
   }
   else if(mode == MODE_APPLICATION)
@@ -479,7 +511,7 @@ bool ProcessEncoderRotation()
     else if(stateApplication == STATE_APPLICATION_EDIT)
     {
       sessions[itemIndexApp].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, sessions[itemIndexApp].volume);
-      SendItemVolumeCommand(&sessions[itemIndexApp], sendBuffer, encodeBuffer);
+      SendItemVolumeCommand(&sessions[itemIndexApp], sendBuffer, encodeBuffer, &waitingAck, &ackTimer, now);
     }
   }
   else if(mode == MODE_GAME)
@@ -498,7 +530,7 @@ bool ProcessEncoderRotation()
     else if(stateGame == STATE_GAME_EDIT)
     {
       sessions[itemIndexGameA].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, sessions[itemIndexGameA].volume);
-      SendItemVolumeCommand(&sessions[itemIndexGameA], sendBuffer, encodeBuffer);
+      SendItemVolumeCommand(&sessions[itemIndexGameA], sendBuffer, encodeBuffer, &waitingAck, &ackTimer, now);
 
       if(itemIndexGameA != itemIndexGameB)
         RebalanceGameVolume(sessions[itemIndexGameA].volume, itemIndexGameB);
@@ -731,9 +763,10 @@ void UpdateLighting()
 //---------------------------------------------------------
 void CycleMode()
 {
-  mode++;
-  if(mode == MODE_COUNT)
-    mode = 0;
+    mode++;
+
+    if(mode == MODE_COUNT)
+      mode = MODE_OUTPUT;
 }
 
 //---------------------------------------------------------
@@ -752,7 +785,7 @@ uint8_t CycleState(uint8_t state, uint8_t count)
 void ToggleMute(Item* items, int8_t index)
 {
   items[index].isMuted = !items[index].isMuted;
-  SendItemVolumeCommand(&items[index], sendBuffer, encodeBuffer);
+  SendItemVolumeCommand(&items[index], sendBuffer, encodeBuffer, &waitingAck, &ackTimer, now);
 }
 
 //---------------------------------------------------------
@@ -762,14 +795,14 @@ void ResetGameVolume()
   sessions[itemIndexGameA].volume = 50;
   sessions[itemIndexGameB].volume = 50;
 
-  SendItemVolumeCommand(&sessions[itemIndexGameA], sendBuffer, encodeBuffer);
-  SendItemVolumeCommand(&sessions[itemIndexGameB], sendBuffer, encodeBuffer);
+  SendItemVolumeCommand(&sessions[itemIndexGameA], sendBuffer, encodeBuffer, &waitingAck, &ackTimer, now);
+  SendItemVolumeCommand(&sessions[itemIndexGameB], sendBuffer, encodeBuffer, &waitingAck, &ackTimer, now);
 }
 
 void RebalanceGameVolume(uint8_t sourceVolume, uint8_t targetIndex)
 {
   sessions[targetIndex].volume = 100 - sourceVolume;
-  SendItemVolumeCommand(&sessions[targetIndex], sendBuffer, encodeBuffer);
+  SendItemVolumeCommand(&sessions[targetIndex], sendBuffer, encodeBuffer, &waitingAck, &ackTimer, now);
 }
 
 //---------------------------------------------------------
@@ -803,3 +836,4 @@ bool IsItemActive(int8_t index)
 
   return false;
 }
+

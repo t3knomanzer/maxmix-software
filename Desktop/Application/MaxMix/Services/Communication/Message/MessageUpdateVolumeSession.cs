@@ -24,6 +24,7 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Fields
+        private byte _revision;
         private int _id;
         private int _volume;
         private bool _isMuted;
@@ -75,6 +76,15 @@ namespace MaxMix.Services.Communication
             _isMuted = Convert.ToBoolean(bytes[5]);
             _isDevice = false;
 
+            return true;
+        }
+        public byte GetRevision()
+        {
+            return _revision;
+        }
+        public bool SetRevision(byte revision)
+        {
+            _revision = revision;
             return true;
         }
         #endregion

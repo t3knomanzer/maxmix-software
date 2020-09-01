@@ -19,17 +19,26 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Properties
-        public byte Revision { get => _revision; }
         #endregion
 
         #region Public Methods
         public byte[] GetBytes()
         {
-            throw new NotImplementedException("Should never be called");
+            return new byte[] {_revision};
         }
 
         public bool SetBytes(byte[] bytes)
         {
+            return true;
+        }
+
+        public byte GetRevision()
+        {
+            return _revision;
+        }
+        public bool SetRevision(byte revision)
+        {
+            _revision = revision;
             return true;
         }
         #endregion

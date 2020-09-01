@@ -4,5 +4,7 @@
     {
         byte[] GetBytes();
         bool SetBytes(byte[] bytes);
+        byte GetRevision();
+        bool SetRevision(byte revision);
     }
 }

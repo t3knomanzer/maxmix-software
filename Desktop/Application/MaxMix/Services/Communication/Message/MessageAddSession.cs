@@ -26,6 +26,7 @@ namespace MaxMix.Services.Communication
         #endregion
         
         #region Fields
+        private byte _revision;
         private int _id;
         private string _name;
         private string _encodedName;
@@ -89,6 +90,15 @@ namespace MaxMix.Services.Communication
         public bool SetBytes(byte[] bytes)
         {
             throw new NotImplementedException("Should never be called");
+        }
+        public byte GetRevision()
+        {
+            return _revision;
+        }
+        public bool SetRevision(byte revision)
+        {
+            _revision = revision;
+            return true;
         }
         #endregion
     }

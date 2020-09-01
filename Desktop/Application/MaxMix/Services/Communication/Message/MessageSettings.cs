@@ -24,6 +24,7 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Fields
+        private byte _revision;
         public bool _displayNewSession;
         public bool _sleepWhenInactive;
         public int _sleepAfterSeconds;
@@ -76,6 +77,15 @@ namespace MaxMix.Services.Communication
         public bool SetBytes(byte[] bytes)
         {
             throw new NotImplementedException("Should never be called");
+        }
+        public byte GetRevision()
+        {
+            return _revision;
+        }
+        public bool SetRevision(byte revision)
+        {
+            _revision = revision;
+            return true;
         }
         #endregion
     }

@@ -175,6 +175,13 @@ namespace MaxMix.ViewModels
         {
             ExitRequested?.Invoke(this, EventArgs.Empty);
         }
+
+        private void SendAck(byte revision)
+        {
+            MessageAcknowledgment ack = new MessageAcknowledgment(revision);
+            Debug.WriteLine("Sending ACK: " + ack.GetRevision());
+            _communicationService.Send(ack);
+        }
         #endregion
 
         #region EventHandlers
@@ -237,6 +244,12 @@ namespace MaxMix.ViewModels
                 var message_ = message as MessageUpdateVolumeSession;
                 _audioSessionService.SetItemVolume(message_.Id, message_.Volume, message_.IsMuted);
             }
+
+            // Send ACK to device
+            SendAck(message.GetRevision());
+
+
+
         }
 
         private void OnCommunicationError(object sender, string e)

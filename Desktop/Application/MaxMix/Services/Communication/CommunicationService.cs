@@ -107,7 +107,10 @@ namespace MaxMix.Services.Communication
                 {
                     try
                     {
-                        _waitingAck = true;
+                        if (message.GetType() != typeof(MessageAcknowledgment))
+                        {
+                            _waitingAck = true;
+                        }
 
                         var messageBytes = _serializationService.Serialize(message, _messageRevision);
                         _serialPort.Write(messageBytes, 0, messageBytes.Length);
@@ -228,13 +231,13 @@ namespace MaxMix.Services.Communication
                             if (message.GetType() == typeof(MessageAcknowledgment))
                             {
                                 MessageAcknowledgment ack = (MessageAcknowledgment)message;
-                                if (ack.Revision == _messageRevision)
+                                if (ack.GetRevision() == _messageRevision)
                                 {
-                                    Debug.WriteLine($"[CommunicationService] ACK received successfuly: {ack.Revision}");
+                                    Debug.WriteLine($"[CommunicationService] ACK received successfuly: {ack.GetRevision()}");
                                     _waitingAck = false;
                                 }
                                 else
-                                    RaiseError($"ACK revision error, received: {ack.Revision} expected: {_messageRevision}");
+                                    RaiseError($"ACK revision error, received: {ack.GetRevision()} expected: {_messageRevision}");
                             }
                             else
                                 RaiseMessageReceived(message);

@@ -9,13 +9,14 @@ namespace MaxMix.Services.Communication
     internal class MessageHandShakeRequest : IMessage
     {
         #region Constructor
-        public MessageHandShakeRequest() { }
+        public MessageHandShakeRequest() {}
         #endregion
 
         #region Consts
         #endregion
 
         #region Fields
+        private byte _revision;
         #endregion
 
         #region Properties
@@ -30,6 +31,15 @@ namespace MaxMix.Services.Communication
         public bool SetBytes(byte[] bytes)
         {
             throw new NotImplementedException("Should never be called");
+        }
+        public byte GetRevision()
+        {
+            return _revision;
+        }
+        public bool SetRevision(byte revision)
+        {
+            _revision = revision;
+            return true;
         }
         #endregion
     }

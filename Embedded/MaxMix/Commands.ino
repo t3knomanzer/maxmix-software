@@ -25,9 +25,9 @@ void SendAcknowledgment(uint8_t* rawBuffer, uint8_t* packageBuffer, uint8_t revi
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void SendItemVolumeCommand(Item* item, uint8_t* rawBuffer, uint8_t* packageBuffer)
+void SendItemVolumeCommand(Item* item, uint8_t* rawBuffer, uint8_t* packageBuffer, bool *waitingAck, uint32_t* ackTimer, uint32_t now)
 {
-  rawBuffer[0] = packageRevision++;
+  rawBuffer[0] = ++messageRevision;
   rawBuffer[1] = MSG_COMMAND_UPDATE_VOLUME;
   
   rawBuffer[2] = (uint8_t)(item->id >> 24) & 0xFF;
@@ -38,8 +38,7 @@ void SendItemVolumeCommand(Item* item, uint8_t* rawBuffer, uint8_t* packageBuffe
   rawBuffer[6] = item->volume;
   rawBuffer[7] = item->isMuted;
   
-  uint8_t encodeSize =  EncodePackage(rawBuffer, 8, packageBuffer);
-  Serial.write(packageBuffer, encodeSize);
+  SendData(rawBuffer, packageBuffer, waitingAck, ackTimer, now);
 }
 
 //---------------------------------------------------------
@@ -132,4 +131,11 @@ bool GetIsDeviceFromRemovePackage(uint8_t* packageBuffer)
 bool GetIsDeviceFromUpdatePackage(uint8_t* packageBuffer)
 {
     return packageBuffer[8] > 0;
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+bool ProcessAcknowledgment(uint8_t* packageBuffer, uint8_t messageRevision)
+{
+    return (packageBuffer[2] == messageRevision);
 }
