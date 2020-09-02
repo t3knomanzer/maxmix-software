@@ -178,7 +178,8 @@ namespace MaxMix.ViewModels
 
         private void SendAck(byte revision)
         {
-            MessageAcknowledgment ack = new MessageAcknowledgment(revision);
+            MessageAcknowledgment ack = new MessageAcknowledgment();
+            ack.SetRevision(revision);
             Debug.WriteLine("Sending ACK: " + ack.GetRevision());
             _communicationService.Send(ack);
         }

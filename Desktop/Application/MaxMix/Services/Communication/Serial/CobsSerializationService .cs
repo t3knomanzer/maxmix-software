@@ -214,11 +214,8 @@ namespace MaxMix.Services.Communication
                 // Message from an unregistered type, simply ignore it.
                 return null;
             }
-            else if (type == typeof(MessageAcknowledgment))
-            {
-                message = Activator.CreateInstance(type, revision) as MessageAcknowledgment;
-            }
-            else {
+            else
+            { 
                 message = Activator.CreateInstance(type) as IMessage;
             }
 

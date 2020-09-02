@@ -9,9 +9,7 @@ namespace MaxMix.Services.Communication
     internal class MessageAcknowledgment : IMessage
     {
         #region Constructor
-        public MessageAcknowledgment(byte revision) {
-            _revision = revision;
-        }
+        public MessageAcknowledgment() {}
         #endregion
 
         #region Fields
