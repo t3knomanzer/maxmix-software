@@ -361,9 +361,11 @@ bool ProcessPackage()
     }
     else
     {
-      index = FindItem(id, devices, deviceCount);
+      index = FindItem(id, sessions, sessionCount);
       if(index == -1)
         return false;
+
+      UpdateItemVolumeCommand(decodeBuffer, sessions, index);
 
       if(IsItemActive(index))
       {
@@ -374,11 +376,9 @@ bool ProcessPackage()
 
           if(index == itemIndexGameB && index != itemIndexGameA)
             RebalanceGameVolume(sessions[itemIndexGameB].volume, itemIndexGameA);
-        }
+        }                
         return true;
       }
-
-      UpdateItemVolumeCommand(decodeBuffer, sessions, index);
       return false;
     }    
   }
