@@ -61,10 +61,14 @@ namespace MaxMix.Services.Audio
         /// <inheritdoc/>
         public void Stop()
         {
-            foreach (AudioDevice device in _devices.Values)
+            foreach (var device in _devices.Values)
                 device.Dispose();
 
+            foreach (var session in _sessions.Values)
+                session.Dispose();
+
             _devices.Clear();
+            _sessions.Clear();
         }
 
 
