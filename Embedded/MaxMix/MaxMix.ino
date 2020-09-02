@@ -751,8 +751,8 @@ uint8_t CycleState(uint8_t state, uint8_t count)
 //---------------------------------------------------------
 void ToggleMute(Item* items, int8_t index)
 {
-  sessions[index].isMuted = !sessions[index].isMuted;
-  SendItemVolumeCommand(&sessions[index], sendBuffer, encodeBuffer);
+  items[index].isMuted = !items[index].isMuted;
+  SendItemVolumeCommand(&items[index], sendBuffer, encodeBuffer);
 }
 
 //---------------------------------------------------------
