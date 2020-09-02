@@ -352,7 +352,7 @@ bool ProcessPackage()
       if(index == -1)
         return false;
 
-      UpdateItemVolumeCommand(decodeBuffer, sessions, index);
+      UpdateItemVolumeCommand(decodeBuffer, devices, index);
 
       if(IsItemActive(index))
         return true;
@@ -779,7 +779,7 @@ void RebalanceGameVolume(uint8_t sourceVolume, uint8_t targetIndex)
 int8_t FindItem(uint32_t id, Item* items, uint8_t itemCount)
 {  
   for(int8_t i = 0; i < itemCount; i++)
-    if(sessions[i].id == id)
+    if(items[i].id == id)
       return i;
 
   return -1;
