@@ -51,6 +51,7 @@ namespace MaxMix.Services.Communication
         * ISMUTED      BYTE        1
         * ISDEVICE     BYTE        1
         * ---------------------------------------
+        *                          7
         */
 
         public byte[] GetBytes()

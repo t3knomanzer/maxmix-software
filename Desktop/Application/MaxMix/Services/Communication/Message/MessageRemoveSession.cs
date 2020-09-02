@@ -40,6 +40,7 @@ namespace MaxMix.Services.Communication
         * ID           INT32       4
         * ISDEVICE     BYTE        1
         * ---------------------------------------
+        *                          5
         */
 
         public byte[] GetBytes()

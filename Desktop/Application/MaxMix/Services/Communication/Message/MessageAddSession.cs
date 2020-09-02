@@ -88,7 +88,7 @@ namespace MaxMix.Services.Communication
 
         public bool SetBytes(byte[] bytes)
         {
-            return true;
+            throw new NotImplementedException("Should never be called");
         }
         #endregion
     }
