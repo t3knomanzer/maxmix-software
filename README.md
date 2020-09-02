@@ -39,3 +39,4 @@ You can join these groups and chats to discuss your-project related questions:
 - Youtube: https://www.youtube.com/channel/UCU5MRTji6emgxk84aEd7Gqg/
 - Twitter: https://twitter.com/maxmixproject/
 - Reddit: https://www.reddit.com/r/maxmixproject/
+- Discord: https://discord.com/invite/TmvvgCw
