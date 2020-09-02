@@ -11,7 +11,8 @@ using System.IO;
 namespace MaxMix.Services.Communication
 {
     /// <summary>
-    /// Manages sending and receiving messages between application and device.
+    /// Manages communication between pc and device including discovery
+    /// through handshake as well as messaging.
     /// It is protocol agnostic, it uses the provided message ISerializationService.
     /// </summary>
     internal class CommunicationService : ICommunicationService
@@ -26,8 +27,8 @@ namespace MaxMix.Services.Communication
         #region Consts
         private const int _baudRate = 115200;
         private const int _portTimeout = 100;
-        private const int _checkPortInterval = 500;
         private const int _ackTimeout = 100;
+        private const int _checkPortInterval = 500;
         private const int _sendRetryMax = 3;
         #endregion
 
@@ -53,26 +54,18 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Events
-        /// <summary>
-        /// Raised when a message has been received and deserialized.
-        /// </summary>
+        /// <inheritdoc/>
         public event EventHandler<IMessage> MessageReceived;
 
-        /// <summary>
-        /// Raised when an error has happend.
-        /// </summary>
+        /// <inheritdoc/>
         public event EventHandler<string> Error;
 
-        /// <summary>
-        /// Raised when a succesful handshake has been established.
-        /// </summary>
+        /// <inheritdoc/>
         public event EventHandler<string> DeviceDiscovered;
         #endregion
 
         #region Public Methods
-        /// <summary>
-        /// Attempt to detect the device and begins the communication process.
-        /// </summary>
+        /// <inheritdoc/>
         public void Start()
         {
             Debug.WriteLine("[CommunicationService] Start");
@@ -84,9 +77,7 @@ namespace MaxMix.Services.Communication
             _reconnectionThread.Start();
         }
 
-        /// <summary>
-        /// Properly ends the connection.
-        /// </summary>
+        /// <inheritdoc/>
         public void Stop()
         {
             Debug.WriteLine("[CommunicationService] Stop");
@@ -104,10 +95,7 @@ namespace MaxMix.Services.Communication
             catch { }
         }
 
-        /// <summary>
-        /// Sends the message using the ISerializationService provided.
-        /// </summary>
-        /// <param name="message">The message object to send.</param>
+        /// <inheritdoc/>
         public bool Send(IMessage message)
         {
             lock (_sendLock)
@@ -160,6 +148,9 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Private Methods
+        /// <summary>
+        /// 
+        /// </summary>
         private void HandleReconnection()
         {
             while (_reconnectionAlive)
@@ -189,8 +180,7 @@ namespace MaxMix.Services.Communication
                             _serialPort.DataReceived += OnDataReceived;
                             _serialPort.Open();
 
-                            var message = new MessageHandShakeRequest();
-                            if (Send(message))
+                            if (Send(new MessageHandShakeRequest()))
                             {
                                 Debug.WriteLine($"[CommunicationService] Device found in port {portName}");
                                 RaiseDeviceDiscovered(portName);
@@ -215,6 +205,11 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region EventHandlers
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
         private void OnDataReceived(object sender, SerialDataReceivedEventArgs args)
         {
             while (_serialPort != null &&  _serialPort.IsOpen && _serialPort.BytesToRead > 0)
@@ -257,11 +252,19 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Event Dispatchers
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
         private void RaiseMessageReceived(IMessage message)
         {
             MessageReceived?.Invoke(this, message);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="error"></param>
         private void RaiseError(string error)
         {
             Debug.WriteLine($"[CommunicationService] Error Raised: {error}");
@@ -272,6 +275,10 @@ namespace MaxMix.Services.Communication
                 Error?.Invoke(this, error);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="portName"></param>
         private void RaiseDeviceDiscovered(string portName)
         {
             if (_synchronizationContext != SynchronizationContext.Current)
