@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
-
+using System.IO;
 
 namespace MaxMix.Services.Communication
 {
@@ -20,34 +20,33 @@ namespace MaxMix.Services.Communication
         public CommunicationService(ISerializationService serializationService)
         {
             _serializationService = serializationService;
-            _synchronizationContext = SynchronizationContext.Current;
-            _buffer = new List<byte>();
         }
         #endregion
 
         #region Consts
         private const int _baudRate = 115200;
-        private const int _timeout = 500;
-        private const int _checkPortInterval = 1000;
-        private const int _ackTimeout = 500;
+        private const int _portTimeout = 100;
+        private const int _checkPortInterval = 500;
+        private const int _ackTimeout = 100;
+        private const int _sendRetryMax = 3;
         #endregion
 
         #region Fields
-        private readonly SynchronizationContext _synchronizationContext;
+        private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
         private readonly ISerializationService _serializationService;
-        private readonly IList<byte> _buffer;
+        private readonly IList<byte> _buffer = new List<byte>();
+        private readonly object _sendLock = new object();
 
-        private string _portName;
         private SerialPort _serialPort;
 
         private Thread _reconnectionThread;
-        private readonly object _lock = new object();
+        private bool _reconnectionAlive;
 
         private byte _messageRevision;
         private bool _waitingAck;
+        private int _sendRetryCount;
 
-        private Stopwatch _watch;
-        private TimeSpan _messageLastSent;
+        private Stopwatch _watch = new Stopwatch();
         #endregion
 
         #region Properties
@@ -78,13 +77,9 @@ namespace MaxMix.Services.Communication
         {
             Debug.WriteLine("[CommunicationService] Start");
 
-            _portName = String.Empty;
             _messageRevision = 0;
-            _waitingAck = false;
 
-            _watch = new Stopwatch();
-            _watch.Start();
-
+            _reconnectionAlive = true;
             _reconnectionThread = new Thread(() => HandleReconnection());
             _reconnectionThread.Start();
         }
@@ -96,10 +91,17 @@ namespace MaxMix.Services.Communication
         {
             Debug.WriteLine("[CommunicationService] Stop");
 
-            _reconnectionThread.Abort();
-            _watch.Stop();
+            _reconnectionAlive = false;
+            _reconnectionThread.Join(100);
 
-            Disconnect();
+            try
+            {
+                _serialPort.DataReceived -= OnDataReceived;
+                _serialPort.Close();
+                _serialPort.Dispose();
+                _serialPort = null;
+            }
+            catch { }
         }
 
         /// <summary>
@@ -108,66 +110,51 @@ namespace MaxMix.Services.Communication
         /// <param name="message">The message object to send.</param>
         public bool Send(IMessage message)
         {
-            Debug.WriteLine("[CommunicationService] Send");
-
-            lock (_lock)
+            lock (_sendLock)
             {
-                if (_serialPort == null || !_serialPort.IsOpen)
-                {
-                    RaiseError("Port is closed");
-                    return false;
-                }
+                Debug.WriteLine("[CommunicationService] Send");
+                _sendRetryCount = 0;
 
-                try
+                while (_sendRetryCount < _sendRetryMax)
                 {
-                    var messageBytes = _serializationService.Serialize(message, _messageRevision);
-                    _serialPort.Write(messageBytes, 0, messageBytes.Length);
+                    try
+                    {
+                        _waitingAck = true;
 
-                    Debug.WriteLine($"[CommunicationService] Message sent: {message.GetType()} Revision: {_messageRevision}");
-                    _messageLastSent = _watch.Elapsed;
-                }
-                catch (Exception e)
-                {
-                    RaiseError(e.Message);
-                    return false;
-                }
+                        var messageBytes = _serializationService.Serialize(message, _messageRevision);
+                        _serialPort.Write(messageBytes, 0, messageBytes.Length);
 
-                try
-                {
-                    _waitingAck = true;
+                        Debug.WriteLine($"[CommunicationService] Message sent: {message.GetType()} Revision: {_messageRevision}");
+                        _watch.Restart();
+                    }
+                    catch (Exception e)
+                    {
+                        RaiseError(e.Message);
+                        return false;
+                    }
+
                     while (_waitingAck)
                     {
-                        // The device did not answer in a timely manner.
-                        if ((_watch.Elapsed - _messageLastSent).TotalMilliseconds > _ackTimeout)
+                        if (_watch.Elapsed.TotalMilliseconds > _ackTimeout)
                         {
-                            if (_portName != String.Empty)
-                            {
-                                // RaiseError only if we were previously connected.
-                                RaiseError("ACK timed out.");
-                            }
-                            else
-                            {
-                                // In discovery mode, simply try again next time.
-                                // TODO: We should find a more explicit way of handling this.
-                                _waitingAck = false;
-                                Debug.WriteLine("[CommunicationService] No handshake received");
-                            }
-
-                            _messageRevision++;
-                            return false;
+                            Debug.WriteLine($"[CommunicationService] ACK timeout Revision: {_messageRevision}");
+                            break;
                         }
 
                         Thread.Sleep(5);
                     }
 
                     _messageRevision++;
-                    return true;
+
+                    if (!_waitingAck)
+                        return true;
+
+                    _sendRetryCount++;
+                    Debug.WriteLine($"[CommunicationService] Send retry... {_sendRetryCount}");
                 }
-                catch (Exception e)
-                {
-                    RaiseError(e.Message);
-                    return false;
-                }
+
+                RaiseError($"ACK not received for revision: {_messageRevision}");
+                return false;
             }
         }
         #endregion
@@ -175,75 +162,55 @@ namespace MaxMix.Services.Communication
         #region Private Methods
         private void HandleReconnection()
         {
-            while (true)
+            while (_reconnectionAlive)
             {
-                lock (_lock)
+                if (_serialPort != null && !_serialPort.IsOpen)
                 {
-                    if (_serialPort == null)
+                    _serialPort = null;
+                    RaiseError("COM port is no longer open.");
+                }
+
+                if (_serialPort == null)
+                {
+                    string[] portNames = { };
+                    try { portNames = SerialPort.GetPortNames(); }
+                    catch { }
+
+                    Debug.WriteLine("[CommunicationService] Discovering devices");
+
+                    foreach (var portName in portNames)
                     {
-                        string[] portNames = { };
-                        try { portNames = SerialPort.GetPortNames(); }
-                        catch { }
-
-                        Debug.WriteLine("[CommunicationService] Discovering devices");
-
-                        foreach (var portName in portNames)
+                        try
                         {
-                            try
+                            Debug.WriteLine($"[CommunicationService] Probing port {portName}");
+                            _serialPort = new SerialPort(portName, _baudRate);
+                            _serialPort.ReadTimeout = _portTimeout;
+                            _serialPort.WriteTimeout = _portTimeout;
+                            _serialPort.DataReceived += OnDataReceived;
+                            _serialPort.Open();
+
+                            var message = new MessageHandShakeRequest();
+                            if (Send(message))
                             {
-                                Debug.WriteLine($"[CommunicationService] Probing port {portName}");
-                                _serialPort = new SerialPort(portName, _baudRate);
-                                _serialPort.ReadTimeout = _timeout;
-                                _serialPort.WriteTimeout = _timeout;
-                                _serialPort.DataReceived += OnDataReceived;
-                                _serialPort.Open();
-
-                                if (_serialPort.IsOpen)
-                                {
-                                    var message = new MessageHandShakeRequest();
-                                    if (Send(message))
-                                    {
-                                        Debug.WriteLine($"[CommunicationService] Device found in port {portName}");
-                                        _portName = portName;
-                                        RaiseDeviceDiscovered(portName);
-                                    }
-                                    else
-                                    {
-                                        _serialPort.Close();
-                                        _serialPort.Dispose();
-                                        _serialPort = null;
-                                    }
-                                }
+                                Debug.WriteLine($"[CommunicationService] Device found in port {portName}");
+                                RaiseDeviceDiscovered(portName);
+                                break;
                             }
-                            catch { }
+                            else
+                                throw new IOException($"Port not responding to handshake {portName}");
                         }
-
-                    }
-                    else
-                    {
-                        if (!_serialPort.IsOpen)
-                            RaiseError("COM port is no longer open.");
+                        catch (Exception e)
+                        {
+                            Debug.WriteLine($"[CommunicationService] {e.Message}");
+                            _serialPort.Close();
+                            _serialPort.Dispose();
+                            _serialPort = null;
+                        }
                     }
                 }
+
                 Thread.Sleep(_checkPortInterval);
             }
-        }
-
-        private void Disconnect()
-        {
-            try
-            {
-                if (_serialPort != null)
-                {
-                    _serialPort.DataReceived -= OnDataReceived;
-                    _serialPort.Close();
-                    _serialPort.Dispose();
-                    _serialPort = null;
-                    _portName = String.Empty;
-                    _messageRevision = 0;
-                }
-            }
-            catch { }
         }
         #endregion
 
@@ -268,11 +235,11 @@ namespace MaxMix.Services.Communication
                                 MessageAcknowledgment ack = (MessageAcknowledgment)message;
                                 if (ack.Revision == _messageRevision)
                                 {
-                                    Debug.WriteLine("ACK received successfuly: " + ack.Revision);
+                                    Debug.WriteLine($"[CommunicationService] ACK received successfuly: {ack.Revision}");
                                     _waitingAck = false;
                                 }
                                 else
-                                    RaiseError("ACK revision error, received: " + ack.Revision + " expected: " + _messageRevision);
+                                    RaiseError($"ACK revision error, received: {ack.Revision} expected: {_messageRevision}");
                             }
                             else
                                 RaiseMessageReceived(message);
@@ -307,7 +274,10 @@ namespace MaxMix.Services.Communication
 
         private void RaiseDeviceDiscovered(string portName)
         {
-            DeviceDiscovered?.Invoke(this, portName);
+            if (_synchronizationContext != SynchronizationContext.Current)
+                _synchronizationContext.Post(o => DeviceDiscovered?.Invoke(this, portName), null);
+            else
+                DeviceDiscovered?.Invoke(this, portName);
         }
 
         #endregion
