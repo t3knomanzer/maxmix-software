@@ -21,7 +21,7 @@ namespace MaxMix.Services.Audio
         #region Fields
         private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
         private readonly IDictionary<int, IAudioDevice> _devices = new ConcurrentDictionary<int, IAudioDevice>();
-        private readonly IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
+        private readonly IDictionary<int, IAudioSession> _sessionGoups = new ConcurrentDictionary<int, IAudioSession>();
         private MMDeviceEnumerator _deviceEnumerator;
         private AudioSessionManager2 _sessionManager;
         #endregion
@@ -73,14 +73,14 @@ namespace MaxMix.Services.Audio
                 device.Dispose();
             }
 
-            foreach (var session in _sessions.Values)
+            foreach (var session in _sessionGoups.Values)
             {
-                UnregisterSession(session);
+                UnregisterSessionGroup(session);
                 session.Dispose();
             }
 
             _devices.Clear();
-            _sessions.Clear();
+            _sessionGoups.Clear();
         }
 
 
@@ -97,7 +97,7 @@ namespace MaxMix.Services.Audio
                 device.Volume = volume;
                 device.IsMuted = isMuted;
             }
-            else if(_sessions.TryGetValue(id, out var session))
+            else if(_sessionGoups.TryGetValue(id, out var session))
             {
                 session.Volume = volume;
                 session.IsMuted = isMuted;
@@ -141,31 +141,66 @@ namespace MaxMix.Services.Audio
         }
 
         /// <summary>
-        /// Registers the session with the service so it's aware
-        /// of events and they're handled properly.
+        /// Retrives the id of the group that this session belongs to.
         /// </summary>
-        /// <param name="session_">The audio session to register.</param>
-        private void RegisterSession(IAudioSession session_)
-        {  
-            var session = session_ as AudioSession;
-            var fileName = session.Process.GetMainModuleFileName();
+        /// <param name="session">The session to get the id for.</param>
+        /// <returns>The id used for the group of this session.</returns>
+        private int GetSessionGroupId(IAudioSession session)
+        {
+            var fileName = (session as AudioSession).Process.GetMainModuleFileName();
+            if (!string.IsNullOrEmpty(fileName))
+                return fileName.GetHashCode();
 
-            _sessions.Add(session.ID, session);
-            session.SessionEnded += OnSessionEnded;
-            session.VolumeChanged += OnSessionVolumeChanged;
+            return session.Id;
+        }
+
+        /// <summary>
+        /// Registers the session with the service so it's aware
+        /// of events and they're handled properly. 
+        /// Sessions are always groupped regardless if they belong to a parent process or not.
+        /// In the case that they don't have a parent process, the group will contain just one session.
+        /// </summary>
+        /// <param name="session">The audio session to register.</param>
+        private void RegisterSession(IAudioSession session)
+        {
+            var groupId = GetSessionGroupId(session);
+            if (_sessionGoups.TryGetValue(groupId, out var group))
+            {
+                var sessionGroup = group as AudioSessionGroup;
+                if (!sessionGroup.ContainsSession(session))
+                    sessionGroup.AddSession(session);
+                else
+                    session.Dispose();
+            }
+            else
+            {
+                var sessionGroup = new AudioSessionGroup(groupId, session.DisplayName);
+                sessionGroup.AddSession(session);
+
+                _sessionGoups.Add(groupId, sessionGroup);
+                sessionGroup.SessionEnded += OnSessionGroupEnded;
+                sessionGroup.VolumeChanged += OnSessionGroupVolumeChanged;
+
+                RaiseSessionCreated(groupId, sessionGroup.DisplayName, sessionGroup.Volume, sessionGroup.IsMuted);
+            }
         }
 
         /// <summary>
         /// Unregisters the session from the service so events
         /// are not responded to anymore.
         /// </summary>
-        /// <param name="session"></param>
-        private void UnregisterSession(IAudioSession session)
+        /// <param name="sessionGroup"></param>
+        private void UnregisterSessionGroup(IAudioSession sessionGroup)
         {
-            session.SessionEnded -= OnSessionEnded;
-            session.VolumeChanged -= OnSessionVolumeChanged;
-            if (_sessions.ContainsKey(session.ID))
-                _sessions.Remove(session.ID);
+            sessionGroup.SessionEnded -= OnSessionGroupEnded;
+            sessionGroup.VolumeChanged -= OnSessionGroupVolumeChanged;
+            if (_sessionGoups.ContainsKey(sessionGroup.Id))
+            {
+                _sessionGoups.Remove(sessionGroup.Id);
+                RaiseSessionRemoved(sessionGroup.Id);
+            }
+
+            sessionGroup.Dispose();
         }
 
         /// <summary>
@@ -179,6 +214,8 @@ namespace MaxMix.Services.Audio
             device.DeviceDefaultChanged += OnDefaultDeviceChanged;
             device.DeviceRemoved += OnDeviceRemoved;
             device.DeviceVolumeChanged += OnDeviceVolumeChanged;
+
+            RaiseDeviceCreated(device.ID, device.DisplayName, device.Volume, device.IsMuted);
         }
 
         /// <summary>
@@ -191,7 +228,12 @@ namespace MaxMix.Services.Audio
             device.DeviceRemoved -= OnDeviceRemoved;
             device.DeviceVolumeChanged -= OnDeviceVolumeChanged;
             if (_devices.ContainsKey(device.ID))
+            {
                 _devices.Remove(device.ID);
+                RaiseDeviceRemoved(device.ID);
+            }
+
+            device.Dispose();
         }
         #endregion
 
@@ -241,7 +283,6 @@ namespace MaxMix.Services.Audio
             }
 
             RegisterDevice(device);
-            RaiseDeviceCreated(device.ID, device.DisplayName, device.Volume, device.IsMuted);
         }
 
         /// <summary>
@@ -250,11 +291,7 @@ namespace MaxMix.Services.Audio
         /// <param name="device">The device to remove</param>
         private void OnDeviceRemoved(IAudioDevice device)
         {
-            if (_devices.ContainsKey(device.ID))
-            {
-                UnregisterDevice(device);
-                RaiseDeviceRemoved(device.ID);
-            }
+            UnregisterDevice(device);
         }
 
         /// <summary>
@@ -280,28 +317,16 @@ namespace MaxMix.Services.Audio
         private void OnSessionCreated(AudioSessionControl session_)
         {
             var session = new AudioSession(session_);
-            if (_sessions.ContainsKey(session.ID))
-            {
-                session.Dispose();
-                return;
-            }
-
             RegisterSession(session);
-            RaiseSessionCreated(session.ID, session.DisplayName, session.Volume, session.IsMuted);
         }
 
         /// <summary>
         /// Handles the removal and notification of the session from the service.
         /// </summary>
         /// <param name="session"></param>
-        private void OnSessionEnded(IAudioSession session)
+        private void OnSessionGroupEnded(IAudioSession session)
         {
-            if (_sessions.ContainsKey(session.ID)) 
-            {
-                UnregisterSession(session);
-                RaiseSessionRemoved(session.ID);
-            }
-
+            UnregisterSessionGroup(session);
         }
 
         /// <summary>
@@ -309,9 +334,9 @@ namespace MaxMix.Services.Audio
         /// of a device or it's mute state has changed.
         /// </summary>
         /// <param name="session"></param>
-        private void OnSessionVolumeChanged(IAudioSession session)
+        private void OnSessionGroupVolumeChanged(IAudioSession session)
         {
-            RaiseSessionVolumeChanged(session.ID, session.Volume, session.IsMuted);
+            RaiseSessionVolumeChanged(session.Id, session.Volume, session.IsMuted);
         }
         #endregion
 
