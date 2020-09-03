@@ -66,8 +66,8 @@ uint8_t sendBuffer[SEND_BUFFER_SIZE];
 uint8_t encodeBuffer[SEND_BUFFER_SIZE];
 
 // State
-uint8_t mode = MODE_MASTER;
-uint8_t stateMaster = STATE_MASTER_NAVIGATE;
+uint8_t mode = MODE_OUTPUT;
+uint8_t stateOutput = STATE_OUTPUT_NAVIGATE;
 uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
 uint8_t stateGame = STATE_GAME_SELECT_A;
 uint8_t stateDisplay = STATE_DISPLAY_AWAKE;
@@ -78,7 +78,7 @@ struct Item sessions[SESSION_MAX_COUNT];
 uint8_t deviceCount = 0;
 uint8_t sessionCount = 0;
 
-int8_t itemIndexMaster = 0;
+int8_t itemIndexOutput = 0;
 int8_t itemIndexApp = 0;
 int8_t itemIndexGameA = 0;
 int8_t itemIndexGameB = 0;
@@ -213,13 +213,13 @@ void ClearSend()
 //---------------------------------------------------------
 void ResetState()
 {
-  mode = MODE_MASTER;
-  stateMaster = STATE_MASTER_NAVIGATE;
+  mode = MODE_OUTPUT;
+  stateOutput = STATE_OUTPUT_NAVIGATE;
   stateApplication = STATE_APPLICATION_NAVIGATE;
   stateGame = STATE_GAME_SELECT_A;
   stateDisplay = STATE_DISPLAY_AWAKE;
 
-  itemIndexMaster = 0;
+  itemIndexOutput = 0;
   itemIndexApp = 0;
   itemIndexGameA = 0;
   itemIndexGameB = 0;
@@ -262,9 +262,9 @@ bool ProcessPackage()
 
       if(settings.displayNewItem)
       {
-        itemIndexMaster = index;
-        if(mode == MODE_MASTER)
-          stateMaster = STATE_MASTER_NAVIGATE;
+        itemIndexOutput = index;
+        if(mode == MODE_OUTPUT)
+          stateOutput = STATE_OUTPUT_NAVIGATE;
 
         return true;
       }
@@ -311,11 +311,11 @@ bool ProcessPackage()
       RemoveItemCommand(decodeBuffer, devices, &deviceCount, index);
       
       bool isItemActive = IsItemActive(index);
-      itemIndexMaster = GetNextIndex(itemIndexMaster, deviceCount, 0, settings.continuousScroll);
+      itemIndexOutput = GetNextIndex(itemIndexOutput, deviceCount, 0, settings.continuousScroll);
       if(isItemActive)
       {
-        if(mode == MODE_MASTER)
-          stateMaster = STATE_MASTER_NAVIGATE;
+        if(mode == MODE_OUTPUT)
+          stateOutput = STATE_OUTPUT_NAVIGATE;
         return true;      
       }
     }
@@ -455,18 +455,18 @@ bool ProcessEncoderRotation()
   if(stateDisplay == STATE_DISPLAY_SLEEP)
     return true;
 
-  if(mode == MODE_MASTER)
+  if(mode == MODE_OUTPUT)
   {
-    if(stateMaster == STATE_MASTER_NAVIGATE)
+    if(stateOutput == STATE_OUTPUT_NAVIGATE)
     {
-      itemIndexMaster = GetNextIndex(itemIndexMaster, deviceCount, encoderDelta, settings.continuousScroll);
+      itemIndexOutput = GetNextIndex(itemIndexOutput, deviceCount, encoderDelta, settings.continuousScroll);
       TimerDisplayReset();
     }
 
-    else if(stateMaster == STATE_MASTER_EDIT)
+    else if(stateOutput == STATE_OUTPUT_EDIT)
     {
-      devices[itemIndexMaster].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, devices[itemIndexMaster].volume);
-      SendItemVolumeCommand(&devices[itemIndexMaster], sendBuffer, encodeBuffer);
+      devices[itemIndexOutput].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, devices[itemIndexOutput].volume);
+      SendItemVolumeCommand(&devices[itemIndexOutput], sendBuffer, encodeBuffer);
     }
   }
   else if(mode == MODE_APPLICATION)
@@ -517,9 +517,9 @@ bool ProcessEncoderButton()
     if(stateDisplay == STATE_DISPLAY_SLEEP)
       return true;
 
-    if(mode == MODE_MASTER)
+    if(mode == MODE_OUTPUT)
     {
-      stateMaster = CycleState(stateMaster, STATE_MASTER_COUNT);
+      stateOutput = CycleState(stateOutput, STATE_OUTPUT_COUNT);
       TimerDisplayReset();
     }
     else if(mode == MODE_APPLICATION)
@@ -537,8 +537,8 @@ bool ProcessEncoderButton()
   }
   else if(encoderButton.doubleTapped())
   {
-    if(mode == MODE_MASTER)
-      ToggleMute(devices, itemIndexMaster);
+    if(mode == MODE_OUTPUT)
+      ToggleMute(devices, itemIndexOutput);
 
     else if(mode == MODE_APPLICATION)
       ToggleMute(sessions, itemIndexApp);
@@ -595,8 +595,8 @@ bool ProcessDisplayScroll()
 {
   bool result = false;
 
-  if(mode == MODE_MASTER)
-    result = strlen(devices[itemIndexMaster].name) > DISPLAY_CHAR_MAX_X2;
+  if(mode == MODE_OUTPUT)
+    result = strlen(devices[itemIndexOutput].name) > DISPLAY_CHAR_MAX_X2;
   else if(mode == MODE_APPLICATION)
     result = strlen(sessions[itemIndexApp].name) > DISPLAY_CHAR_MAX_X2;
   else if(mode == MODE_GAME)
@@ -639,16 +639,16 @@ void UpdateDisplay()
     return;
   }
   
-  if(mode == MODE_MASTER)
+  if(mode == MODE_OUTPUT)
   {
-    if(stateMaster == STATE_MASTER_NAVIGATE)
+    if(stateOutput == STATE_OUTPUT_NAVIGATE)
     {
-      uint8_t scrollLeft = CanScrollLeft(itemIndexMaster, deviceCount, settings.continuousScroll);
-      uint8_t scrollRight = CanScrollRight(itemIndexMaster, deviceCount, settings.continuousScroll);
-      DisplayMasterSelectScreen(display, devices[itemIndexMaster].name, devices[itemIndexMaster].volume, devices[itemIndexMaster].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT);
+      uint8_t scrollLeft = CanScrollLeft(itemIndexOutput, deviceCount, settings.continuousScroll);
+      uint8_t scrollRight = CanScrollRight(itemIndexOutput, deviceCount, settings.continuousScroll);
+      DisplayOutputSelectScreen(display, devices[itemIndexOutput].name, devices[itemIndexOutput].volume, devices[itemIndexOutput].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT);
     }
-    else if(stateMaster == STATE_MASTER_EDIT)
-      DisplayMasterEditScreen(display, devices[itemIndexMaster].name, devices[itemIndexMaster].volume, devices[itemIndexMaster].isMuted, mode, MODE_COUNT);
+    else if(stateOutput == STATE_OUTPUT_EDIT)
+      DisplayOutputEditScreen(display, devices[itemIndexOutput].name, devices[itemIndexOutput].volume, devices[itemIndexOutput].isMuted, mode, MODE_COUNT);
   }
   else if(mode == MODE_APPLICATION)
   {
@@ -697,7 +697,7 @@ void UpdateLighting()
     return;
   }
   
-  if(mode == MODE_MASTER)
+  if(mode == MODE_OUTPUT)
   {
     uint8_t volumeColor = round(sessions[0].volume * 2.55f);
     SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
@@ -792,7 +792,7 @@ int8_t FindItem(uint32_t id, Item* items, uint8_t itemCount)
 //---------------------------------------------------------
 bool IsItemActive(int8_t index)
 {
-  if(mode == MODE_MASTER && itemIndexMaster == index)
+  if(mode == MODE_OUTPUT && itemIndexOutput == index)
     return true;
 
   else if(mode == MODE_APPLICATION && itemIndexApp == index)
