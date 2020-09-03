@@ -88,7 +88,6 @@ namespace MaxMix.Services.Audio
             if (_volume == value)
                 return;
 
-            _isNotifyEnabled = false;
             _volume = value;
             foreach (var session in _sessions.Values)
                 session.Volume = value;
@@ -103,7 +102,6 @@ namespace MaxMix.Services.Audio
             if (_isMuted == value)
                 return;
 
-            _isNotifyEnabled = false;
             _isMuted = value;
             foreach (var session in _sessions.Values)
                 session.IsMuted = value;
@@ -115,12 +113,6 @@ namespace MaxMix.Services.Audio
         {
             _volume = session.Volume;
             _isMuted = session.IsMuted;
-
-            if (!_isNotifyEnabled)
-            {
-                _isNotifyEnabled = true;
-                return;
-            }
 
             VolumeChanged?.Invoke(this);
         }
