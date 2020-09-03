@@ -60,9 +60,7 @@ namespace MaxMix.ViewModels
         /// </summary>
         public event EventHandler ExitRequested;
         #endregion
-
-
-         
+        
         #region Fields
         private ISerializationService _serializationService;
         private IAudioSessionService _audioSessionService;

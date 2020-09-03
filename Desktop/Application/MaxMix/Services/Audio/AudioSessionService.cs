@@ -61,12 +61,6 @@ namespace MaxMix.Services.Audio
         /// <inheritdoc/>
         public void Stop()
         {
-            if (_deviceEnumerator != null)
-            {
-                _deviceEnumerator.DeviceAdded -= OnDeviceAdded;
-                _deviceEnumerator = null;
-            }
-
             foreach (var device in _devices.Values)
             {
                 UnregisterDevice(device);
@@ -81,6 +75,13 @@ namespace MaxMix.Services.Audio
 
             _devices.Clear();
             _sessionGoups.Clear();
+
+
+            if (_deviceEnumerator != null)
+            {
+                _deviceEnumerator.DeviceAdded -= OnDeviceAdded;
+                _deviceEnumerator = null;
+            }
         }
 
 
