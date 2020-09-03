@@ -237,7 +237,7 @@ namespace MaxMix.ViewModels
             if (message.GetType() == typeof(MessageUpdateVolumeSession))
             {
                 var message_ = message as MessageUpdateVolumeSession;
-                _audioSessionService.SetSessionVolume(message_.Id, message_.Volume, message_.IsMuted);
+                _audioSessionService.SetItemVolume(message_.Id, message_.Volume, message_.IsMuted);
             }
         }
 

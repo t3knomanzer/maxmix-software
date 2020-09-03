@@ -9,19 +9,17 @@ using System.Threading;
 namespace MaxMix.Services.Audio
 {
     /// <summary>
-    /// Provides functionality to interact with windows audio sessions.
+    /// Provides a higher level interface to interact with windows audio
+    /// devices and sessions and adds extra features.
     /// </summary>
     internal class AudioSessionService : IAudioSessionService
     {
         #region Constructor
-        public AudioSessionService()
-        {
-            _synchronizationContext = SynchronizationContext.Current;
-        }
+        public AudioSessionService() { }
         #endregion
 
         #region Fields
-        private readonly SynchronizationContext _synchronizationContext;
+        private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
         private readonly IDictionary<int, IAudioDevice> _devices = new ConcurrentDictionary<int, IAudioDevice>();
         private readonly IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
         private MMDeviceEnumerator _deviceEnumerator;
@@ -55,17 +53,31 @@ namespace MaxMix.Services.Audio
         /// <inheritdoc/>
         public void Start()
         {
+            // Initialization needs to happen in it's own thread for CSCore
+            // to work properly.
             ThreadPool.QueueUserWorkItem(Initialize);
         }
 
         /// <inheritdoc/>
         public void Stop()
         {
+            if (_deviceEnumerator != null)
+            {
+                _deviceEnumerator.DeviceAdded -= OnDeviceAdded;
+                _deviceEnumerator = null;
+            }
+
             foreach (var device in _devices.Values)
+            {
+                UnregisterDevice(device);
                 device.Dispose();
+            }
 
             foreach (var session in _sessions.Values)
+            {
+                UnregisterSession(session);
                 session.Dispose();
+            }
 
             _devices.Clear();
             _sessions.Clear();
@@ -73,29 +85,35 @@ namespace MaxMix.Services.Audio
 
 
         /// <summary>
-        /// Sets the volume of an audio session.
+        /// Sets the volume of a device or session.
         /// </summary>
-        /// <param name="id">The App Id of the target session.</param>
-        /// <param name="volume">The desired volume.</param>
-        public void SetSessionVolume(int id, int volume, bool isMuted)
+        /// <param name="id">The Id of the target session.</param>
+        /// <param name="volume">The desired volume from 0 to 100.</param>
+        /// <param name="isMuted">Wether the session should be muted.</param>
+        public void SetItemVolume(int id, int volume, bool isMuted)
         {
             if (_devices.TryGetValue(id, out var device))
             {
                 device.Volume = volume;
                 device.IsMuted = isMuted;
-                return;
             }
-
-            if (_sessions.TryGetValue(id, out var session))
+            else if(_sessions.TryGetValue(id, out var session))
             {
                 session.Volume = volume;
                 session.IsMuted = isMuted;
-                return;
+            }
+            else 
+            { 
+                // TODO: Raise error
             }
         }
         #endregion
 
         #region Private Methods
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stateInfo"></param>
         private void Initialize(object stateInfo)
         {
             _deviceEnumerator = new MMDeviceEnumerator();
@@ -109,12 +127,24 @@ namespace MaxMix.Services.Audio
                 OnDefaultDeviceChanged(defaultDevice);
         }
 
+        /// <summary>
+        /// Checks that the session references a valid process.
+        /// There are situations where we may get invalid sessions pointing
+        /// at null processes which cause issues further down.
+        /// </summary>
+        /// <param name="session">The session to validate.</param>
+        /// <returns>Wether the session is valid or not.</returns>
         private bool ValidateSession(AudioSessionControl session)
         {
             var session2 = session.QueryInterface<AudioSessionControl2>();
             return session2.Process != null;
         }
 
+        /// <summary>
+        /// Registers the session with the service so it's aware
+        /// of events and they're handled properly.
+        /// </summary>
+        /// <param name="session_">The audio session to register.</param>
         private void RegisterSession(IAudioSession session_)
         {  
             var session = session_ as AudioSession;
@@ -123,12 +153,53 @@ namespace MaxMix.Services.Audio
             _sessions.Add(session.ID, session);
             session.SessionEnded += OnSessionEnded;
             session.VolumeChanged += OnSessionVolumeChanged;
+        }
 
-            RaiseSessionCreated(session.ID, session.DisplayName, session.Volume, session.IsMuted);
+        /// <summary>
+        /// Unregisters the session from the service so events
+        /// are not responded to anymore.
+        /// </summary>
+        /// <param name="session"></param>
+        private void UnregisterSession(IAudioSession session)
+        {
+            session.SessionEnded -= OnSessionEnded;
+            session.VolumeChanged -= OnSessionVolumeChanged;
+            if (_sessions.ContainsKey(session.ID))
+                _sessions.Remove(session.ID);
+        }
+
+        /// <summary>
+        /// Registers the device with the service so it's aware
+        /// of events and they're handled properly.
+        /// </summary>
+        /// <param name="device"></param>
+        private void RegisterDevice(IAudioDevice device)
+        {
+            _devices.Add(device.ID, device);
+            device.DeviceDefaultChanged += OnDefaultDeviceChanged;
+            device.DeviceRemoved += OnDeviceRemoved;
+            device.DeviceVolumeChanged += OnDeviceVolumeChanged;
+        }
+
+        /// <summary>
+        /// Unregisters the session from the service so events
+        /// are not responded to anymore.
+        /// <param name="device">The device to unregister</param>
+        private void UnregisterDevice(IAudioDevice device)
+        {
+            device.DeviceDefaultChanged -= OnDefaultDeviceChanged;
+            device.DeviceRemoved -= OnDeviceRemoved;
+            device.DeviceVolumeChanged -= OnDeviceVolumeChanged;
+            if (_devices.ContainsKey(device.ID))
+                _devices.Remove(device.ID);
         }
         #endregion
 
         #region Event Handlers
+        /// <summary>
+        /// Handles 
+        /// </summary>
+        /// <param name="device"></param>
         private void OnDefaultDeviceChanged(IAudioDevice device)
         {
             if (_sessionManager != null)
@@ -151,11 +222,15 @@ namespace MaxMix.Services.Audio
 
         private void OnDeviceAdded(object sender, DeviceNotificationEventArgs e)
         {
-            e.TryGetDevice(out var device);
-            if (device != null)
+            if(e.TryGetDevice(out var device))
                 OnDeviceAdded(device);
         }
 
+        /// <summary>
+        /// Handles wrapping the device into a higher level object, registering
+        /// it in the service and notifying of the event.
+        /// </summary>
+        /// <param name="device_">A CSCore audio device object.</param>
         private void OnDeviceAdded(MMDevice device_)
         {
             var device = new AudioDevice(device_);
@@ -165,19 +240,28 @@ namespace MaxMix.Services.Audio
                 return;
             }
 
-            _devices.Add(device.ID, device);
-            device.DeviceDefaultChanged += OnDefaultDeviceChanged;
-            device.DeviceRemoved += OnDeviceRemoved;
-            device.DeviceVolumeChanged += OnDeviceVolumeChanged;
-
+            RegisterDevice(device);
             RaiseDeviceCreated(device.ID, device.DisplayName, device.Volume, device.IsMuted);
         }
 
+        /// <summary>
+        /// Handles the removal and notification of the device from the service.
+        /// </summary>
+        /// <param name="device">The device to remove</param>
         private void OnDeviceRemoved(IAudioDevice device)
         {
-            RaiseDeviceRemoved(device.ID);
+            if (_devices.ContainsKey(device.ID))
+            {
+                UnregisterDevice(device);
+                RaiseDeviceRemoved(device.ID);
+            }
         }
 
+        /// <summary>
+        /// Handles changes and notifications required when the volume
+        /// of a device or it's mute state has changed.
+        /// </summary>
+        /// <param name="device"></param>
         private void OnDeviceVolumeChanged(IAudioDevice device)
         {
             RaiseDeviceVolumeChanged(device.ID, device.Volume, device.IsMuted);
@@ -188,6 +272,11 @@ namespace MaxMix.Services.Audio
             OnSessionCreated(e.NewSession);
         }
 
+        /// <summary>
+        /// Handles wrapping the session into a higher level object, registering
+        /// it in the service and notifying of the event.
+        /// </summary>
+        /// <param name="session_"></param>
         private void OnSessionCreated(AudioSessionControl session_)
         {
             var session = new AudioSession(session_);
@@ -198,20 +287,28 @@ namespace MaxMix.Services.Audio
             }
 
             RegisterSession(session);
+            RaiseSessionCreated(session.ID, session.DisplayName, session.Volume, session.IsMuted);
         }
 
+        /// <summary>
+        /// Handles the removal and notification of the session from the service.
+        /// </summary>
+        /// <param name="session"></param>
         private void OnSessionEnded(IAudioSession session)
         {
-            if (_sessions.Remove(session.ID)) 
+            if (_sessions.ContainsKey(session.ID)) 
             {
-                session.SessionEnded -= OnSessionEnded;
-                session.VolumeChanged -= OnSessionVolumeChanged;
-                session.Dispose();
+                UnregisterSession(session);
+                RaiseSessionRemoved(session.ID);
             }
 
-            RaiseSessionRemoved(session.ID);
         }
 
+        /// <summary>
+        /// Handles changes and notifications required when the volume
+        /// of a device or it's mute state has changed.
+        /// </summary>
+        /// <param name="session"></param>
         private void OnSessionVolumeChanged(IAudioSession session)
         {
             RaiseSessionVolumeChanged(session.ID, session.Volume, session.IsMuted);

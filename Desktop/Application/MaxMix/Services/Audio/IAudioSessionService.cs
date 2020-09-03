@@ -6,7 +6,7 @@ namespace MaxMix.Services.Audio
     {
         void Start();
         void Stop();
-        void SetSessionVolume(int id, int volume, bool isMuted);
+        void SetItemVolume(int id, int volume, bool isMuted);
 
         event DefaultAudioDeviceChangedDelegate DefaultDeviceChanged;
         event AudioDeviceCreatedDelegate DeviceCreated;
