@@ -142,7 +142,7 @@ namespace MaxMix.Services.Audio
             if (!string.IsNullOrEmpty(fileName))
                 return fileName.GetHashCode();
 
-            return session.Id;
+            return (session as AudioSession).ProcessID;
         }
 
         /// <summary>
