@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace MaxMix.Services.Audio
 {
@@ -24,6 +25,8 @@ namespace MaxMix.Services.Audio
             _endpointVolume = AudioEndpointVolume.FromDevice(Device);
             _endpointVolume.RegisterControlChangeNotify(_callback);
             _callback.NotifyRecived += OnEndpointVolumeChanged;
+
+            UpdateDisplayName();
         }
         #endregion
 
@@ -60,7 +63,7 @@ namespace MaxMix.Services.Audio
         public int Id => Device.DeviceID.GetHashCode();
 
         /// <inheritdoc/>
-        public string DisplayName => Device.FriendlyName;
+        public string DisplayName { get; protected set; }
 
         /// <inheritdoc/>
         public bool IsDefault
@@ -120,6 +123,21 @@ namespace MaxMix.Services.Audio
                 try { _endpointVolume.IsMuted = value; }
                 catch { }
             }
+        }
+        #endregion
+
+        #region Private Methods
+        private void UpdateDisplayName()
+        {
+            var displayName = Device.FriendlyName;
+            var match = Regex.Match(displayName, @"\(+.*\)+");
+            if (match.Success)
+            {
+                displayName = match.Value;
+                displayName = displayName.Substring(1, displayName.Length - 2);
+            }
+
+            DisplayName = displayName;
         }
         #endregion
 
