@@ -14,7 +14,7 @@ namespace MaxMix.Services.Audio
         /// <summary>
         /// The computed Identifier for this session.
         /// </summary>
-        int ID { get; }
+        int Id { get; }
 
         /// <summary>
         /// 

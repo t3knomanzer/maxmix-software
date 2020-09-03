@@ -57,7 +57,7 @@ namespace MaxMix.Services.Audio
         public MMDevice Device { get; private set; }
 
         /// <inheritdoc/>
-        public int ID => Device.DeviceID.GetHashCode();
+        public int Id => Device.DeviceID.GetHashCode();
 
         /// <inheritdoc/>
         public string DisplayName => Device.FriendlyName;

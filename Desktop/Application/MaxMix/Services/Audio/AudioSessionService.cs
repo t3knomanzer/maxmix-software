@@ -211,16 +211,16 @@ namespace MaxMix.Services.Audio
         /// <param name="device"></param>
         private void RegisterDevice(IAudioDevice device)
         {
-            _devices.Add(device.ID, device);
+            _devices.Add(device.Id, device);
             device.DeviceDefaultChanged += OnDefaultDeviceChanged;
             device.DeviceRemoved += OnDeviceRemoved;
             device.DeviceVolumeChanged += OnDeviceVolumeChanged;
 
-            RaiseDeviceCreated(device.ID, device.DisplayName, device.Volume, device.IsMuted);
+            RaiseDeviceCreated(device.Id, device.DisplayName, device.Volume, device.IsMuted);
 
             var sessionManager = AudioSessionManager2.FromMMDevice(device.Device);
             sessionManager.SessionCreated += OnSessionCreated;
-            _sessionManagers.Add(device.ID, sessionManager);
+            _sessionManagers.Add(device.Id, sessionManager);
 
             foreach (var session in sessionManager.GetSessionEnumerator())
             {
@@ -235,17 +235,17 @@ namespace MaxMix.Services.Audio
         /// <param name="device">The device to unregister</param>
         private void UnregisterDevice(IAudioDevice device)
         {
-            if (_sessionManagers.ContainsKey(device.ID))
-                _sessionManagers.Remove(device.ID);
+            if (_sessionManagers.ContainsKey(device.Id))
+                _sessionManagers.Remove(device.Id);
 
             device.DeviceDefaultChanged -= OnDefaultDeviceChanged;
             device.DeviceRemoved -= OnDeviceRemoved;
             device.DeviceVolumeChanged -= OnDeviceVolumeChanged;
 
-            if (_devices.ContainsKey(device.ID))
+            if (_devices.ContainsKey(device.Id))
             {
-                _devices.Remove(device.ID);
-                RaiseDeviceRemoved(device.ID);
+                _devices.Remove(device.Id);
+                RaiseDeviceRemoved(device.Id);
             }
 
             device.Dispose();
@@ -259,7 +259,7 @@ namespace MaxMix.Services.Audio
         /// <param name="device"></param>
         private void OnDefaultDeviceChanged(IAudioDevice device)
         {
-            RaiseDefaultDeviceChanged(device.ID);
+            RaiseDefaultDeviceChanged(device.Id);
         }
 
         private void OnDeviceAdded(object sender, DeviceNotificationEventArgs e)
@@ -276,7 +276,7 @@ namespace MaxMix.Services.Audio
         private void OnDeviceAdded(MMDevice device_)
         {
             var device = new AudioDevice(device_);
-            if (_devices.ContainsKey(device.ID))
+            if (_devices.ContainsKey(device.Id))
             {
                 device.Dispose();
                 return;
@@ -301,7 +301,7 @@ namespace MaxMix.Services.Audio
         /// <param name="device"></param>
         private void OnDeviceVolumeChanged(IAudioDevice device)
         {
-            RaiseDeviceVolumeChanged(device.ID, device.Volume, device.IsMuted);
+            RaiseDeviceVolumeChanged(device.Id, device.Volume, device.IsMuted);
         }
 
         private void OnSessionCreated(object sender, SessionCreatedEventArgs e)
