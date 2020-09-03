@@ -60,7 +60,7 @@ namespace MaxMix.Services.Audio
         /// <summary>
         /// The ProcessID that created the audio session.
         /// </summary>
-        public int ProcessID => _session2.ProcessID;
+        public int ProcessID => IsSystemSound ? 0 : _session2.ProcessID;
 
         /// <summary>
         /// The process that created the audio session.

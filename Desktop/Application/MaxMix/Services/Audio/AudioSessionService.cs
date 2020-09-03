@@ -138,11 +138,15 @@ namespace MaxMix.Services.Audio
         /// <returns>The id used for the group of this session.</returns>
         private int GetSessionGroupId(IAudioSession session)
         {
-            var fileName = (session as AudioSession).Process.GetMainModuleFileName();
+            var audioSession = session as AudioSession;
+            if (audioSession.IsSystemSound)
+                return audioSession.ProcessID;
+
+            var fileName = audioSession.Process.GetMainModuleFileName();
             if (!string.IsNullOrEmpty(fileName))
                 return fileName.GetHashCode();
 
-            return (session as AudioSession).ProcessID;
+            return audioSession.ProcessID;
         }
 
         /// <summary>
