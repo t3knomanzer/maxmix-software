@@ -49,7 +49,7 @@ namespace MaxMix.Services.Audio
         public AudioSessionControl Session { get; private set; }
 
         /// <inheritdoc/>
-        public int Id => IsSystemSound ? DisplayName.GetHashCode() : _session2.SessionIdentifier.GetHashCode();
+        public int Id => _session2.SessionIdentifier.GetHashCode();
 
         /// <inheritdoc/>
         public string DisplayName { get; protected set; }

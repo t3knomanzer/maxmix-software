@@ -29,7 +29,6 @@ namespace MaxMix.Services.Audio
         private readonly IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
         private int _volume = 100;
         private bool _isMuted = false;
-        private bool _isNotifyEnabled = true;
         #endregion
 
         #region Properties
