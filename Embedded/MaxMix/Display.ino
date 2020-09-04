@@ -11,16 +11,17 @@
 #include <Wire.h>
 #include "Logo.h"
 
-float timerDisplayA = 0;
-float timerDisplayB = 0;
+SQ15x16 timerDisplayA = 0;
+SQ15x16 timerDisplayB = 0;
 
 //********************************************************
 // *** FUNCTIONS
 //********************************************************
 void TimerDisplayUpdate(uint32_t delta)
 {
-  timerDisplayA += delta / 1000.0f;
-  timerDisplayB += delta / 1000.0f;
+  SQ15x16 dt = SQ15x16(delta) / 1000;
+  timerDisplayA += dt;
+  timerDisplayB += dt;
 }
 
 void ResetTimerDisplayA()
@@ -39,12 +40,12 @@ void TimerDisplayReset()
   ResetTimerDisplayB();
 }
 
-float GetTimerDisplayA()
+SQ15x16 GetTimerDisplayA()
 {
   return max(0, timerDisplayA - DISPLAY_SCROLL_IDLE_TIME);
 }
 
-float GetTimerDisplayB()
+SQ15x16 GetTimerDisplayB()
 {
   return max(0, timerDisplayB - DISPLAY_SCROLL_IDLE_TIME);
 }
@@ -189,7 +190,7 @@ void DisplayGameEditScreen(Adafruit_SSD1306* display, char* nameA, char* nameB, 
 //---------------------------------------------------------
 // Draws a row of the Game mode screen
 //---------------------------------------------------------
-void DrawGameEditItem(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, uint8_t px, uint8_t py, float (*getTime)(), void (*resetTime)())
+void DrawGameEditItem(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, uint8_t px, uint8_t py, SQ15x16 (*getTime)(), void (*resetTime)())
 {
   // Name 
   display->setTextSize(1);             
@@ -286,13 +287,13 @@ void DrawSelectionArrows(Adafruit_SSD1306* display, uint8_t leftArrow, uint8_t r
 // Draw Selection Arrows
 //---------------------------------------------------------
 void DrawItemName(Adafruit_SSD1306* display, char* name, uint8_t fontSize, uint8_t charWidth, uint8_t charHeight, uint8_t charSpacing,
-                  uint8_t x, uint8_t y, float (*getTime)(), void (*resetTime)(), float scrollSpeed)
+                  uint8_t x, uint8_t y, SQ15x16 (*getTime)(), void (*resetTime)(), SQ15x16 scrollSpeed)
 {
   uint8_t nameCopies = 1;
   uint8_t nameLength = strlen(name);
-  int16_t scrollMin = 0;
-  int16_t scrollMax = (nameLength + 1) * (charWidth + charSpacing);
-  int16_t scroll = Scroll(name, (*getTime)(), scrollMin, scrollMax, scrollSpeed); 
+  SQ15x16 scrollMin = 0;
+  SQ15x16 scrollMax = (nameLength + 1) * (charWidth + charSpacing);
+  SQ15x16 scroll = Scroll(name, (*getTime)(), scrollMin, scrollMax, scrollSpeed);
 
   if(abs(scroll) >= abs(scrollMax))
     (*resetTime)();
@@ -302,7 +303,7 @@ void DrawItemName(Adafruit_SSD1306* display, char* name, uint8_t fontSize, uint8
 
   display->setTextSize(fontSize);
   display->setTextColor(WHITE);  
-  display->setCursor(x - scroll, y);
+  display->setCursor(x - scroll.getInteger(), y);
   while(nameCopies > 0)
   {
     for(size_t i = 0; i < nameLength; i++)
@@ -402,15 +403,15 @@ void DrawEditVolume(Adafruit_SSD1306* display, uint8_t volume)
   display->print(volume);
 }
 
-int16_t Scroll(char* name, float time, float scrollMin, float scrollMax, float speed)
+SQ15x16 Scroll(char* name, SQ15x16 time, SQ15x16 scrollMin, SQ15x16 scrollMax, SQ15x16 speed)
 {
   uint8_t nameLength = strlen(name);
   if(nameLength <= DISPLAY_CHAR_MAX_X2)
     return 0;
 
   // Value mapping: (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-  float timeMax = nameLength / speed;
-  int16_t scroll = (time - 0.0f) * (scrollMax - scrollMin) / (timeMax - 0.0f) + scrollMin;
+  SQ15x16 timeMax = nameLength / speed;
+  SQ15x16 scroll = (time - 0) * (scrollMax - scrollMin) / (timeMax - 0) + scrollMin;
 
   return scroll;
 }
