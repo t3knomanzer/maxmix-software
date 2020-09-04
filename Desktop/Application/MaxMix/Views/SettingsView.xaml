@@ -47,11 +47,6 @@
         <CheckBox Grid.Column="1" Grid.Row="3"
                   IsChecked="{Binding ContinuousScroll}" />
 
-        <Label Grid.Column="0" Grid.Row="4"
-               Content="Display System Sounds" />
-        <CheckBox Grid.Column="1" Grid.Row="4"
-                  IsChecked="{Binding SystemSounds}" />
-
         <!-- AccelerationPercentage -->
         <Label Grid.Column="0" Grid.Row="5"
                Content="Encoder acceleration (percentage)" />
