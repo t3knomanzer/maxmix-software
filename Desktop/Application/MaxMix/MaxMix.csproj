@@ -132,6 +132,7 @@
     <Compile Include="Services\Audio\AudioSessionGroup.cs" />
     <Compile Include="Services\Audio\AudioSessionService.cs" />
     <Compile Include="Services\Audio\AudioSession.cs" />
+    <Compile Include="Services\Audio\IAudioDevice.cs" />
     <Compile Include="Services\Audio\IAudioSession.cs" />
     <Compile Include="Services\Audio\IAudioSessionService.cs" />
     <Compile Include="Services\Communication\Serial\CobsSerializationService .cs" />
@@ -145,7 +146,6 @@
     <Compile Include="Services\Communication\Message\MessageRemoveSession.cs" />
     <Compile Include="Services\Communication\Message\MessageSettings.cs" />
     <Compile Include="Services\Communication\Message\MessageUpdateVolumeSession.cs" />
-    <Compile Include="Services\Update\UpdateService.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />

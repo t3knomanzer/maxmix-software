@@ -66,7 +66,7 @@ void RemoveItemCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t* itemC
 {
   // Re-order items array
   for(uint8_t i = itemIndex; i < *itemCount - 1; i++)
-    items[i] = items[i + 1];
+    itemsBuffer[i] = itemsBuffer[i + 1];
 
   *itemCount = *itemCount - 1;
 }
@@ -83,7 +83,7 @@ void UpdateItemVolumeCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t 
 //---------------------------------------------------------
 void UpdateSettingsCommand(uint8_t* packageBuffer, Settings* settings) 
 {
-  settings->displayNewSession = packageBuffer[2];
+  settings->displayNewItem = packageBuffer[2];
   settings->sleepWhenInactive = packageBuffer[3];
   settings->sleepAfterSeconds = packageBuffer[4];
   settings->continuousScroll = packageBuffer[5];
@@ -91,6 +91,7 @@ void UpdateSettingsCommand(uint8_t* packageBuffer, Settings* settings)
 
   uint16_t dblTapTime = ((uint16_t)packageBuffer[7]) |
                         ((uint16_t)packageBuffer[8] << 8);
+
   encoderButton.doubleTapTime(dblTapTime);
 }
 
@@ -116,4 +117,19 @@ uint32_t GetIdFromPackage(uint8_t* packageBuffer)
                   ((uint32_t)packageBuffer[4] << 16) |
                   ((uint32_t)packageBuffer[5] << 24);
     return id;
+}
+
+bool GetIsDeviceFromAddPackage(uint8_t* packageBuffer)
+{
+    return packageBuffer[44] > 0;
+}
+
+bool GetIsDeviceFromRemovePackage(uint8_t* packageBuffer)
+{
+    return packageBuffer[6] > 0;
+}
+
+bool GetIsDeviceFromUpdatePackage(uint8_t* packageBuffer)
+{
+    return packageBuffer[8] > 0;
 }

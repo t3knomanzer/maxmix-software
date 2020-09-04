@@ -13,11 +13,11 @@ namespace MaxMix.Services.Audio
         #region Constructor
         public AudioSession(AudioSessionControl session)
         {
-            _session = session;
-            _session.RegisterAudioSessionNotification(_events);
+            Session = session;
+            Session.RegisterAudioSessionNotification(_events);
 
-            _session2 = _session.QueryInterface<AudioSessionControl2>();
-            _simpleAudio = _session.QueryInterface<SimpleAudioVolume>();
+            _session2 = Session.QueryInterface<AudioSessionControl2>();
+            _simpleAudio = Session.QueryInterface<SimpleAudioVolume>();
 
             _events.StateChanged += OnStateChanged;
             _events.SimpleVolumeChanged += OnVolumeChanged;
@@ -36,7 +36,6 @@ namespace MaxMix.Services.Audio
 
         #region Fields
         private AudioSessionEvents _events = new AudioSessionEvents();
-        private AudioSessionControl _session;
         private AudioSessionControl2 _session2;
         private SimpleAudioVolume _simpleAudio;
         private bool _isNotifyEnabled = true;
@@ -47,7 +46,10 @@ namespace MaxMix.Services.Audio
 
         #region Properties
         /// <inheritdoc/>
-        public int ID => IsSystemSound ? DisplayName.GetHashCode() : _session2.ProcessID;
+        public AudioSessionControl Session { get; private set; }
+
+        /// <inheritdoc/>
+        public int Id => _session2.SessionIdentifier.GetHashCode();
 
         /// <inheritdoc/>
         public string DisplayName { get; protected set; }
@@ -58,7 +60,7 @@ namespace MaxMix.Services.Audio
         /// <summary>
         /// The ProcessID that created the audio session.
         /// </summary>
-        public int ProcessID => _session2.ProcessID;
+        public int ProcessID => IsSystemSound ? 0 : _session2.ProcessID;
 
         /// <summary>
         /// The process that created the audio session.
@@ -152,8 +154,8 @@ namespace MaxMix.Services.Audio
             _events.StateChanged -= OnStateChanged;
             _events.SimpleVolumeChanged -= OnVolumeChanged;
 
-            _session?.UnregisterAudioSessionNotification(_events);
-            _session = null;
+            Session.UnregisterAudioSessionNotification(_events);
+            Session = null;
             _session2 = null;
             _simpleAudio = null;
         }

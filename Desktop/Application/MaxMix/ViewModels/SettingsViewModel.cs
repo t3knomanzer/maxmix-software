@@ -92,16 +92,6 @@ namespace MaxMix.ViewModels
             }
         }
 
-        public bool SystemSounds
-        {
-            get => _settings.SystemSounds;
-            set
-            {
-                _settings.SystemSounds = value;
-                RaisePropertyChanged();
-            }
-        }
-
         /// <summary>
         /// Value used in the acceleration algorithm.
         /// Increasing the divisor will reduce the acceleration effect.

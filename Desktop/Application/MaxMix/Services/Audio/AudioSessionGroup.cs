@@ -12,7 +12,7 @@ namespace MaxMix.Services.Audio
         #region Constructor
         public AudioSessionGroup(int id, string displayName)
         {
-            ID = id;
+            Id = id;
             DisplayName = displayName;
         }
         #endregion
@@ -26,21 +26,17 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Fields
-        private IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
+        private readonly IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
         private int _volume = 100;
         private bool _isMuted = false;
-        private bool _isNotifyEnabled = true;
         #endregion
 
         #region Properties
         /// <inheritdoc/>
-        public int ID { get; protected set; }
+        public int Id { get; protected set; }
 
         /// <inheritdoc/>
         public string DisplayName { get; protected set; }
-
-        /// <inheritdoc/>
-        public bool IsSystemSound { get; protected set; }
 
         /// <inheritdoc/>
         public int Volume
@@ -58,15 +54,13 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="session"></param>
         public void AddSession(IAudioSession session)
         {
-            if (_sessions.ContainsKey(session.ID))
-            {
-                session.Dispose();
-                return;
-            }
-
-            _sessions.Add(session.ID, session);
+            _sessions.Add(session.Id, session);
             session.VolumeChanged += OnVolumeChanged;
             session.SessionEnded += OnSessionEnded;
 
@@ -74,31 +68,39 @@ namespace MaxMix.Services.Audio
             {
                 _volume = session.Volume;
                 _isMuted = session.IsMuted;
-                IsSystemSound |= session.IsSystemSound;
-
-                VolumeChanged?.Invoke(this);
             }
+        }
+
+        public bool ContainsSession(IAudioSession session)
+        {
+            return _sessions.ContainsKey(session.Id);
         }
         #endregion
 
         #region Private Methods
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
         private void SetVolume(int value)
         {
             if (_volume == value)
                 return;
 
-            _isNotifyEnabled = false;
             _volume = value;
             foreach (var session in _sessions.Values)
                 session.Volume = value;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
         private void SetIsMuted(bool value)
         {
             if (_isMuted == value)
                 return;
 
-            _isNotifyEnabled = false;
             _isMuted = value;
             foreach (var session in _sessions.Values)
                 session.IsMuted = value;
@@ -111,18 +113,12 @@ namespace MaxMix.Services.Audio
             _volume = session.Volume;
             _isMuted = session.IsMuted;
 
-            if (!_isNotifyEnabled)
-            {
-                _isNotifyEnabled = true;
-                return;
-            }
-
             VolumeChanged?.Invoke(this);
         }
 
         private void OnSessionEnded(IAudioSession session)
         {
-            _sessions.Remove(session.ID);
+            _sessions.Remove(session.Id);
             session.Dispose();
 
             if (_sessions.Count > 0)
@@ -133,6 +129,9 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region IDisposable
+        /// <summary>
+        /// 
+        /// </summary>
         public void Dispose()
         {
             foreach (var session in _sessions.Values)

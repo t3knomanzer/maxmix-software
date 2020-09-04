@@ -23,10 +23,14 @@ static const uint8_t  PIN_ENCODER_OUTB = 16; //A2
 static const uint8_t  PIN_ENCODER_SWITCH = 17; //A3
 
 // --- States
-static const uint8_t  MODE_MASTER = 0;
+static const uint8_t  MODE_OUTPUT = 0;
 static const uint8_t  MODE_APPLICATION = 1;
 static const uint8_t  MODE_GAME = 2;
 static const uint8_t  MODE_COUNT = 3;
+
+static const uint8_t  STATE_OUTPUT_NAVIGATE = 0;
+static const uint8_t  STATE_OUTPUT_EDIT = 1;
+static const uint8_t  STATE_OUTPUT_COUNT = 2;
 
 static const uint8_t  STATE_APPLICATION_NAVIGATE = 0;
 static const uint8_t  STATE_APPLICATION_EDIT = 1;
@@ -50,7 +54,8 @@ static const uint8_t  PIXELS_NUM = 8; // Number of pixels in ring
 static const uint16_t ROTARY_ACCELERATION_DIVISOR_MAX = 400;
 
 // --- Messages
-static const uint8_t ITEM_MAX_COUNT = 8;
+static const uint8_t DEVICE_MAX_COUNT = 3;
+static const uint8_t SESSION_MAX_COUNT = 5;
 static const uint8_t ITEM_BUFFER_NAME_SIZE = 36;
 static const uint8_t RECEIVE_BUFFER_SIZE = 128;
 static const uint8_t SEND_BUFFER_SIZE = 9;

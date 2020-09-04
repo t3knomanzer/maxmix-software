@@ -9,12 +9,13 @@ namespace MaxMix.Services.Communication
     internal class MessageAddSession : IMessage
     {
         #region Constructor
-        public MessageAddSession(int id, string name, int volume, bool isMuted)
+        public MessageAddSession(int id, string name, int volume, bool isMuted, bool isDevice)
         {
             _id = id;
             _name = name;
             _volume = volume;
             _isMuted = isMuted;
+            _isDevice = isDevice;
 
             EncodeName();
         }
@@ -23,13 +24,14 @@ namespace MaxMix.Services.Communication
         #region Consts
         private readonly int _nameLength = 36;
         #endregion
-
+        
         #region Fields
         private int _id;
         private string _name;
         private string _encodedName;
         private int _volume;
         private bool _isMuted;
+        private bool _isDevice;
         #endregion
 
         #region Properties
@@ -38,6 +40,7 @@ namespace MaxMix.Services.Communication
         public string EncodedName { get => _encodedName; }
         public int Volume { get => _volume; }
         public bool IsMuted { get => _isMuted; }
+        public bool IsDevice { get => _isDevice; }
         #endregion
 
         #region Private Methods
@@ -65,8 +68,9 @@ namespace MaxMix.Services.Communication
         * NAME         STRING      36
         * VOLUME       BYTE        1
         * ISMUTED      BYTE        1
+        * ISDEVICE     BYTE        1
         * ---------------------------------------
-        *                          42
+        *                          43
         */
 
         public byte[] GetBytes()
@@ -75,15 +79,16 @@ namespace MaxMix.Services.Communication
 
             result.AddRange(BitConverter.GetBytes(Id));
             result.AddRange(Encoding.ASCII.GetBytes(EncodedName));
-            result.Add((byte)Volume);
+            result.Add(Convert.ToByte(Volume));
             result.Add(Convert.ToByte(IsMuted));
+            result.Add(Convert.ToByte(IsDevice));
 
             return result.ToArray();
         }
 
         public bool SetBytes(byte[] bytes)
         {
-            return true;
+            throw new NotImplementedException("Should never be called");
         }
         #endregion
     }
