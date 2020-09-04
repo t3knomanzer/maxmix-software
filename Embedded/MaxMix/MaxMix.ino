@@ -29,8 +29,7 @@
 #include "src/ButtonEvents/ButtonEvents.h"
 #include "src/Rotary/Rotary.h"
 #include "src/TimerOne/TimerOne.h"
-#include "src/FixedPoints/FixedPoints.h"
-#include "src/FixedPoints/FixedPointsCommon.h"
+
 
 //********************************************************
 // *** STRUCTS

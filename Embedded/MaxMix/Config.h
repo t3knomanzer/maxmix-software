@@ -9,6 +9,9 @@
 //
 //********************************************************
 
+#include "src/FixedPoints/FixedPoints.h"
+#include "src/FixedPoints/FixedPointsCommon.h"
+
 //********************************************************
 // *** CONSTS
 //********************************************************
@@ -107,9 +110,9 @@ static const uint8_t DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2 = 14;
 static const uint8_t DISPLAY_WIDGET_DOTGROUP_WIDTH = (MODE_COUNT - 1) * DISPLAY_WIDGET_DOT_SIZE_X1 + DISPLAY_WIDGET_DOT_SIZE_X2 + (MODE_COUNT - 1) * DISPLAY_MARGIN_X2;
 static const uint8_t DISPLAY_WIDGET_DOTGROUP_HEIGHT = DISPLAY_WIDGET_DOT_SIZE_X2;
 
-static const float DISPLAY_SCROLL_SPEED_X2 = 3.0; // Chars per second
-static const float DISPLAY_SCROLL_SPEED_X1 = 4.0; // Chars per second
-static const float DISPLAY_SCROLL_IDLE_TIME = 3.0; // Seconds
+static const SQ15x16 DISPLAY_SCROLL_SPEED_X2 = 3.0; // Chars per second
+static const SQ15x16 DISPLAY_SCROLL_SPEED_X1 = 4.0; // Chars per second
+static const SQ15x16 DISPLAY_SCROLL_IDLE_TIME = 3.0; // Seconds
 
 // - Mode specific
 static const uint8_t DISPLAY_GAME_EDIT_CHAR_MAX = 7;
