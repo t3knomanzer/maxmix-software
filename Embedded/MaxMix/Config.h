@@ -48,7 +48,7 @@ static const uint8_t  STATE_DISPLAY_SLEEP = 1;
 static const uint8_t  DISPLAY_RESET =   4; // Reset pin # (or -1 if sharing Arduino reset pin)
 
 // --- Lighting
-static const uint8_t  PIXELS_NUM = 8; // Number of pixels in ring
+static const uint8_t  PIXELS_COUNT = 8; // Number of pixels in ring
 
 // --- Rotary Encoder
 static const uint16_t ROTARY_ACCELERATION_DIVISOR_MAX = 400;

@@ -97,6 +97,7 @@ volatile int8_t steps = 0;
 uint32_t now = 0;
 uint32_t last = 0;
 uint32_t lastActivityTime = 0;
+uint32_t lastLightingUpdate = 0;
 
 // Lighting
 Adafruit_NeoPixel* pixels;
@@ -127,8 +128,10 @@ void setup()
   Serial.begin(BAUD_RATE);
 
   //--- Pixels
-  pixels = new Adafruit_NeoPixel(PIXELS_NUM, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
+  pixels = new Adafruit_NeoPixel(PIXELS_COUNT, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
+  pixels->setBrightness(50); // approx 20%
   pixels->begin();
+  pixels->show();
 
   // --- Display
   display = InitializeDisplay();
@@ -181,12 +184,17 @@ void loop()
   ClearSend();
   encoderButton.update();
 
-
   if(isDirty || ProcessDisplayScroll())
+  {
     UpdateDisplay();
+  }
 
-  if(isDirty)
-    UpdateLighting();  
+  // Update Lighting at 30Hz
+  if(now >= (lastLightingUpdate + 33))
+  {
+    lastLightingUpdate = now;
+    UpdateLighting();
+  }
 
   TimerDisplayUpdate(now - last);
   isDirty = false;
@@ -678,52 +686,6 @@ void UpdateDisplay()
     }
     else if(stateGame == STATE_GAME_EDIT)
       DisplayGameEditScreen(display, sessions[itemIndexGameA].name, sessions[itemIndexGameB].name, sessions[itemIndexGameA].volume, sessions[itemIndexGameB].volume, sessions[itemIndexGameA].isMuted, sessions[itemIndexGameB].isMuted, mode, MODE_COUNT);
-  }
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void UpdateLighting()
-{
-  if(stateDisplay == STATE_DISPLAY_SLEEP)
-  {
-    SetPixelsColor(pixels, 0,0,0);
-    return;
-  }
-
-  if(sessionCount == 0)
-  {
-    SetPixelsColor(pixels, 128,128,128);
-    return;
-  }
-  
-  if(mode == MODE_OUTPUT)
-  {
-    uint8_t volumeColor = round(sessions[0].volume * 2.55f);
-    SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-  }
-  else if(mode == MODE_APPLICATION)
-  {
-    uint8_t volumeColor = round(sessions[itemIndexApp].volume * 2.55f);
-    SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-  }
-  else if(mode == MODE_GAME)
-  {
-    uint8_t volumeColor;
-    if(stateGame == STATE_GAME_SELECT_A)
-    {
-      volumeColor = round(sessions[itemIndexGameA].volume * 2.55f);
-      SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-    }
-    else if(stateGame == STATE_GAME_SELECT_B)
-    {
-      volumeColor = round(sessions[itemIndexGameB].volume * 2.55f);
-      SetPixelsColor(pixels, volumeColor, 255 - volumeColor, volumeColor);
-    }
-    else
-    {
-      SetPixelsColor(pixels, 128, 128, 128);
-    }
   }
 }
 
