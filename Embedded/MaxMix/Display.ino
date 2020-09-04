@@ -51,6 +51,7 @@ float GetTimerDisplayB()
 
 Adafruit_SSD1306* InitializeDisplay()
 {
+  Wire.setClock(DISPLAY_SPEED);
   Adafruit_SSD1306* display = new Adafruit_SSD1306(DISPLAY_WIDTH, DISPLAY_HEIGHT, &Wire, DISPLAY_RESET);
   display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS);
   display->setRotation(2);
