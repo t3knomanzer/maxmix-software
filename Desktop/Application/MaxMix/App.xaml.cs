@@ -8,6 +8,7 @@ using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -21,6 +22,7 @@ namespace MaxMix
     public partial class App : Application
     {
         IDisposable _errorReporter;
+        private static Mutex _mutex = null;
 
         private void InitErrorReporting()
         {
@@ -40,12 +42,22 @@ namespace MaxMix
 
         private void ApplicationStartup(object sender, StartupEventArgs e)
         {
+            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+
+            bool createdNew;
+            _mutex = new Mutex(true, assemblyName, out createdNew);
+            if (!createdNew)
+            {
+                // App is already running! Exiting the application  
+                Application.Current.Shutdown();
+                return;
+            }
+
             InitErrorReporting();
             DispatcherUnhandledException += OnDispatcherUnhandledException;
 
             var window = new MainWindow();
 
-            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
             string assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             window.Title = string.Format("{0} {1}", assemblyName, assemblyVersion);
 
