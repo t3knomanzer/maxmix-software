@@ -180,7 +180,7 @@ namespace MaxMix.ViewModels
         {
             MessageAcknowledgment ack = new MessageAcknowledgment();
             ack.SetRevision(revision);
-            Debug.WriteLine("Sending ACK: " + ack.GetRevision());
+            Debug.WriteLine($"[MainViewModel] ACK sent. Revision: {revision}");
             _communicationService.Send(ack);
         }
         #endregion
@@ -248,9 +248,6 @@ namespace MaxMix.ViewModels
 
             // Send ACK to device
             SendAck(message.GetRevision());
-
-
-
         }
 
         private void OnCommunicationError(object sender, string e)
