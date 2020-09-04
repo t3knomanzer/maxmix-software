@@ -46,6 +46,7 @@ static const uint8_t  STATE_DISPLAY_SLEEP = 1;
 
 // --- Display
 static const uint8_t  DISPLAY_RESET =   4; // Reset pin # (or -1 if sharing Arduino reset pin)
+static const uint32_t DISPLAY_SPEED =   400000;
 
 // --- Lighting
 static const uint8_t  PIXELS_NUM = 8; // Number of pixels in ring
