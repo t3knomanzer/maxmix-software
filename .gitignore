@@ -2,6 +2,7 @@
 .vs
 .vs/
 Desktop/**/bin
+.pio
 .vscode/
 Desktop/**/obj
 

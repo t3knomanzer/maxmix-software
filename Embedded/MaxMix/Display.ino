@@ -78,6 +78,76 @@ void DisplaySplashScreen(Adafruit_SSD1306* display)
 }
 
 //---------------------------------------------------------
+// Draw Item Name
+//---------------------------------------------------------
+void DrawItemName(Adafruit_SSD1306* display, char* name, uint8_t fontSize, uint8_t charWidth, uint8_t charHeight, uint8_t charSpacing,
+                  uint8_t x, uint8_t y, SQ15x16 (*getTime)(), void (*resetTime)(), SQ15x16 scrollSpeed)
+{
+  uint8_t nameCopies = 1;
+  uint8_t nameLength = strlen(name);
+  SQ15x16 scrollMin = 0;
+  SQ15x16 scrollMax = (nameLength + 1) * (charWidth + charSpacing);
+  SQ15x16 scroll = Scroll(name, (*getTime)(), scrollMin, scrollMax, scrollSpeed);
+
+  if(abs(scroll) >= abs(scrollMax))
+    (*resetTime)();
+
+  if(abs(scroll) > 0)
+    nameCopies = 2;
+
+  display->setTextSize(fontSize);
+  display->setTextColor(WHITE);  
+  display->setCursor(x - scroll.getInteger(), y);
+  while(nameCopies > 0)
+  {
+    for(size_t i = 0; i < nameLength; i++)
+      display->print(name[i]);
+
+    display->print(' ');
+    nameCopies--;
+  }
+}
+
+void DrawSelectionChannelName(Adafruit_SSD1306* display, char* channel)
+{
+  display->setTextSize(1);
+  display->setTextColor(WHITE);
+  display->setCursor(0, DISPLAY_AREA_CENTER_HEIGHT - DISPLAY_CHAR_HEIGHT_X1 - 1);
+  
+  display->print(channel);
+}
+
+void DrawSelectionVolumeBar(Adafruit_SSD1306* display, uint8_t volume, bool isMuted)
+{
+  uint8_t x0, y0, x1, y1;
+
+  // Min limit
+  x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE;
+  y0 = DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2;
+  y1 = y0 + DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1 - 1;
+
+  display->drawLine(x0, y0, x0, y1, WHITE);
+
+  // Bar
+  x0 += 1 + DISPLAY_MARGIN_X1;
+  uint8_t width = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 2;
+  width = map(volume, 0, 100, 0, width);
+
+  if(width > 0)
+  {
+    if(isMuted)
+      display->drawRect(x0, y0, width, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1, WHITE);
+    else
+      display->fillRect(x0, y0, width, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1, WHITE);
+  }
+
+  // Max limit
+  x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - 1;
+
+  display->drawLine(x0, y0, x0, y1, WHITE);
+}
+
+//---------------------------------------------------------
 // Draws the output mode screen
 //---------------------------------------------------------
 void DisplayOutputSelectScreen(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex, uint8_t modeCount)
@@ -169,26 +239,6 @@ void DisplayGameSelectScreen(Adafruit_SSD1306* display, char* name, uint8_t volu
 }
 
 //---------------------------------------------------------
-// Draws the Game mode screen
-//---------------------------------------------------------
-void DisplayGameEditScreen(Adafruit_SSD1306* display, char* nameA, char* nameB, uint8_t volumeA, uint8_t volumeB, bool isMutedA, bool isMutedB, uint8_t modeIndex, uint8_t modeCount)
-{
-  uint8_t py;
-  
-  display->clearDisplay();
-  
-  DrawDotGroup(display, modeIndex, modeCount);
-
-  py = DISPLAY_MARGIN_X2;
-  DrawGameEditItem(display, nameA, volumeA, isMutedA, DISPLAY_AREA_CENTER_MARGIN_SIDE, py, GetTimerDisplayA, ResetTimerDisplayA);
-
-  py = DISPLAY_MARGIN_X2 + DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2 + DISPLAY_MARGIN_X1;
-  DrawGameEditItem(display, nameB, volumeB, isMutedB, DISPLAY_AREA_CENTER_MARGIN_SIDE, py, GetTimerDisplayB, ResetTimerDisplayB);
-
-  display->display();
-}
-
-//---------------------------------------------------------
 // Draws a row of the Game mode screen
 //---------------------------------------------------------
 void DrawGameEditItem(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, uint8_t px, uint8_t py, SQ15x16 (*getTime)(), void (*resetTime)())
@@ -225,6 +275,26 @@ void DrawGameEditItem(Adafruit_SSD1306* display, char* name, uint8_t volume, boo
   // Volume bar min indicator
   px += maxWidth + DISPLAY_MARGIN_X1;
   display->drawLine(px, py, px, py + DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT - 1, WHITE);
+}
+
+//---------------------------------------------------------
+// Draws the Game mode screen
+//---------------------------------------------------------
+void DisplayGameEditScreen(Adafruit_SSD1306* display, char* nameA, char* nameB, uint8_t volumeA, uint8_t volumeB, bool isMutedA, bool isMutedB, uint8_t modeIndex, uint8_t modeCount)
+{
+  uint8_t py;
+  
+  display->clearDisplay();
+  
+  DrawDotGroup(display, modeIndex, modeCount);
+
+  py = DISPLAY_MARGIN_X2;
+  DrawGameEditItem(display, nameA, volumeA, isMutedA, DISPLAY_AREA_CENTER_MARGIN_SIDE, py, GetTimerDisplayA, ResetTimerDisplayA);
+
+  py = DISPLAY_MARGIN_X2 + DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2 + DISPLAY_MARGIN_X1;
+  DrawGameEditItem(display, nameB, volumeB, isMutedB, DISPLAY_AREA_CENTER_MARGIN_SIDE, py, GetTimerDisplayB, ResetTimerDisplayB);
+
+  display->display();
 }
 
 //---------------------------------------------------------
@@ -282,76 +352,6 @@ void DrawSelectionArrows(Adafruit_SSD1306* display, uint8_t leftArrow, uint8_t r
 
     display->fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
   }
-}
-
-//---------------------------------------------------------
-// Draw Selection Arrows
-//---------------------------------------------------------
-void DrawItemName(Adafruit_SSD1306* display, char* name, uint8_t fontSize, uint8_t charWidth, uint8_t charHeight, uint8_t charSpacing,
-                  uint8_t x, uint8_t y, SQ15x16 (*getTime)(), void (*resetTime)(), SQ15x16 scrollSpeed)
-{
-  uint8_t nameCopies = 1;
-  uint8_t nameLength = strlen(name);
-  SQ15x16 scrollMin = 0;
-  SQ15x16 scrollMax = (nameLength + 1) * (charWidth + charSpacing);
-  SQ15x16 scroll = Scroll(name, (*getTime)(), scrollMin, scrollMax, scrollSpeed);
-
-  if(abs(scroll) >= abs(scrollMax))
-    (*resetTime)();
-
-  if(abs(scroll) > 0)
-    nameCopies = 2;
-
-  display->setTextSize(fontSize);
-  display->setTextColor(WHITE);  
-  display->setCursor(x - scroll.getInteger(), y);
-  while(nameCopies > 0)
-  {
-    for(size_t i = 0; i < nameLength; i++)
-      display->print(name[i]);
-
-    display->print(' ');
-    nameCopies--;
-  }
-}
-
-void DrawSelectionChannelName(Adafruit_SSD1306* display, char* channel)
-{
-  display->setTextSize(1);
-  display->setTextColor(WHITE);
-  display->setCursor(0, DISPLAY_AREA_CENTER_HEIGHT - DISPLAY_CHAR_HEIGHT_X1 - 1);
-  
-  display->print(channel);
-}
-
-void DrawSelectionVolumeBar(Adafruit_SSD1306* display, uint8_t volume, bool isMuted)
-{
-  uint8_t x0, y0, x1, y1;
-
-  // Min limit
-  x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE;
-  y0 = DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2;
-  y1 = y0 + DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1 - 1;
-
-  display->drawLine(x0, y0, x0, y1, WHITE);
-
-  // Bar
-  x0 += 1 + DISPLAY_MARGIN_X1;
-  uint8_t width = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 2;
-  width = map(volume, 0, 100, 0, width);
-
-  if(width > 0)
-  {
-    if(isMuted)
-      display->drawRect(x0, y0, width, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1, WHITE);
-    else
-      display->fillRect(x0, y0, width, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1, WHITE);
-  }
-
-  // Max limit
-  x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - 1;
-
-  display->drawLine(x0, y0, x0, y1, WHITE);
 }
 
 void DrawEditVolumeBar(Adafruit_SSD1306* display, uint8_t volume, bool isMuted)
