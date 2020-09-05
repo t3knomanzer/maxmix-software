@@ -15,6 +15,8 @@ using FirmwareInstaller.Framework.Mvvm;
 using FirmwareInstaller.Services.Update;
 using System.Runtime.CompilerServices;
 using Octokit;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace FirmwareInstaller.ViewModels
 {
@@ -43,7 +45,6 @@ namespace FirmwareInstaller.ViewModels
         #endregion
 
         #region Events
-        public event EventHandler ExitRequested;
         #endregion
 
         #region Consts
@@ -56,14 +57,16 @@ namespace FirmwareInstaller.ViewModels
         private InstallService _installService;
 
         private DelegateCommand _installCommand;
-        private DelegateCommand _requestExitCommand;
+        private DelegateCommand<string> _loadFirmwareCommand;
 
         private string _selectedPort;
         private string _selectedVersion;
+        private string _customFwFilePath;
         private IList<string> _logList;
         private string _log;
         private bool _isBusy = false;
         private bool _useOldBootloader = true;
+        private bool _useCustomFw = false;
         #endregion
 
         #region Properties
@@ -88,11 +91,7 @@ namespace FirmwareInstaller.ViewModels
         public string SelectedPort
         {
             get => _selectedPort;
-            set
-            {
-                _selectedPort = value;
-                RaisePropertyChanged();
-            }
+            set => SetProperty(ref _selectedPort, value);
         }
 
         /// <summary>
@@ -101,10 +100,20 @@ namespace FirmwareInstaller.ViewModels
         public string SelectedVersion
         {
             get => _selectedVersion;
+            set => SetProperty(ref _selectedVersion, value);
+        }
+
+
+        /// <summary>
+        /// Selected version to download.
+        /// </summary>
+        public string CustomFwFilePath
+        {
+            get => _customFwFilePath;
             set
             {
-                _selectedVersion = value;
-                RaisePropertyChanged();
+                SetProperty(ref _customFwFilePath, value);
+                InstallCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -116,10 +125,21 @@ namespace FirmwareInstaller.ViewModels
         public bool UseOldBootloader
         {
             get => _useOldBootloader;
+            set => SetProperty(ref _useOldBootloader, value);
+        }
+
+        /// <summary>
+        /// Indicates wether if the connected board is using
+        /// the new or old bootloader. This is determines the baudrate
+        /// used to upload the sketch.
+        /// </summary>
+        public bool UseCustomFw
+        {
+            get => _useCustomFw;
             set
             {
-                _useOldBootloader = value;
-                RaisePropertyChanged();
+                SetProperty(ref _useCustomFw, value);
+                InstallCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -139,11 +159,7 @@ namespace FirmwareInstaller.ViewModels
         public string Log
         {
             get => _log;
-            private set
-            {
-                _log = value;
-                RaisePropertyChanged();
-            }
+            private set => SetProperty(ref _log, value);
         }
 
         #endregion
@@ -166,13 +182,13 @@ namespace FirmwareInstaller.ViewModels
         /// <summary>
         /// Raises the exitRequested event to start the process to shutdown the application.
         /// </summary>
-        public DelegateCommand RequestExitCommand
+        public DelegateCommand<string> LoadFirmwareCommand
         {
             get
             {
-                if (_requestExitCommand == null)
-                    _requestExitCommand = new DelegateCommand(() => RaiseExitRequested());
-                return _requestExitCommand;
+                if (_loadFirmwareCommand == null)
+                    _loadFirmwareCommand = new DelegateCommand<string>(o => LoadFirmware(o));
+                return _loadFirmwareCommand;
             }
         }
         #endregion
@@ -239,9 +255,22 @@ namespace FirmwareInstaller.ViewModels
 
         private bool CanInstall()
         {
-            return !string.IsNullOrEmpty(SelectedPort) &&
-                   !string.IsNullOrEmpty(SelectedVersion) &&
-                   !IsBusy;
+            if(IsBusy)
+            {
+                return false;
+            }
+            else if(string.IsNullOrEmpty(SelectedPort))
+            {
+                return false;
+            }
+            else if (UseCustomFw)
+            {
+                return File.Exists(CustomFwFilePath);
+            }
+            else
+            {
+                return !string.IsNullOrEmpty(SelectedVersion);
+            }
         }
 
         private async void Install()
@@ -249,23 +278,30 @@ namespace FirmwareInstaller.ViewModels
             IsBusy = true;
             ClearLog();
 
-            SendLog($"Downloading version {_selectedVersion}...");
-            var versionFilePath = await _downloadService.DownloadVersionAsync(_selectedVersion);
-            if (string.IsNullOrEmpty(versionFilePath))
+            var fwFilePath = CustomFwFilePath;
+            if (!UseCustomFw)
             {
-                IsBusy = false;
-                return;
+
+                SendLog($"Downloading version {_selectedVersion}...");
+                fwFilePath = await _downloadService.DownloadVersionAsync(_selectedVersion);
+                if (string.IsNullOrEmpty(fwFilePath))
+                {
+                    IsBusy = false;
+                    return;
+                }
             }
 
-            SendLog($"Installing file {versionFilePath} to {_selectedPort}");
-            await _installService.InstallAsync(versionFilePath, _selectedPort, _useOldBootloader);
+            SendLog($"Installing file {fwFilePath} to {_selectedPort}");
+            await _installService.InstallAsync(fwFilePath, _selectedPort, _useOldBootloader);
 
             IsBusy = false;
         }
 
-        private void RaiseExitRequested()
+        private void LoadFirmware(string filePath)
         {
-            ExitRequested?.Invoke(this, EventArgs.Empty);
+            SendLog($"Custom firmware loaded {Path.GetFileName(filePath)}");
+            CustomFwFilePath = filePath;
+            UseCustomFw = true;
         }
         #endregion
 

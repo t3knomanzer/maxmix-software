@@ -84,6 +84,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Framework\Attached\Commands.cs" />
     <Compile Include="Framework\Converters\BoolNegateConverter.cs" />
     <Compile Include="Framework\Mvvm\DelegateCommand.cs" />
     <Compile Include="Framework\Mvvm\ObservableObject.cs" />
@@ -166,5 +167,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

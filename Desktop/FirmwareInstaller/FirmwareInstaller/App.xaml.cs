@@ -24,20 +24,11 @@ namespace FirmwareInstaller
             window.Title = string.Format("{0} {1}", assemblyName, assemblyVersion);
 
             var dataContext = new MainViewModel();
-            dataContext.ExitRequested += OnExitRequested;
 
             window.DataContext = dataContext;
             dataContext.Start();
 
             window.Show();
-        }
-
-        private void OnExitRequested(object sender, EventArgs e)
-        {
-            var dataContext = (MainViewModel)sender;
-            dataContext.Stop();
-
-            Application.Current.Shutdown();
         }
     }
 }
