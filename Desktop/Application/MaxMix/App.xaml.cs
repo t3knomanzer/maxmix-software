@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Diagnostics;
 
 namespace MaxMix
 {
@@ -22,7 +23,7 @@ namespace MaxMix
     public partial class App : Application
     {
         IDisposable _errorReporter;
-        private static Mutex _mutex = null;
+        private static Mutex _singleInstanceMutex = null;
 
         private void InitErrorReporting()
         {
@@ -40,15 +41,20 @@ namespace MaxMix
             _errorReporter.Dispose();
         }
 
-        private void ApplicationStartup(object sender, StartupEventArgs e)
+        private bool IsApplicationRunning()
         {
             var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+            bool mutexAcquired;
+            _singleInstanceMutex = new Mutex(true, assemblyName, out mutexAcquired);
+            return mutexAcquired;
+        }
 
-            bool createdNew;
-            _mutex = new Mutex(true, assemblyName, out createdNew);
-            if (!createdNew)
+        private void ApplicationStartup(object sender, StartupEventArgs e)
+        {
+            if (!IsApplicationRunning())
             {
-                // App is already running! Exiting the application  
+                // Application is already running !
+                Debug.WriteLine("[App] Application is already running, exiting.");
                 Application.Current.Shutdown();
                 return;
             }
@@ -58,6 +64,7 @@ namespace MaxMix
 
             var window = new MainWindow();
 
+            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
             string assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             window.Title = string.Format("{0} {1}", assemblyName, assemblyVersion);
 
@@ -78,6 +85,8 @@ namespace MaxMix
             window.taskbarIcon.Dispose();
 
             _errorReporter.Dispose();
+
+            _singleInstanceMutex.Dispose();
 
             Application.Current.Shutdown();
         }
