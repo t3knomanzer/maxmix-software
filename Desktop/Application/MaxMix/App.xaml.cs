@@ -8,10 +8,12 @@ using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Diagnostics;
 
 namespace MaxMix
 {
@@ -21,6 +23,7 @@ namespace MaxMix
     public partial class App : Application
     {
         IDisposable _errorReporter;
+        private static Mutex _singleInstanceMutex = null;
 
         private void InitErrorReporting()
         {
@@ -38,8 +41,24 @@ namespace MaxMix
             _errorReporter.Dispose();
         }
 
+        private bool IsApplicationRunning()
+        {
+            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+            bool mutexAcquired;
+            _singleInstanceMutex = new Mutex(true, assemblyName, out mutexAcquired);
+            return mutexAcquired;
+        }
+
         private void ApplicationStartup(object sender, StartupEventArgs e)
         {
+            if (!IsApplicationRunning())
+            {
+                // Application is already running !
+                Debug.WriteLine("[App] Application is already running, exiting.");
+                Application.Current.Shutdown();
+                return;
+            }
+
             InitErrorReporting();
             DispatcherUnhandledException += OnDispatcherUnhandledException;
 
@@ -66,6 +85,8 @@ namespace MaxMix
             window.taskbarIcon.Dispose();
 
             _errorReporter.Dispose();
+
+            _singleInstanceMutex.Dispose();
 
             Application.Current.Shutdown();
         }
