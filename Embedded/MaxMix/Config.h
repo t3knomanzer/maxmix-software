@@ -53,6 +53,7 @@ static const uint32_t DISPLAY_SPEED =   400000;
 
 // --- Lighting
 static const uint8_t  PIXELS_COUNT = 8; // Number of pixels in ring
+static const uint8_t  PIXELS_BRIGHTNESS = 96; // Master brightness of all the pixels. [0..255] Be carefull of the current draw on the USB port.
 
 // --- Rotary Encoder
 static const uint16_t ROTARY_ACCELERATION_DIVISOR_MAX = 400;

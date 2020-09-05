@@ -128,7 +128,7 @@ void setup()
 
   //--- Pixels
   pixels = new Adafruit_NeoPixel(PIXELS_COUNT, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
-  pixels->setBrightness(50); // approx 20%
+  pixels->setBrightness(PIXELS_BRIGHTNESS);
   pixels->begin();
   pixels->show();
 
