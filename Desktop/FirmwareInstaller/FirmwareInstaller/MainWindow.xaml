@@ -4,52 +4,76 @@
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:local="clr-namespace:FirmwareInstaller"
+                 xmlns:att="clr-namespace:FirmwareInstaller.Framework.Attached"
                  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
                  mc:Ignorable="d"
-                 Height="400" Width="600"
+                 Height="400" Width="400"
+                 Background="{StaticResource WindowBackgroundBrush}"
                  Icon="/Resources/fwinstaller.ico">
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="Load Custom Firmware..." att:Commands.FileOpenCommand="{Binding LoadFirmwareCommand}" />
+            </MenuItem>
+
+        </Menu>
         
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width=".5*" />
-            <ColumnDefinition Width=".5*" />
-        </Grid.ColumnDefinitions>
+        <Grid Margin="10" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+        
+            <Grid Grid.Row="0" IsEnabled="{Binding IsBusy, Converter={StaticResource Cnv_BoolNegate}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+        
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width=".5*" />
+                </Grid.ColumnDefinitions>
 
-         <!-- Versions -->
-        <Label Grid.Column="0" Grid.Row="0" Content="Versions" Margin="0,0,0,0"/>
-        <ComboBox Grid.Column="1" Grid.Row="0" Margin="0,0,15,0"
-                  ItemsSource="{Binding Versions}" SelectedValue="{Binding SelectedVersion}"
-                  IsEnabled="{Binding IsBusy, Converter={StaticResource Cnv_BoolNegate}}"/>
+                 <!-- Versions -->
+                <Label Grid.Column="0" Grid.Row="0" Content="Version" Margin="0,0,0,0"/>
+                <ComboBox Grid.Column="1" Grid.Row="0" Margin="0,0,15,0" HorizontalAlignment="Right" MinWidth="150"
+                          ItemsSource="{Binding Versions}" SelectedValue="{Binding SelectedVersion}"
+                          IsEnabled="{Binding ElementName=CtrlUseCustomFw, Path=IsChecked, Converter={StaticResource Cnv_BoolNegate}}"/>
 
-        <!-- COM -->
-        <Label Grid.Column="0" Grid.Row="1" Content="Port" Margin="0,5,0,0"/>
-        <ComboBox Grid.Column="1" Grid.Row="1" Margin="0,5,15,0"
-                  ItemsSource="{Binding Ports}" SelectedValue="{Binding SelectedPort}"
-                  IsEnabled="{Binding IsBusy, Converter={StaticResource Cnv_BoolNegate}}"/>
+                <!-- COM -->
+                <Label Grid.Column="0" Grid.Row="2" Content="Port" Margin="0,5,0,0"/>
+                <ComboBox Grid.Column="1" Grid.Row="2" Margin="0,5,15,0" HorizontalAlignment="Right" MinWidth="150"
+                          ItemsSource="{Binding Ports}" SelectedValue="{Binding SelectedPort}"/>
 
-        <!-- Bootloader -->
-        <Label Grid.Column="0" Grid.Row="2" Content="Old bootloader" Margin="0,5,0,0"/>
-        <CheckBox Grid.Column="1" Grid.Row="2" Margin="0,5,15,0"
-                  IsChecked="{Binding UseOldBootloader}"
-                  IsEnabled="{Binding IsBusy, Converter={StaticResource Cnv_BoolNegate}}"/>
+                <!-- Custom FW -->
+                <Label Grid.Column="0" Grid.Row="3" Content="Use custom firmware" Margin="0,5,0,0"/>
+                <DockPanel  Grid.Column="1" Grid.Row="3" Margin="0,5,15,0">
+                    <CheckBox x:Name="CtrlUseCustomFw" DockPanel.Dock="Right" IsChecked="{Binding UseCustomFw}"/>
+                    <Label Content="{Binding CustomFwFilePath}" />
+                </DockPanel>
 
-        <!-- Install -->
-        <Button Grid.Column="1" Grid.Row="3" Content="Install" Margin="0,5,15,0" MinWidth="150" HorizontalAlignment="Right"
-                Command="{Binding InstallCommand}"/>
+                <!-- Bootloader -->
+                <Label Grid.Column="0" Grid.Row="4" Content="Use old bootloader" Margin="0,5,0,0"/>
+                <CheckBox Grid.Column="1" Grid.Row="4" Margin="0,5,15,0" HorizontalAlignment="Right"
+                          IsChecked="{Binding UseOldBootloader}"/>
 
-        <!-- Log -->
-        <ScrollViewer x:Name="Ctrl_LogScroll" Grid.ColumnSpan="2" Grid.Row="4" Margin="0,25,0,0">
-            <TextBox x:Name="Ctrl_Log" IsReadOnly="True" Text="{Binding Log, Mode=OneWay}" />
-        </ScrollViewer>
-    </Grid>
-    
+                <!-- Install -->
+                <Button Grid.Column="1" Grid.Row="5" Content="Install" Margin="0,5,15,0" MinWidth="150" HorizontalAlignment="Right"
+                        Command="{Binding InstallCommand}"/>
+            </Grid>
+        
+            <!-- Log -->
+            <ScrollViewer Grid.Row="1"  x:Name="Ctrl_LogScroll" Margin="0,25,0,0" >
+                <TextBox x:Name="Ctrl_Log" IsReadOnly="True" Text="{Binding Log, Mode=OneWay}"/>
+            </ScrollViewer>
+        </Grid>
+    </DockPanel>
+
 </mah:MetroWindow>
 
