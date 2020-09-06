@@ -21,6 +21,8 @@
 
 // Custom
 #include "Config.h"
+#include "Structs.h"
+#include "Display.h"
 
 // Third-party
 #include "src/Adafruit_GFX/Adafruit_GFX.h"
@@ -30,27 +32,6 @@
 #include "src/Rotary/Rotary.h"
 #include "src/TimerOne/TimerOne.h"
 
-
-//********************************************************
-// *** STRUCTS
-//********************************************************
-struct Item
-{
-  uint32_t id;                          // 4 Bytes (32 bit)
-  char name[ITEM_BUFFER_NAME_SIZE];     // 36 Bytes (36 Chars)
-  int8_t volume;                        // 1 Byte
-  uint8_t isMuted;                      // 1 Byte
-                                        // 43 Bytes TOTAL
-};
-
-struct Settings
-{
-  uint8_t displayNewItem = 1;
-  uint8_t sleepWhenInactive = 1;
-  uint8_t sleepAfterSeconds = 5;
-  uint8_t continuousScroll = 1;
-  uint8_t accelerationPercentage = 60;
-};
 
 //********************************************************
 // *** VARIABLES
@@ -72,8 +53,8 @@ uint8_t stateGame = STATE_GAME_SELECT_A;
 uint8_t stateDisplay = STATE_DISPLAY_AWAKE;
 uint8_t isDirty = true;
 
-struct Item devices[DEVICE_MAX_COUNT];
-struct Item sessions[SESSION_MAX_COUNT];
+Item devices[DEVICE_MAX_COUNT];
+Item sessions[SESSION_MAX_COUNT];
 uint8_t deviceCount = 0;
 uint8_t sessionCount = 0;
 
@@ -85,7 +66,7 @@ int8_t itemIndexGameB = 0;
 uint32_t defaultEndpointId;
 
 // Settings
-struct Settings settings;
+Settings settings;
 
 // Rotary Encoder
 ButtonEvents encoderButton;
@@ -102,9 +83,6 @@ uint32_t lastLightingUpdate = 0;
 
 // Lighting
 Adafruit_NeoPixel* pixels;
-
-// Display
-Adafruit_SSD1306* display;
 
 //********************************************************
 // *** INTERRUPTS
@@ -135,8 +113,8 @@ void setup()
   pixels->show();
 
   // --- Display
-  display = InitializeDisplay();
-  DisplaySplashScreen(display);
+  Display::Initialize();
+  Display::SplashScreen();
 
   // --- Encoder
   pinMode(PIN_ENCODER_SWITCH, INPUT_PULLUP);
@@ -197,7 +175,7 @@ void loop()
     UpdateLighting();
   }
 
-  TimerDisplayUpdate(now - last);
+  Display::UpdateTimers(now - last);
   isDirty = false;
 }
 
@@ -473,7 +451,7 @@ bool ProcessEncoderRotation()
     if(stateOutput == STATE_OUTPUT_NAVIGATE)
     {
       itemIndexOutput = GetNextIndex(itemIndexOutput, deviceCount, encoderDelta, settings.continuousScroll);
-      TimerDisplayReset();
+      Display::ResetTimers();
     }
 
     else if(stateOutput == STATE_OUTPUT_EDIT)
@@ -487,7 +465,7 @@ bool ProcessEncoderRotation()
     if(stateApplication == STATE_APPLICATION_NAVIGATE)
     {
       itemIndexApp = GetNextIndex(itemIndexApp, sessionCount, encoderDelta, settings.continuousScroll);
-      TimerDisplayReset();
+      Display::ResetTimers();
     }
     else if(stateApplication == STATE_APPLICATION_EDIT)
     {
@@ -500,12 +478,12 @@ bool ProcessEncoderRotation()
     if(stateGame == STATE_GAME_SELECT_A)
     {
       itemIndexGameA = GetNextIndex(itemIndexGameA, sessionCount, encoderDelta, settings.continuousScroll);
-      TimerDisplayReset();
+      Display::ResetTimers();
     }
     else if(stateGame == STATE_GAME_SELECT_B)
     {
       itemIndexGameB = GetNextIndex(itemIndexGameB, sessionCount, encoderDelta, settings.continuousScroll);
-      TimerDisplayReset();
+      Display::ResetTimers();
     }
 
     else if(stateGame == STATE_GAME_EDIT)
@@ -536,17 +514,17 @@ bool ProcessEncoderButton()
         SendSetDefaultEndpointCommand(&devices[itemIndexOutput], sendBuffer, encodeBuffer);
 
       stateOutput = CycleState(stateOutput, STATE_OUTPUT_COUNT);
-      TimerDisplayReset();
+      Display::ResetTimers();
     }
     else if(mode == MODE_APPLICATION)
     {
       stateApplication = CycleState(stateApplication, STATE_APPLICATION_COUNT);
-      TimerDisplayReset();
+      Display::ResetTimers();
     }
     else if(mode == MODE_GAME)
     {
       stateGame = CycleState(stateGame, STATE_GAME_COUNT);
-      TimerDisplayReset();
+      Display::ResetTimers();
     }
 
     return true;
@@ -570,7 +548,7 @@ bool ProcessEncoderButton()
       return true;
       
     CycleMode();
-    TimerDisplayReset();
+    Display::ResetTimers();
 
     return true;
   }
@@ -644,14 +622,14 @@ void UpdateDisplay()
 {
   if(stateDisplay == STATE_DISPLAY_SLEEP)
   {
-    DisplaySleep(display);
+    Display::Sleep();
     return;
   }
 
   // TODO: Update to include devices.
   if(sessionCount == 0)
   {
-    DisplaySplashScreen(display);
+    Display::SplashScreen();
     return;
   }
   
@@ -663,10 +641,10 @@ void UpdateDisplay()
       uint8_t scrollRight = CanScrollRight(itemIndexOutput, deviceCount, settings.continuousScroll);
       uint8_t isDefaultEndpoint =  devices[itemIndexOutput].id == defaultEndpointId;
 
-      DisplayOutputSelectScreen(display, devices[itemIndexOutput].name, devices[itemIndexOutput].volume, devices[itemIndexOutput].isMuted, isDefaultEndpoint, scrollLeft, scrollRight, mode, MODE_COUNT);
+      Display::OutputSelectScreen(&devices[itemIndexOutput], isDefaultEndpoint, scrollLeft, scrollRight, mode);
     }
     else if(stateOutput == STATE_OUTPUT_EDIT)
-      DisplayOutputEditScreen(display, devices[itemIndexOutput].name, devices[itemIndexOutput].volume, devices[itemIndexOutput].isMuted, mode, MODE_COUNT);
+      Display::OutputEditScreen(&devices[itemIndexOutput], mode);
   }
   else if(mode == MODE_APPLICATION)
   {
@@ -674,11 +652,11 @@ void UpdateDisplay()
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexApp, sessionCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexApp, sessionCount, settings.continuousScroll);
-      DisplayApplicationSelectScreen(display, sessions[itemIndexApp].name, sessions[itemIndexApp].volume, sessions[itemIndexApp].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT);
+      Display::ApplicationSelectScreen(&sessions[itemIndexApp], scrollLeft, scrollRight, mode);
     }
 
     else if(stateApplication == STATE_APPLICATION_EDIT)
-      DisplayApplicationEditScreen(display, sessions[itemIndexApp].name, sessions[itemIndexApp].volume, sessions[itemIndexApp].isMuted, mode, MODE_COUNT);
+      Display::ApplicationEditScreen(&sessions[itemIndexApp], mode);
   }
   else if(mode == MODE_GAME)
   {
@@ -686,16 +664,16 @@ void UpdateDisplay()
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexGameA, sessionCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexGameA, sessionCount, settings.continuousScroll);
-      DisplayGameSelectScreen(display, sessions[itemIndexGameA].name, sessions[itemIndexGameA].volume, sessions[itemIndexGameA].isMuted, "A", scrollLeft, scrollRight, mode, MODE_COUNT);
+      Display::GameSelectScreen(&sessions[itemIndexGameA], 'A', scrollLeft, scrollRight, mode);
     }
     else if(stateGame == STATE_GAME_SELECT_B)
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexGameB, sessionCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexGameB, sessionCount, settings.continuousScroll);
-      DisplayGameSelectScreen(display, sessions[itemIndexGameB].name, sessions[itemIndexGameB].volume, sessions[itemIndexGameB].isMuted, "B", scrollLeft, scrollRight, mode, MODE_COUNT);
+      Display::GameSelectScreen(&sessions[itemIndexGameB], 'B', scrollLeft, scrollRight, mode);
     }
     else if(stateGame == STATE_GAME_EDIT)
-      DisplayGameEditScreen(display, sessions[itemIndexGameA].name, sessions[itemIndexGameB].name, sessions[itemIndexGameA].volume, sessions[itemIndexGameB].volume, sessions[itemIndexGameA].isMuted, sessions[itemIndexGameB].isMuted, mode, MODE_COUNT);
+      Display::GameEditScreen(&sessions[itemIndexGameA], &sessions[itemIndexGameB], mode);
   }
 }
 

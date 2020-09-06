@@ -1,3 +1,4 @@
+#pragma once
 //********************************************************
 // PROJECT: MAXMIX
 // AUTHOR: Ruben Henares
