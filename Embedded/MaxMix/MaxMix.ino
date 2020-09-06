@@ -66,7 +66,7 @@ uint8_t encodeBuffer[SEND_BUFFER_SIZE];
 
 // State
 uint8_t mode = MODE_OUTPUT;
-uint8_t stateOutput = STATE_OUTPUT_NAVIGATE;
+uint8_t stateOutput = STATE_OUTPUT_EDIT;
 uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
 uint8_t stateGame = STATE_GAME_SELECT_A;
 uint8_t stateDisplay = STATE_DISPLAY_AWAKE;
@@ -223,7 +223,7 @@ void ClearSend()
 void ResetState()
 {
   mode = MODE_OUTPUT;
-  stateOutput = STATE_OUTPUT_NAVIGATE;
+  stateOutput = STATE_OUTPUT_EDIT;
   stateApplication = STATE_APPLICATION_NAVIGATE;
   stateGame = STATE_GAME_SELECT_A;
   stateDisplay = STATE_DISPLAY_AWAKE;
@@ -268,15 +268,6 @@ bool ProcessPackage()
       }
       else
         UpdateItemCommand(decodeBuffer, devices, index);
-
-      if(settings.displayNewItem)
-      {
-        itemIndexOutput = index;
-        if(mode == MODE_OUTPUT)
-          stateOutput = STATE_OUTPUT_NAVIGATE;
-
-        return true;
-      }
     }
     else
     {
