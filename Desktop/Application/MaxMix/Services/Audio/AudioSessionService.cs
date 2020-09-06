@@ -104,6 +104,10 @@ namespace MaxMix.Services.Audio
 
         public void SetDefaultEndpoint(int id)
         {
+            if (_devices.TryGetValue(id, out var device))
+            {
+                AudioExtensions.SetDefaultEndpoint(device.Device.DeviceID, Role.Multimedia);
+            }
 
         }
         #endregion
