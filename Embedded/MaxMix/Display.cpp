@@ -87,6 +87,38 @@ namespace Display
         display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, charHeight, BLACK);
     }
 
+    void DrawGameEditItem(Item *item, uint8_t px, uint8_t py, uint8_t timerIndex)
+    {
+        // Name
+        display->setTextSize(1);
+        display->setTextColor(WHITE);
+        display->setCursor(px, py);
+
+        // Item name
+        DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, px, py, timerIndex, DISPLAY_SCROLL_SPEED_X1);
+
+        // Volume bar min indicator
+        px += DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH + DISPLAY_MARGIN_X2;
+        display->drawLine(px, py, px, py + DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT - 1, WHITE);
+
+        // Volume bar
+        px += 1 + DISPLAY_MARGIN_X1;
+        uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH - DISPLAY_MARGIN_X2 - 2 - DISPLAY_MARGIN_X1 * 2;
+        uint8_t width = map(item->volume, 0, 100, 0, maxWidth);
+
+        if (width > 0)
+        {
+            if (item->isMuted)
+                display->drawRect(px, py, width, DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT, WHITE);
+            else
+                display->fillRect(px, py, width, DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT, WHITE);
+        }
+
+        // Volume bar min indicator
+        px += maxWidth + DISPLAY_MARGIN_X1;
+        display->drawLine(px, py, px, py + DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT - 1, WHITE);
+    }
+
     void DrawSelectionChannelName(char channel)
     {
         display->setTextSize(1);
@@ -142,45 +174,6 @@ namespace Display
         display->setCursor(x0, 0);
 
         display->print(volume);
-    }
-
-    //---------------------------------------------------------
-    // Draws a row of the Game mode screen
-    //---------------------------------------------------------
-    void DrawGameEditItem(Item *item, uint8_t px, uint8_t py, uint8_t timerIndex)
-    {
-        // Name
-        display->setTextSize(1);
-        display->setTextColor(WHITE);
-        display->setCursor(px, py);
-
-        // Item name
-        DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, px, py, timerIndex, DISPLAY_SCROLL_SPEED_X1);
-
-        // Clear sides
-        display->fillRect(0, py, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1, BLACK);
-        display->fillRect(DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH, py, DISPLAY_WIDTH, DISPLAY_CHAR_HEIGHT_X1, BLACK);
-
-        // Volume bar min indicator
-        px += DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH + DISPLAY_MARGIN_X2;
-        display->drawLine(px, py, px, py + DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT - 1, WHITE);
-
-        // Volume bar
-        px += 1 + DISPLAY_MARGIN_X1;
-        uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH - DISPLAY_MARGIN_X2 - 2 - DISPLAY_MARGIN_X1 * 2;
-        uint8_t width = map(item->volume, 0, 100, 0, maxWidth);
-
-        if (width > 0)
-        {
-            if (item->isMuted)
-                display->drawRect(px, py, width, DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT, WHITE);
-            else
-                display->fillRect(px, py, width, DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT, WHITE);
-        }
-
-        // Volume bar min indicator
-        px += maxWidth + DISPLAY_MARGIN_X1;
-        display->drawLine(px, py, px, py + DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT - 1, WHITE);
     }
 
     //---------------------------------------------------------
