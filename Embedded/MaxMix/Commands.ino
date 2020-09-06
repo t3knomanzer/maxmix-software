@@ -98,13 +98,6 @@ void UpdateItemVolumeCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t 
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-void SetDefaultEndpointCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t index) 
-{
-  
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
 void UpdateSettingsCommand(uint8_t* packageBuffer, Settings* settings) 
 {
   settings->displayNewItem = packageBuffer[2];

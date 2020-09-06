@@ -168,7 +168,7 @@ void DrawSelectionItemVolume(Adafruit_SSD1306* display, uint8_t volume)
 //---------------------------------------------------------
 // Draws the output mode screen
 //---------------------------------------------------------
-void DisplayOutputSelectScreen(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex, uint8_t modeCount)
+void DisplayOutputSelectScreen(Adafruit_SSD1306* display, char* name, uint8_t volume, bool isMuted, bool isDefaultEndpoint, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex, uint8_t modeCount)
 {
   display->clearDisplay();
 
@@ -178,6 +178,9 @@ void DisplayOutputSelectScreen(Adafruit_SSD1306* display, char* name, uint8_t vo
   display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, BLACK);
   DrawSelectionArrows(display, leftArrow, rightArrow);
   DrawSelectionVolumeBar(display, volume, isMuted);
+
+  if(isDefaultEndpoint)
+    DrawSelectionChannelName(display, "O");
 
   display->display();
 }

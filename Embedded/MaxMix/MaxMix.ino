@@ -82,6 +82,8 @@ int8_t itemIndexApp = 0;
 int8_t itemIndexGameA = 0;
 int8_t itemIndexGameB = 0;
 
+uint32_t defaultEndpointId;
+
 // Settings
 struct Settings settings;
 
@@ -389,6 +391,19 @@ bool ProcessPackage()
       return false;
     }    
   }
+  else if(command == MSG_COMMAND_SET_DEFAULT_ENDPOINT)
+  {
+    uint32_t id = GetIdFromPackage(decodeBuffer);
+    int8_t index = FindItem(id, devices, deviceCount);
+    if(index == -1)
+        return false;
+
+    itemIndexOutput = index;
+    defaultEndpointId = id;
+
+    if(mode == MODE_OUTPUT)
+      return true;
+  }
   else if(command == MSG_COMMAND_SETTINGS)
   {
     UpdateSettingsCommand(decodeBuffer, &settings);
@@ -655,7 +670,9 @@ void UpdateDisplay()
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexOutput, deviceCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexOutput, deviceCount, settings.continuousScroll);
-      DisplayOutputSelectScreen(display, devices[itemIndexOutput].name, devices[itemIndexOutput].volume, devices[itemIndexOutput].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT);
+      uint8_t isDefaultEndpoint =  devices[itemIndexOutput].id == defaultEndpointId;
+
+      DisplayOutputSelectScreen(display, devices[itemIndexOutput].name, devices[itemIndexOutput].volume, devices[itemIndexOutput].isMuted, isDefaultEndpoint, scrollLeft, scrollRight, mode, MODE_COUNT);
     }
     else if(stateOutput == STATE_OUTPUT_EDIT)
       DisplayOutputEditScreen(display, devices[itemIndexOutput].name, devices[itemIndexOutput].volume, devices[itemIndexOutput].isMuted, mode, MODE_COUNT);

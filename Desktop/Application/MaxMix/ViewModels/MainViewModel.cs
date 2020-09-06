@@ -181,6 +181,8 @@ namespace MaxMix.ViewModels
         #region EventHandlers
         private void OnDefaultDeviceChanged(object sender, int id)
         {
+            var message = new MessageSetDefaultEndpoint(id);
+            _communicationService.Send(message);
         }
 
         private void OnDeviceCreated(object sender, int id, string displayName, int volume, bool isMuted)
