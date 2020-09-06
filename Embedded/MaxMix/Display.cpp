@@ -45,14 +45,14 @@ namespace Display
 
     void Sleep(void)
     {
-        // TODO: replace
+        // TODO: replace with display off
         display->clearDisplay();
         display->display();
     }
 
     void SplashScreen(void)
     {
-        // LOGO is 128v32, no need to clear display, just draw and go
+        display-> clearDisplay();
         display->drawBitmap(0, 0, LOGOBMP, LOGO_WIDTH, LOGO_HEIGHT, 1);
         display->display();
     }
