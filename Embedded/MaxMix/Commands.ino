@@ -44,6 +44,23 @@ void SendItemVolumeCommand(Item* item, uint8_t* rawBuffer, uint8_t* packageBuffe
 
 //---------------------------------------------------------
 //---------------------------------------------------------
+void SendSetDefaultEndpointCommand(Item* item, uint8_t* rawBuffer, uint8_t* packageBuffer)
+{
+  rawBuffer[0] = packageRevision++;
+  rawBuffer[1] = MSG_COMMAND_SET_DEFAULT_ENDPOINT;
+  
+  rawBuffer[2] = (uint8_t)(item->id >> 24) & 0xFF;
+  rawBuffer[3] = (uint8_t)(item->id >> 16) & 0xFF;
+  rawBuffer[4] = (uint8_t)(item->id >> 8) & 0xFF;
+  rawBuffer[5] = (uint8_t)item->id & 0xFF;
+ 
+  uint8_t encodeSize =  EncodePackage(rawBuffer, 8, packageBuffer);
+  Serial.write(packageBuffer, encodeSize);
+}
+
+
+//---------------------------------------------------------
+//---------------------------------------------------------
 void AddItemCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t* itemCount)
 {
   UpdateItemCommand(packageBuffer, itemsBuffer, *itemCount);
@@ -75,8 +92,15 @@ void RemoveItemCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t* itemC
 //---------------------------------------------------------
 void UpdateItemVolumeCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t index) 
 {
-    itemsBuffer[index].volume = packageBuffer[6];
-    itemsBuffer[index].isMuted = packageBuffer[7];
+  itemsBuffer[index].volume = packageBuffer[6];
+  itemsBuffer[index].isMuted = packageBuffer[7];
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+void SetDefaultEndpointCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t index) 
+{
+  
 }
 
 //---------------------------------------------------------

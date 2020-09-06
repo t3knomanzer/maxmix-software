@@ -101,6 +101,11 @@ namespace MaxMix.Services.Audio
                 // TODO: Raise error
             }
         }
+
+        public void SetDefaultEndpoint(int id)
+        {
+
+        }
         #endregion
 
         #region Private Methods

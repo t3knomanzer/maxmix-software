@@ -526,6 +526,9 @@ bool ProcessEncoderButton()
 
     if(mode == MODE_OUTPUT)
     {
+      if(stateOutput == STATE_OUTPUT_NAVIGATE)
+        SendSetDefaultEndpointCommand(&devices[itemIndexOutput], sendBuffer, encodeBuffer);
+
       stateOutput = CycleState(stateOutput, STATE_OUTPUT_COUNT);
       TimerDisplayReset();
     }
