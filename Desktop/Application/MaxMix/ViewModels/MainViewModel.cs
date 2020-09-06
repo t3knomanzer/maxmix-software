@@ -33,7 +33,8 @@ namespace MaxMix.ViewModels
             _serializationService.RegisterType<MessageAddSession>(2);
             _serializationService.RegisterType<MessageRemoveSession>(3);
             _serializationService.RegisterType<MessageUpdateVolumeSession>(4);
-            _serializationService.RegisterType<MessageSettings>(5);
+            _serializationService.RegisterType<MessageSetDefaultEndpoint>(5);
+            _serializationService.RegisterType<MessageSettings>(6);
 
             _settingsViewModel = new SettingsViewModel();
             _settingsViewModel.PropertyChanged += OnSettingsChanged;
@@ -180,6 +181,8 @@ namespace MaxMix.ViewModels
         #region EventHandlers
         private void OnDefaultDeviceChanged(object sender, int id)
         {
+            var message = new MessageSetDefaultEndpoint(id);
+            _communicationService.Send(message);
         }
 
         private void OnDeviceCreated(object sender, int id, string displayName, int volume, bool isMuted)
@@ -236,6 +239,11 @@ namespace MaxMix.ViewModels
             {
                 var message_ = message as MessageUpdateVolumeSession;
                 _audioSessionService.SetItemVolume(message_.Id, message_.Volume, message_.IsMuted);
+            }
+            else if (message.GetType() == typeof(MessageSetDefaultEndpoint))
+            {
+                var message_ = message as MessageSetDefaultEndpoint;
+                _audioSessionService.SetDefaultEndpoint(message_.Id);
             }
         }
 

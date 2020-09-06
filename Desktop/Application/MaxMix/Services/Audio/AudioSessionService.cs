@@ -101,6 +101,15 @@ namespace MaxMix.Services.Audio
                 // TODO: Raise error
             }
         }
+
+        public void SetDefaultEndpoint(int id)
+        {
+            if (_devices.TryGetValue(id, out var device))
+            {
+                AudioExtensions.SetDefaultEndpoint(device.Device.DeviceID, Role.Multimedia);
+            }
+
+        }
         #endregion
 
         #region Private Methods

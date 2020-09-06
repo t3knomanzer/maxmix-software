@@ -135,6 +135,7 @@
     <Compile Include="Services\Audio\IAudioDevice.cs" />
     <Compile Include="Services\Audio\IAudioSession.cs" />
     <Compile Include="Services\Audio\IAudioSessionService.cs" />
+    <Compile Include="Services\Communication\Message\MessageSetDefaultEndpoint.cs" />
     <Compile Include="Services\Communication\Serial\CobsSerializationService .cs" />
     <Compile Include="Services\Communication\CommunicationService.cs" />
     <Compile Include="Services\Communication\ICommunicationService.cs" />

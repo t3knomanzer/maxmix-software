@@ -66,7 +66,7 @@ uint8_t encodeBuffer[SEND_BUFFER_SIZE];
 
 // State
 uint8_t mode = MODE_OUTPUT;
-uint8_t stateOutput = STATE_OUTPUT_NAVIGATE;
+uint8_t stateOutput = STATE_OUTPUT_EDIT;
 uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
 uint8_t stateGame = STATE_GAME_SELECT_A;
 uint8_t stateDisplay = STATE_DISPLAY_AWAKE;
@@ -81,6 +81,8 @@ int8_t itemIndexOutput = 0;
 int8_t itemIndexApp = 0;
 int8_t itemIndexGameA = 0;
 int8_t itemIndexGameB = 0;
+
+uint32_t defaultEndpointId;
 
 // Settings
 struct Settings settings;
@@ -221,7 +223,7 @@ void ClearSend()
 void ResetState()
 {
   mode = MODE_OUTPUT;
-  stateOutput = STATE_OUTPUT_NAVIGATE;
+  stateOutput = STATE_OUTPUT_EDIT;
   stateApplication = STATE_APPLICATION_NAVIGATE;
   stateGame = STATE_GAME_SELECT_A;
   stateDisplay = STATE_DISPLAY_AWAKE;
@@ -266,15 +268,6 @@ bool ProcessPackage()
       }
       else
         UpdateItemCommand(decodeBuffer, devices, index);
-
-      if(settings.displayNewItem)
-      {
-        itemIndexOutput = index;
-        if(mode == MODE_OUTPUT)
-          stateOutput = STATE_OUTPUT_NAVIGATE;
-
-        return true;
-      }
     }
     else
     {
@@ -388,6 +381,19 @@ bool ProcessPackage()
       }
       return false;
     }    
+  }
+  else if(command == MSG_COMMAND_SET_DEFAULT_ENDPOINT)
+  {
+    uint32_t id = GetIdFromPackage(decodeBuffer);
+    int8_t index = FindItem(id, devices, deviceCount);
+    if(index == -1)
+        return false;
+
+    itemIndexOutput = index;
+    defaultEndpointId = id;
+
+    if(mode == MODE_OUTPUT)
+      return true;
   }
   else if(command == MSG_COMMAND_SETTINGS)
   {
@@ -526,6 +532,9 @@ bool ProcessEncoderButton()
 
     if(mode == MODE_OUTPUT)
     {
+      if(stateOutput == STATE_OUTPUT_NAVIGATE)
+        SendSetDefaultEndpointCommand(&devices[itemIndexOutput], sendBuffer, encodeBuffer);
+
       stateOutput = CycleState(stateOutput, STATE_OUTPUT_COUNT);
       TimerDisplayReset();
     }
@@ -652,7 +661,9 @@ void UpdateDisplay()
     {
       uint8_t scrollLeft = CanScrollLeft(itemIndexOutput, deviceCount, settings.continuousScroll);
       uint8_t scrollRight = CanScrollRight(itemIndexOutput, deviceCount, settings.continuousScroll);
-      DisplayOutputSelectScreen(display, devices[itemIndexOutput].name, devices[itemIndexOutput].volume, devices[itemIndexOutput].isMuted, scrollLeft, scrollRight, mode, MODE_COUNT);
+      uint8_t isDefaultEndpoint =  devices[itemIndexOutput].id == defaultEndpointId;
+
+      DisplayOutputSelectScreen(display, devices[itemIndexOutput].name, devices[itemIndexOutput].volume, devices[itemIndexOutput].isMuted, isDefaultEndpoint, scrollLeft, scrollRight, mode, MODE_COUNT);
     }
     else if(stateOutput == STATE_OUTPUT_EDIT)
       DisplayOutputEditScreen(display, devices[itemIndexOutput].name, devices[itemIndexOutput].volume, devices[itemIndexOutput].isMuted, mode, MODE_COUNT);
