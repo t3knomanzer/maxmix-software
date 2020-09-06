@@ -146,6 +146,7 @@
     <Compile Include="Services\Communication\Message\MessageRemoveSession.cs" />
     <Compile Include="Services\Communication\Message\MessageSettings.cs" />
     <Compile Include="Services\Communication\Message\MessageUpdateVolumeSession.cs" />
+    <Compile Include="Services\Audio\PolicyConfig.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />

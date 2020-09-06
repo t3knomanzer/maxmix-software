@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSCore.CoreAudioAPI;
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -32,6 +33,12 @@ namespace MaxMix.Services.Audio
             if (string.IsNullOrEmpty(fileName)) return null;
             var versionInfo = FileVersionInfo.GetVersionInfo(fileName);
             return versionInfo.ProductName;
+        }
+
+        public static void SetDefaultEndpoint(string deviceID, Role role)
+        {
+            var policyConfig = new PolicyConfig();
+            policyConfig.SetDefaultEndpoint(deviceID, role);
         }
     }
 }
