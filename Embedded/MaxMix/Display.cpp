@@ -21,14 +21,13 @@ namespace Display
         displayTimer[1] = 0;
     }
 
-    static SQ15x16 Scroll(char *name, SQ15x16 time, SQ15x16 scrollMin, SQ15x16 scrollMax, SQ15x16 speed)
+    static SQ15x16 Scroll(uint8_t length, SQ15x16 time, SQ15x16 scrollMin, SQ15x16 scrollMax, SQ15x16 speed)
     {
-        uint8_t nameLength = strlen(name);
-        if (nameLength <= DISPLAY_CHAR_MAX_X2)
+        if (length <= DISPLAY_CHAR_MAX_X2)
             return 0;
 
         // Value mapping: (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-        SQ15x16 timeMax = nameLength / speed;
+        SQ15x16 timeMax = length / speed;
         SQ15x16 scroll = (time - 0) * (scrollMax - scrollMin) / (timeMax - 0) + scrollMin;
 
         return scroll;
@@ -52,18 +51,18 @@ namespace Display
 
     void SplashScreen(void)
     {
-        display-> clearDisplay();
+        display->clearDisplay();
         display->drawBitmap(0, 0, LOGOBMP, LOGO_WIDTH, LOGO_HEIGHT, 1);
         display->display();
     }
 
-    void DrawItemName(char *name, uint8_t fontSize, uint8_t charWidth, uint8_t charHeight, uint8_t charSpacing, uint8_t x, uint8_t y, uint8_t timerIndex, SQ15x16 scrollSpeed)
+    void DrawItemName(const char *name, uint8_t fontSize, uint8_t charWidth, uint8_t charHeight, uint8_t charSpacing, uint8_t x, uint8_t y, uint8_t timerIndex, SQ15x16 scrollSpeed)
     {
         uint8_t nameCopies = 1;
         uint8_t nameLength = strlen(name);
         SQ15x16 scrollMin = 0;
         SQ15x16 scrollMax = (nameLength + 1) * (charWidth + charSpacing);
-        SQ15x16 scroll = Scroll(name, max(0, displayTimer[timerIndex] - DISPLAY_SCROLL_IDLE_TIME), scrollMin, scrollMax, scrollSpeed);
+        SQ15x16 scroll = Scroll(nameLength, max(0, displayTimer[timerIndex] - DISPLAY_SCROLL_IDLE_TIME), scrollMin, scrollMax, scrollSpeed);
 
         if (abs(scroll) >= abs(scrollMax))
             displayTimer[timerIndex] = 0;
@@ -82,6 +81,10 @@ namespace Display
             display->print(' ');
             nameCopies--;
         }
+
+        // clear margins
+        display->fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, charHeight, BLACK);
+        display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, charHeight, BLACK);
     }
 
     void DrawSelectionChannelName(char channel)
@@ -296,8 +299,6 @@ namespace Display
 
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
-        display->fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, BLACK);
-        display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, BLACK);
         DrawSelectionArrows(leftArrow, rightArrow);
         DrawSelectionVolumeBar(item);
 
@@ -327,12 +328,7 @@ namespace Display
         display->clearDisplay();
 
         DrawDotGroup(modeIndex);
-
         DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
-        // Clear sides
-        display->fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, BLACK);
-        display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, BLACK);
-
         DrawSelectionArrows(leftArrow, rightArrow);
         DrawSelectionVolumeBar(item);
 
@@ -345,12 +341,9 @@ namespace Display
 
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X1);
-        // Clear sides
-        display->fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1, BLACK);
-        display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1, BLACK);
-
         DrawEditVolumeBar(item);
         DrawEditVolume(item->volume);
+
         display->display();
     }
 
@@ -362,19 +355,14 @@ namespace Display
         display->clearDisplay();
 
         DrawDotGroup(modeIndex);
-
         DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
-        // Clear sides
-        display->fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, BLACK);
-        display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2, BLACK);
-
         DrawSelectionArrows(leftArrow, rightArrow);
         DrawSelectionVolumeBar(item);
         DrawSelectionChannelName(channel);
 
         display->display();
     }
-    
+
     void GameEditScreen(Item *itemA, Item *itemB, uint8_t modeIndex)
     {
         uint8_t py;

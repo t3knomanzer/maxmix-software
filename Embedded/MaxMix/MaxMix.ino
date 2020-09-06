@@ -654,7 +654,6 @@ void UpdateDisplay()
       uint8_t scrollRight = CanScrollRight(itemIndexApp, sessionCount, settings.continuousScroll);
       Display::ApplicationSelectScreen(&sessions[itemIndexApp], scrollLeft, scrollRight, mode);
     }
-
     else if(stateApplication == STATE_APPLICATION_EDIT)
       Display::ApplicationEditScreen(&sessions[itemIndexApp], mode);
   }
