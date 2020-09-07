@@ -5,8 +5,10 @@
 
 namespace Display
 {
-    Adafruit_SSD1306 *display;
-    SQ15x16 displayTimer[] = {0, 0};
+    //---------------------------------------------------------
+    // Timers & Timer Functions
+    //---------------------------------------------------------
+    static SQ15x16 displayTimer[] = {0, 0};
 
     void UpdateTimers(uint32_t delta)
     {
@@ -21,17 +23,10 @@ namespace Display
         displayTimer[1] = 0;
     }
 
-    static SQ15x16 Scroll(uint8_t length, SQ15x16 time, SQ15x16 scrollMin, SQ15x16 scrollMax, SQ15x16 speed)
-    {
-        if (length <= DISPLAY_CHAR_MAX_X2)
-            return 0;
-
-        // Value mapping: (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-        SQ15x16 timeMax = length / speed;
-        SQ15x16 scroll = (time - 0) * (scrollMax - scrollMin) / (timeMax - 0) + scrollMin;
-
-        return scroll;
-    }
+    //---------------------------------------------------------
+    // Display & Display Functions
+    //---------------------------------------------------------
+    static Adafruit_SSD1306 *display;
 
     void Initialize(void)
     {
@@ -49,14 +44,22 @@ namespace Display
         display->display();
     }
 
-    void SplashScreen(void)
+    //---------------------------------------------------------
+    // Volume Bar Functions
+    //---------------------------------------------------------
+    static SQ15x16 Scroll(uint8_t length, SQ15x16 time, SQ15x16 scrollMin, SQ15x16 scrollMax, SQ15x16 speed)
     {
-        display->clearDisplay();
-        display->drawBitmap(0, 0, LOGOBMP, LOGO_WIDTH, LOGO_HEIGHT, 1);
-        display->display();
+        if (length <= DISPLAY_CHAR_MAX_X2)
+            return 0;
+
+        // Value mapping: (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+        SQ15x16 timeMax = length / speed;
+        SQ15x16 scroll = (time - 0) * (scrollMax - scrollMin) / (timeMax - 0) + scrollMin;
+
+        return scroll;
     }
 
-    void DrawItemName(const char *name, uint8_t fontSize, uint8_t charWidth, uint8_t charHeight, uint8_t charSpacing, uint8_t x, uint8_t y, uint8_t timerIndex, SQ15x16 scrollSpeed)
+    static void DrawItemName(const char *name, uint8_t fontSize, uint8_t charWidth, uint8_t charHeight, uint8_t charSpacing, uint8_t x, uint8_t y, uint8_t timerIndex, SQ15x16 scrollSpeed)
     {
         uint8_t nameCopies = 1;
         uint8_t nameLength = strlen(name);
@@ -87,7 +90,7 @@ namespace Display
         display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, charHeight, BLACK);
     }
 
-    void DrawGameEditItem(Item *item, uint8_t px, uint8_t py, uint8_t timerIndex)
+    static void DrawGameEditItem(Item *item, uint8_t px, uint8_t py, uint8_t timerIndex)
     {
         // Name
         display->setTextSize(1);
@@ -123,7 +126,54 @@ namespace Display
         display->drawLine(px, py, px, py + DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT - 1, WHITE);
     }
 
-    void DrawSelectionChannelName(char channel)
+    //---------------------------------------------------------
+    // Volume Bar Functions
+    //---------------------------------------------------------
+    static void DrawVolumeBar(Item *item, uint8_t y0, uint8_t maxWidth, uint8_t height)
+    {
+        uint8_t x0, y1;
+
+        // Min limit
+        x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE;
+        y1 = y0 + height - 1;
+
+        display->drawLine(x0, y0, x0, y1, WHITE);
+
+        // Bar
+        x0 += 1 + DISPLAY_MARGIN_X1;
+        SQ7x8 width = item->volume / (SQ7x8)100 * maxWidth;
+
+        if (width > 0)
+        {
+            if (item->isMuted)
+                display->drawRect(x0, y0, width.getInteger(), height, WHITE);
+            else
+                display->fillRect(x0, y0, width.getInteger(), height, WHITE);
+        }
+
+        // Max limit
+        x0 += maxWidth + DISPLAY_MARGIN_X1;
+        display->drawLine(x0, y0, x0, y1, WHITE);
+    }
+
+    static void DrawSelectionVolumeBar(Item *item)
+    {
+        uint8_t y0 = DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2;
+        uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 2;
+        DrawVolumeBar(item, y0, maxWidth, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
+    }
+
+    static void DrawEditVolumeBar(Item *item)
+    {
+        uint8_t y0 = DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2;
+        uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 3 - DISPLAY_CHAR_WIDTH_X2 * 3 - DISPLAY_CHAR_SPACING_X2 * 2;
+        DrawVolumeBar(item, y0, maxWidth, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2);
+    }
+
+    //---------------------------------------------------------
+    // Screen Element Functions
+    //---------------------------------------------------------
+    static void DrawSelectionChannelName(char channel)
     {
         display->setTextSize(1);
         display->setTextColor(WHITE);
@@ -132,37 +182,7 @@ namespace Display
         display->print(channel);
     }
 
-    void DrawSelectionVolumeBar(Item *item)
-    {
-        uint8_t x0, y0, y1;
-
-        // Min limit
-        x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE;
-        y0 = DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2;
-        y1 = y0 + DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1 - 1;
-
-        display->drawLine(x0, y0, x0, y1, WHITE);
-
-        // Bar
-        x0 += 1 + DISPLAY_MARGIN_X1;
-        uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 2;
-        SQ7x8 width = item->volume / (SQ7x8)100 * maxWidth;
-
-        if (width > 0)
-        {
-            if (item->isMuted)
-                display->drawRect(x0, y0, width.getInteger(), DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1, WHITE);
-            else
-                display->fillRect(x0, y0, width.getInteger(), DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1, WHITE);
-        }
-
-        // Max limit
-        x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - 1;
-
-        display->drawLine(x0, y0, x0, y1, WHITE);
-    }
-
-    void DrawVolumeNumber(uint8_t volume, uint8_t x0, uint8_t y0)
+    static void DrawVolumeNumber(uint8_t volume, uint8_t x0, uint8_t y0)
     {
         x0 = x0 - DISPLAY_CHAR_WIDTH_X2;
         if (volume > 9)
@@ -177,12 +197,7 @@ namespace Display
         display->print(volume);
     }
 
-    //---------------------------------------------------------
-    // Draw Mode Indicator
-    // Horizontal alignment: display center
-    // Vertical alignment: display bottom
-    //---------------------------------------------------------
-    void DrawDotGroup(uint8_t index)
+    static void DrawDotGroup(uint8_t index)
     {
         uint8_t px, py, x0, y0, dotSize;
 
@@ -202,10 +217,7 @@ namespace Display
         }
     }
 
-    //---------------------------------------------------------
-    // Draw Selection Arrows
-    //---------------------------------------------------------
-    void DrawSelectionArrows(uint8_t leftArrow, uint8_t rightArrow)
+    static void DrawSelectionArrows(uint8_t leftArrow, uint8_t rightArrow)
     {
         uint8_t x0, y0, x1, y1, x2, y2;
 
@@ -234,38 +246,18 @@ namespace Display
         }
     }
 
-    void DrawEditVolumeBar(Item *item)
+    //---------------------------------------------------------
+    // MaxMix Logo Screen
+    //---------------------------------------------------------
+    void SplashScreen(void)
     {
-        uint8_t x0, y0, y1;
-
-        // Min limit
-        x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE;
-        y0 = DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2;
-        y1 = y0 + DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2 - 1;
-
-        display->drawLine(x0, y0, x0, y1, WHITE);
-
-        // Bar
-        x0 += 1 + DISPLAY_MARGIN_X1;
-        uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 3 - DISPLAY_CHAR_WIDTH_X2 * 3 - DISPLAY_CHAR_SPACING_X2 * 2;
-        SQ7x8 width = item->volume / (SQ7x8)100 * maxWidth;
-
-        if (width > 0)
-        {
-            if (item->isMuted)
-                display->drawRect(x0, y0, width.getInteger(), DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2, WHITE);
-            else
-                display->fillRect(x0, y0, width.getInteger(), DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2, WHITE);
-        }
-
-        // Max limit
-        x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2 * 3 - DISPLAY_CHAR_SPACING_X2 * 2 - DISPLAY_MARGIN_X1;
-
-        display->drawLine(x0, y0, x0, y1, WHITE);
+        display->clearDisplay();
+        display->drawBitmap(0, 0, LOGOBMP, LOGO_WIDTH, LOGO_HEIGHT, 1);
+        display->display();
     }
 
     //---------------------------------------------------------
-    // Draws the output mode screen
+    // Output Mode screens
     //---------------------------------------------------------
     void OutputSelectScreen(Item *item, bool isDefaultEndpoint, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex)
     {
@@ -295,7 +287,7 @@ namespace Display
     }
 
     //---------------------------------------------------------
-    // Draws the Application mode selection screen
+    // Application Mode screens
     //---------------------------------------------------------
     void ApplicationSelectScreen(Item *item, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex)
     {
@@ -322,7 +314,7 @@ namespace Display
     }
 
     //---------------------------------------------------------
-    // Draws the Application mode selection screen
+    // Game Mode screens
     //---------------------------------------------------------
     void GameSelectScreen(Item *item, char channel, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex)
     {
