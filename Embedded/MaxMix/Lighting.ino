@@ -32,14 +32,14 @@ void UpdateLighting()
   }
 
   // Push the colors to the pixels strip
-  pixels->show();
+  pixels.show();
 }
 
 //---------------------------------------------------------
 void LightingBlackOut()
 {
   // All black
-  pixels->clear();
+  pixels.clear();
 }
 
 //---------------------------------------------------------
@@ -47,7 +47,7 @@ void LightingCircularFunk()
 {
   uint32_t t = millis();
   uint16_t hue = t * 20;
-  uint32_t rgbColor = pixels->ColorHSV(hue);
+  uint32_t rgbColor = pixels.ColorHSV(hue);
   uint16_t period = 500;
 
   uint16_t startOffset = 0;
@@ -56,11 +56,11 @@ void LightingCircularFunk()
     startOffset = 1;
   }
 
-  pixels->clear();
-  pixels->setPixelColor(startOffset, rgbColor);
-  pixels->setPixelColor(startOffset+2, rgbColor);
-  pixels->setPixelColor(startOffset+4, rgbColor);
-  pixels->setPixelColor(startOffset+6, rgbColor);
+  pixels.clear();
+  pixels.setPixelColor(startOffset, rgbColor);
+  pixels.setPixelColor(startOffset+2, rgbColor);
+  pixels.setPixelColor(startOffset+4, rgbColor);
+  pixels.setPixelColor(startOffset+6, rgbColor);
 }
 
 //---------------------------------------------------------
@@ -75,7 +75,7 @@ void LightingVolume(Item * item)
       uint32_t amp = min(volAcc, 255);
       volAcc -= amp;
       uint32_t color = (amp << 16) | (amp << 8) | amp;
-      pixels->setPixelColor(i, color);
+      pixels.setPixelColor(i, color);
     }
   }
   else
@@ -86,7 +86,7 @@ void LightingVolume(Item * item)
     int32_t period = 500;
     int32_t amp = (period - abs(t % (2*period) - period)) * 255 / period; // Triangular wave
     uint32_t color = (amp << 16);
-    pixels->fill(color);
+    pixels.fill(color);
   }
 }
 
@@ -100,6 +100,6 @@ void LightingVolumeDual(Item * item)
     uint32_t amp = min(volAcc, 255);
     volAcc -= amp;
     uint32_t color = (amp << 16) | (255 - amp);
-    pixels->setPixelColor(i, color);
+    pixels.setPixelColor(i, color);
   }
 }

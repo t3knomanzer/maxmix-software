@@ -26,22 +26,21 @@ namespace Display
     //---------------------------------------------------------
     // Display & Display Functions
     //---------------------------------------------------------
-    static Adafruit_SSD1306 *display;
+    static Adafruit_SSD1306 display(DISPLAY_WIDTH, DISPLAY_HEIGHT, &Wire, DISPLAY_RESET);
 
     void Initialize(void)
     {
         Wire.setClock(DISPLAY_SPEED);
-        display = new Adafruit_SSD1306(DISPLAY_WIDTH, DISPLAY_HEIGHT, &Wire, DISPLAY_RESET);
-        display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS);
-        display->setRotation(2);
-        display->setTextWrap(false);
+        display.begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS);
+        display.setRotation(2);
+        display.setTextWrap(false);
     }
 
     void Sleep(void)
     {
         // TODO: replace with display off
-        display->clearDisplay();
-        display->display();
+        display.clearDisplay();
+        display.display();
     }
 
     //---------------------------------------------------------
@@ -52,7 +51,7 @@ namespace Display
         // Min limit
         uint8_t y1 = y0 + height - 1;
 
-        display->drawLine(x0, y0, x0, y1, WHITE);
+        display.drawLine(x0, y0, x0, y1, WHITE);
 
         // Bar
         x0 += 1 + DISPLAY_MARGIN_X1;
@@ -61,14 +60,14 @@ namespace Display
         if (width > 0)
         {
             if (item->isMuted)
-                display->drawRect(x0, y0, width.getInteger(), height, WHITE);
+                display.drawRect(x0, y0, width.getInteger(), height, WHITE);
             else
-                display->fillRect(x0, y0, width.getInteger(), height, WHITE);
+                display.fillRect(x0, y0, width.getInteger(), height, WHITE);
         }
 
         // Max limit
         x0 += maxWidth + DISPLAY_MARGIN_X1;
-        display->drawLine(x0, y0, x0, y1, WHITE);
+        display.drawLine(x0, y0, x0, y1, WHITE);
     }
 
     //---------------------------------------------------------
@@ -100,34 +99,34 @@ namespace Display
         if (abs(scroll) > 0)
             nameCopies = 2;
 
-        display->setTextSize(fontSize);
-        display->setTextColor(WHITE);
-        display->setCursor(x - scroll.getInteger(), y);
+        display.setTextSize(fontSize);
+        display.setTextColor(WHITE);
+        display.setCursor(x - scroll.getInteger(), y);
         while (nameCopies > 0)
         {
-            display->print(name);
-            display->print(' ');
+            display.print(name);
+            display.print(' ');
             nameCopies--;
         }
 
         // clear margins
-        display->fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, charHeight, BLACK);
-        display->fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, charHeight, BLACK);
+        display.fillRect(0, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, charHeight, BLACK);
+        display.fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, charHeight, BLACK);
     }
 
     static void DrawGameEditItem(Item *item, uint8_t y0, uint8_t timerIndex)
     {
         // Name
-        display->setTextSize(1);
-        display->setTextColor(WHITE);
-        display->setCursor(DISPLAY_AREA_CENTER_MARGIN_SIDE, y0);
+        display.setTextSize(1);
+        display.setTextColor(WHITE);
+        display.setCursor(DISPLAY_AREA_CENTER_MARGIN_SIDE, y0);
 
         // Item name
         DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_AREA_CENTER_MARGIN_SIDE, y0, timerIndex, DISPLAY_SCROLL_SPEED_X1);
 
         // Clear sides
-        display->fillRect(0, y0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1, BLACK);
-        display->fillRect(DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH, y0, DISPLAY_WIDTH, DISPLAY_CHAR_HEIGHT_X1, BLACK);
+        display.fillRect(0, y0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1, BLACK);
+        display.fillRect(DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH, y0, DISPLAY_WIDTH, DISPLAY_CHAR_HEIGHT_X1, BLACK);
 
         // Volume bar min indicator
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH + DISPLAY_MARGIN_X2, y0, DISPLAY_GAME_VOLUMEBAR_WIDTH, DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT);
@@ -138,11 +137,11 @@ namespace Display
     //---------------------------------------------------------
     static void DrawSelectionChannelName(char channel)
     {
-        display->setTextSize(1);
-        display->setTextColor(WHITE);
-        display->setCursor(0, DISPLAY_AREA_CENTER_HEIGHT - DISPLAY_CHAR_HEIGHT_X1 - 1);
+        display.setTextSize(1);
+        display.setTextColor(WHITE);
+        display.setCursor(0, DISPLAY_AREA_CENTER_HEIGHT - DISPLAY_CHAR_HEIGHT_X1 - 1);
 
-        display->print(channel);
+        display.print(channel);
     }
 
     static void DrawVolumeNumber(uint8_t volume, uint8_t x0, uint8_t y0)
@@ -153,11 +152,11 @@ namespace Display
         if (volume > 99)
             x0 = x0 - DISPLAY_CHAR_WIDTH_X2 - DISPLAY_CHAR_SPACING_X2;
 
-        display->setTextSize(2);
-        display->setTextColor(WHITE);
-        display->setCursor(x0, y0);
+        display.setTextSize(2);
+        display.setTextColor(WHITE);
+        display.setCursor(x0, y0);
 
-        display->print(volume);
+        display.print(volume);
     }
 
     static void DrawDotGroup(uint8_t index)
@@ -175,7 +174,7 @@ namespace Display
             dotSize = i == index ? DISPLAY_WIDGET_DOT_SIZE_X2 : DISPLAY_WIDGET_DOT_SIZE_X1;
             y0 = py - dotSize / 2;
 
-            display->fillRect(x0, y0, dotSize, dotSize, WHITE);
+            display.fillRect(x0, y0, dotSize, dotSize, WHITE);
             x0 += dotSize + DISPLAY_MARGIN_X2;
         }
     }
@@ -193,7 +192,7 @@ namespace Display
             x2 = x0 + DISPLAY_WIDGET_ARROW_SIZE_X1;
             y2 = y0 + DISPLAY_WIDGET_ARROW_SIZE_X1;
 
-            display->fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
+            display.fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
         }
 
         if (rightArrow)
@@ -205,7 +204,7 @@ namespace Display
             x2 = x0 - DISPLAY_WIDGET_ARROW_SIZE_X1;
             y2 = y0 + DISPLAY_WIDGET_ARROW_SIZE_X1;
 
-            display->fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
+            display.fillTriangle(x0, y0, x1, y1, x2, y2, WHITE);
         }
     }
 
@@ -214,9 +213,9 @@ namespace Display
     //---------------------------------------------------------
     void SplashScreen(void)
     {
-        display->clearDisplay();
-        display->drawBitmap(0, 0, LOGOBMP, LOGO_WIDTH, LOGO_HEIGHT, 1);
-        display->display();
+        display.clearDisplay();
+        display.drawBitmap(0, 0, LOGOBMP, LOGO_WIDTH, LOGO_HEIGHT, 1);
+        display.display();
     }
 
     //---------------------------------------------------------
@@ -224,7 +223,7 @@ namespace Display
     //---------------------------------------------------------
     void OutputSelectScreen(Item *item, bool isDefaultEndpoint, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex)
     {
-        display->clearDisplay();
+        display.clearDisplay();
 
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
@@ -234,19 +233,19 @@ namespace Display
         if (isDefaultEndpoint)
             DrawSelectionChannelName('O');
 
-        display->display();
+        display.display();
     }
 
     void OutputEditScreen(Item *item, uint8_t modeIndex)
     {
-        display->clearDisplay();
+        display.clearDisplay();
 
         DrawDotGroup(modeIndex);
         DrawItemName("VOL", 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
         DrawVolumeNumber(item->volume, DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH, 0);
 
-        display->display();
+        display.display();
     }
 
     //---------------------------------------------------------
@@ -254,26 +253,26 @@ namespace Display
     //---------------------------------------------------------
     void ApplicationSelectScreen(Item *item, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex)
     {
-        display->clearDisplay();
+        display.clearDisplay();
 
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
         DrawSelectionArrows(leftArrow, rightArrow);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
 
-        display->display();
+        display.display();
     }
 
     void ApplicationEditScreen(Item *item, uint8_t modeIndex)
     {
-        display->clearDisplay();
+        display.clearDisplay();
 
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X1);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X2, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2);
         DrawVolumeNumber(item->volume, DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2);
 
-        display->display();
+        display.display();
     }
 
     //---------------------------------------------------------
@@ -281,7 +280,7 @@ namespace Display
     //---------------------------------------------------------
     void GameSelectScreen(Item *item, char channel, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex)
     {
-        display->clearDisplay();
+        display.clearDisplay();
 
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
@@ -289,17 +288,17 @@ namespace Display
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
         DrawSelectionChannelName(channel);
 
-        display->display();
+        display.display();
     }
 
     void GameEditScreen(Item *itemA, Item *itemB, uint8_t modeIndex)
     {
-        display->clearDisplay();
+        display.clearDisplay();
 
         DrawDotGroup(modeIndex);
         DrawGameEditItem(itemA, DISPLAY_MARGIN_X2, DISPLAY_TIMER_A);
         DrawGameEditItem(itemB, DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2 * 2 + DISPLAY_MARGIN_X1, DISPLAY_TIMER_B);
 
-        display->display();
+        display.display();
     }
 }; // namespace Display

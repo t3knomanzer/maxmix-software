@@ -82,7 +82,7 @@ uint32_t lastActivityTime = 0;
 uint32_t lastLightingUpdate = 0;
 
 // Lighting
-Adafruit_NeoPixel* pixels;
+Adafruit_NeoPixel pixels(PIXELS_COUNT, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
 
 //********************************************************
 // *** INTERRUPTS
@@ -107,10 +107,9 @@ void setup()
   Serial.begin(BAUD_RATE);
 
   //--- Pixels
-  pixels = new Adafruit_NeoPixel(PIXELS_COUNT, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
-  pixels->setBrightness(PIXELS_BRIGHTNESS);
-  pixels->begin();
-  pixels->show();
+  pixels.setBrightness(PIXELS_BRIGHTNESS);
+  pixels.begin();
+  pixels.show();
 
   // --- Display
   Display::Initialize();
