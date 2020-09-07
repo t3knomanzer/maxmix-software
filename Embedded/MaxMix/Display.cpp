@@ -73,12 +73,12 @@ namespace Display
     //---------------------------------------------------------
     // Item Functions
     //---------------------------------------------------------
-    static void DrawItemName(const char *name, uint8_t fontSize, uint8_t charWidth, uint8_t charHeight, uint8_t charSpacing, uint8_t x, uint8_t y, uint8_t timerIndex, SQ15x16 scrollSpeed)
+    static void DrawItemName(const char *name, uint8_t fontSize, uint8_t charWidth, uint8_t charHeight, uint8_t charSpacing, uint8_t charMax, uint8_t x, uint8_t y, uint8_t timerIndex, SQ15x16 scrollSpeed)
     {
         uint8_t nameLength = strlen(name);
         SQ15x16 scrollMax = (nameLength + 1) * (charWidth + charSpacing);
         SQ15x16 scroll = 0;
-        if (nameLength > DISPLAY_CHAR_MAX_X1 / fontSize)
+        if (nameLength > charMax)
             scroll = max(0, displayTimer[timerIndex] - DISPLAY_SCROLL_IDLE_TIME) * scrollMax / (nameLength / scrollSpeed);
 
         if (abs(scroll) >= abs(scrollMax))
@@ -109,7 +109,7 @@ namespace Display
         display.setCursor(DISPLAY_AREA_CENTER_MARGIN_SIDE, y0);
 
         // Item name
-        DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_AREA_CENTER_MARGIN_SIDE, y0, timerIndex, DISPLAY_SCROLL_SPEED_X1);
+        DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_CHAR_MAX_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, y0, timerIndex, DISPLAY_SCROLL_SPEED_X1);
 
         // Clear sides
         display.fillRect(0, y0, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1, BLACK);
@@ -213,7 +213,7 @@ namespace Display
         display.clearDisplay();
 
         DrawDotGroup(modeIndex);
-        DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
+        DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_CHAR_MAX_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
         DrawSelectionArrows(leftArrow, rightArrow);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
 
@@ -228,7 +228,7 @@ namespace Display
         display.clearDisplay();
 
         DrawDotGroup(modeIndex);
-        DrawItemName("VOL", 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
+        DrawItemName("VOL", 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_CHAR_MAX_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
         DrawVolumeNumber(item->volume, DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH, 0);
 
@@ -243,7 +243,7 @@ namespace Display
         display.clearDisplay();
 
         DrawDotGroup(modeIndex);
-        DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
+        DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_CHAR_MAX_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
         DrawSelectionArrows(leftArrow, rightArrow);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
 
@@ -255,7 +255,7 @@ namespace Display
         display.clearDisplay();
 
         DrawDotGroup(modeIndex);
-        DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X1);
+        DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_CHAR_MAX_X1, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X1);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X2, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2);
         DrawVolumeNumber(item->volume, DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2);
 
@@ -270,7 +270,7 @@ namespace Display
         display.clearDisplay();
 
         DrawDotGroup(modeIndex);
-        DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
+        DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_CHAR_MAX_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
         DrawSelectionArrows(leftArrow, rightArrow);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
         DrawSelectionChannelName(channel);
