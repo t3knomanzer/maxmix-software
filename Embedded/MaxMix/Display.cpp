@@ -164,11 +164,11 @@ namespace Display
 
     void DrawVolumeNumber(uint8_t volume, uint8_t x0, uint8_t y0)
     {
-        x0 -= DISPLAY_CHAR_WIDTH_X2;
+        x0 = x0 - DISPLAY_CHAR_WIDTH_X2;
         if (volume > 9)
-            x0 -= DISPLAY_CHAR_WIDTH_X2 - DISPLAY_CHAR_SPACING_X2;
+            x0 = x0 - DISPLAY_CHAR_WIDTH_X2 - DISPLAY_CHAR_SPACING_X2;
         if (volume > 99)
-            x0 -= DISPLAY_CHAR_WIDTH_X2 - DISPLAY_CHAR_SPACING_X2;
+            x0 = x0 - DISPLAY_CHAR_WIDTH_X2 - DISPLAY_CHAR_SPACING_X2;
 
         display->setTextSize(2);
         display->setTextColor(WHITE);
