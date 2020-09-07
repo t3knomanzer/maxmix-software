@@ -108,14 +108,14 @@ namespace Display
         // Volume bar
         px += 1 + DISPLAY_MARGIN_X1;
         uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH - DISPLAY_MARGIN_X2 - 2 - DISPLAY_MARGIN_X1 * 2;
-        uint8_t width = map(item->volume, 0, 100, 0, maxWidth);
+        SQ7x8 width = item->volume / (SQ7x8)100 * maxWidth;
 
         if (width > 0)
         {
             if (item->isMuted)
-                display->drawRect(px, py, width, DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT, WHITE);
+                display->drawRect(px, py, width.getInteger(), DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT, WHITE);
             else
-                display->fillRect(px, py, width, DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT, WHITE);
+                display->fillRect(px, py, width.getInteger(), DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT, WHITE);
         }
 
         // Volume bar min indicator
@@ -145,15 +145,15 @@ namespace Display
 
         // Bar
         x0 += 1 + DISPLAY_MARGIN_X1;
-        uint8_t width = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 2;
-        width = map(item->volume, 0, 100, 0, width);
+        uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 2;
+        SQ7x8 width = item->volume / (SQ7x8)100 * maxWidth;
 
         if (width > 0)
         {
             if (item->isMuted)
-                display->drawRect(x0, y0, width, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1, WHITE);
+                display->drawRect(x0, y0, width.getInteger(), DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1, WHITE);
             else
-                display->fillRect(x0, y0, width, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1, WHITE);
+                display->fillRect(x0, y0, width.getInteger(), DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1, WHITE);
         }
 
         // Max limit
@@ -239,7 +239,7 @@ namespace Display
 
     void DrawEditVolumeBar(Item *item)
     {
-        uint8_t x0, y0, x1, y1;
+        uint8_t x0, y0, y1;
 
         // Min limit
         x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE;
@@ -250,15 +250,15 @@ namespace Display
 
         // Bar
         x0 += 1 + DISPLAY_MARGIN_X1;
-        x1 = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 3 - DISPLAY_CHAR_WIDTH_X2 * 3 - DISPLAY_CHAR_SPACING_X2 * 2;
-        x1 = map(item->volume, 0, 100, 0, x1);
+        uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 3 - DISPLAY_CHAR_WIDTH_X2 * 3 - DISPLAY_CHAR_SPACING_X2 * 2;
+        SQ7x8 width = item->volume / (SQ7x8)100 * maxWidth;
 
-        if (x1 > 0)
+        if (width > 0)
         {
             if (item->isMuted)
-                display->drawRect(x0, y0, x1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2, WHITE);
+                display->drawRect(x0, y0, width.getInteger(), DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2, WHITE);
             else
-                display->fillRect(x0, y0, x1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2, WHITE);
+                display->fillRect(x0, y0, width.getInteger(), DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2, WHITE);
         }
 
         // Max limit
