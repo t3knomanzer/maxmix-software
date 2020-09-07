@@ -20,15 +20,15 @@ void UpdateLighting()
   }
   else if(mode == MODE_OUTPUT)
   {
-    LightingVolume(&devices[itemIndexOutput]);
+    LightingVolume(&devices[itemIndexOutput], &settings.volumeColor1, &settings.volumeColor2);
   }
   else if(mode == MODE_APPLICATION)
   {
-    LightingVolume(&sessions[itemIndexApp]);
+    LightingVolume(&sessions[itemIndexApp], &settings.volumeColor1, &settings.volumeColor2);
   }
   else if(mode == MODE_GAME)
   {
-    LightingVolumeDual(&sessions[itemIndexGameA]);
+    LightingVolume(&sessions[itemIndexGameA], &settings.gameVolumeColor1, &settings.gameVolumeColor2);
   }
 
   // Push the colors to the pixels strip
@@ -50,7 +50,7 @@ void LightingCircularFunk()
   uint32_t rgbColor = pixels->ColorHSV(hue);
   uint16_t period = 500;
 
-  uint16_t startOffset = 0;
+  uint8_t startOffset = 0;
   if ((t % period) > (period / 2))
   {
     startOffset = 1;
@@ -64,42 +64,48 @@ void LightingCircularFunk()
 }
 
 //---------------------------------------------------------
-void LightingVolume(Item * item)
+void LightingVolume(Item * item, Color * c1, Color * c2)
 {
-  if (!item->isMuted)
-  {
-    // Circular lighting representing volume.
-    uint32_t volAcc = ((uint32_t)item->volume * 255 * PIXELS_COUNT) / 100;
-    for (int i=0; i<PIXELS_COUNT; i++)
-    {
-      uint32_t amp = min(volAcc, 255);
-      volAcc -= amp;
-      uint32_t color = (amp << 16) | (amp << 8) | amp;
-      pixels->setPixelColor(i, color);
-    }
-  }
-  else
-  {
-    // Red breathing.
-    // All vars need to be signed for the formula to work.
-    int32_t t = millis();
-    int32_t period = 500;
-    int32_t amp = (period - abs(t % (2*period) - period)) * 255 / period; // Triangular wave
-    uint32_t color = (amp << 16);
-    pixels->fill(color);
-  }
-}
-
-//---------------------------------------------------------
-void LightingVolumeDual(Item * item)
-{
-  // Circular lighting representing volume.
+  // Dual colors circular lighting representing the volume.
   uint32_t volAcc = ((uint32_t)item->volume * 255 * PIXELS_COUNT) / 100;
   for (int i=0; i<PIXELS_COUNT; i++)
   {
     uint32_t amp = min(volAcc, 255);
     volAcc -= amp;
-    uint32_t color = (amp << 16) | (255 - amp);
-    pixels->setPixelColor(i, color);
+
+    // Linear interpolation to get the final color of each pixel.
+    Color c = LerpColor(c1, c2, amp);
+    pixels->setPixelColor(i, c.r, c.g, c.b);
   }
+}
+
+//---------------------------------------------------------
+Color LerpColor(Color * c1, Color * c2, uint8_t fade)
+{
+  // Boundary cases don't work with bitwise stuff below.
+  if (fade == 0)
+  {
+    return *c1;
+  }
+  else if (fade == 255)
+  {
+    return *c2;
+  }
+
+  uint16_t invFadeMod = (255 - fade) + 1;
+  uint16_t fadeMod = fade + 1;
+
+  Color cA = {
+    (uint8_t)((uint16_t(c1->r) * invFadeMod) >> 8),
+    (uint8_t)((uint16_t(c1->g) * invFadeMod) >> 8),
+    (uint8_t)((uint16_t(c1->b) * invFadeMod) >> 8)
+  };
+
+  Color cB = {
+    (uint8_t)((uint16_t(c2->r >> 16) * fadeMod) >> 8),
+    (uint8_t)((uint16_t(c2->g >> 8) * fadeMod) >> 8),
+    (uint8_t)((uint16_t(c2->b >> 0) * fadeMod) >> 8)
+  };
+
+  return {(c1->r + c2->r), (c1->g + c1->g), (c1->b + c2->b)};
 }

@@ -34,6 +34,10 @@
 //********************************************************
 // *** STRUCTS
 //********************************************************
+typedef struct Color {
+  uint8_t r, g, b;
+};
+
 struct Item
 {
   uint32_t id;                          // 4 Bytes (32 bit)
@@ -50,6 +54,10 @@ struct Settings
   uint8_t sleepAfterSeconds = 5;
   uint8_t continuousScroll = 1;
   uint8_t accelerationPercentage = 60;
+  Color volumeColor1 = {0x00, 0x00, 0xFF};
+  Color volumeColor2 = {0xFF, 0x00, 0x00};
+  Color gameVolumeColor1 = {0x00, 0xFF, 0xFF};
+  Color gameVolumeColor2 = {0xFF, 0x00, 0xFF};
 };
 
 //********************************************************
