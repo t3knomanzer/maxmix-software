@@ -66,34 +66,53 @@ void LightingCircularFunk()
 //---------------------------------------------------------
 void LightingVolume(Item * item, Color * c1, Color * c2)
 {
-  // Dual colors circular lighting representing the volume.
-  uint32_t volAcc = ((uint32_t)item->volume * 255 * PIXELS_COUNT) / 100;
-  for (int i=0; i<PIXELS_COUNT; i++)
-  {
-    uint32_t amp = min(volAcc, 255);
-    volAcc -= amp;
+  if (!item->isMuted) {
+    // Dual colors circular lighting representing the volume.
+    uint32_t volAcc = ((uint32_t)item->volume * 255 * PIXELS_COUNT) / 100;
+    for (int i=0; i<PIXELS_COUNT; i++)
+    {
+      uint32_t amp = min(volAcc, 255);
+      volAcc -= amp;
 
-    // Linear interpolation to get the final color of each pixel.
-    Color c = LerpColor(c1, c2, amp);
-    pixels->setPixelColor(i, c.r, c.g, c.b);
+      // Linear interpolation to get the final color of each pixel.
+      Color c = LerpColor(c1, c2, amp);
+      pixels->setPixelColor(i, c.r, c.g, c.b);
+    }
+  }
+  else
+  {
+    // Pulsing/breathing on the second color.
+    // Both 't' and 'period' need to be signed for the formula to work.
+    int32_t t = millis();
+    int32_t period = 500;
+    uint8_t amp = (period - abs(t % (2*period) - period)) * 255 / period; // Triangular wave
+
+    Color c = {
+      (uint8_t)((uint16_t)c2->r * amp / 255),
+      (uint8_t)((uint16_t)c2->g * amp / 255),
+      (uint8_t)((uint16_t)c2->b * amp / 255),
+    };
+
+    uint32_t color32 = ((uint32_t)c.r << 16) | ((uint32_t)c.g << 8) | (uint32_t)c.b;
+    pixels->fill(color32);
   }
 }
 
 //---------------------------------------------------------
-Color LerpColor(Color * c1, Color * c2, uint8_t fade)
+Color LerpColor(Color * c1, Color * c2, uint8_t coeff)
 {
   // Boundary cases don't work with bitwise stuff below.
-  if (fade == 0)
+  if (coeff == 0)
   {
     return *c1;
   }
-  else if (fade == 255)
+  else if (coeff == 255)
   {
     return *c2;
   }
 
-  uint16_t invFadeMod = (255 - fade) + 1;
-  uint16_t fadeMod = fade + 1;
+  uint16_t invFadeMod = (255 - coeff) + 1;
+  uint16_t fadeMod = coeff + 1;
 
   Color cA = {
     (uint8_t)((uint16_t(c1->r) * invFadeMod) >> 8),
