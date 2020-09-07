@@ -162,20 +162,17 @@ namespace Display
         display->drawLine(x0, y0, x0, y1, WHITE);
     }
 
-    void DrawSelectionItemVolume(uint8_t volume)
+    void DrawVolumeNumber(uint8_t volume, uint8_t x0, uint8_t y0)
     {
-        uint8_t x0;
-
-        if (volume < 10)
-            x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - DISPLAY_CHAR_WIDTH_X2;
-        else if (volume < 100)
-            x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - DISPLAY_CHAR_WIDTH_X2 * 2 - DISPLAY_CHAR_SPACING_X2 * 2;
-        else if (volume == 100)
-            x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH - DISPLAY_CHAR_WIDTH_X2 * 3 - DISPLAY_CHAR_SPACING_X2 * 3;
+        x0 -= DISPLAY_CHAR_WIDTH_X2;
+        if (volume > 9)
+            x0 -= DISPLAY_CHAR_WIDTH_X2 - DISPLAY_CHAR_SPACING_X2;
+        if (volume > 99)
+            x0 -= DISPLAY_CHAR_WIDTH_X2 - DISPLAY_CHAR_SPACING_X2;
 
         display->setTextSize(2);
         display->setTextColor(WHITE);
-        display->setCursor(x0, 0);
+        display->setCursor(x0, y0);
 
         display->print(volume);
     }
@@ -267,26 +264,6 @@ namespace Display
         display->drawLine(x0, y0, x0, y1, WHITE);
     }
 
-    void DrawEditVolume(uint8_t volume)
-    {
-        uint8_t x0, y0;
-
-        x0 = DISPLAY_AREA_CENTER_MARGIN_SIDE;
-        y0 = DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2;
-
-        if (volume < 10)
-            x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2;
-        else if (volume < 100)
-            x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2 * 2;
-        else if (volume == 100)
-            x0 = DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE - DISPLAY_CHAR_WIDTH_X2 * 3;
-
-        display->setTextSize(2);
-        display->setTextColor(WHITE);
-        display->setCursor(x0, y0);
-        display->print(volume);
-    }
-
     //---------------------------------------------------------
     // Draws the output mode screen
     //---------------------------------------------------------
@@ -311,8 +288,8 @@ namespace Display
 
         DrawDotGroup(modeIndex);
         DrawItemName("VOL", 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
-        DrawSelectionItemVolume(item->volume);
         DrawSelectionVolumeBar(item);
+        DrawVolumeNumber(item->volume, DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH, 0);
 
         display->display();
     }
@@ -339,7 +316,7 @@ namespace Display
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X1);
         DrawEditVolumeBar(item);
-        DrawEditVolume(item->volume);
+        DrawVolumeNumber(item->volume, DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2);
 
         display->display();
     }
