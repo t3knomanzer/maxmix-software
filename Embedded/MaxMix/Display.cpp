@@ -156,20 +156,6 @@ namespace Display
         display->drawLine(x0, y0, x0, y1, WHITE);
     }
 
-    static void DrawSelectionVolumeBar(Item *item)
-    {
-        uint8_t y0 = DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2;
-        uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 2;
-        DrawVolumeBar(item, y0, maxWidth, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
-    }
-
-    static void DrawEditVolumeBar(Item *item)
-    {
-        uint8_t y0 = DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2;
-        uint8_t maxWidth = DISPLAY_AREA_CENTER_WIDTH - 2 - DISPLAY_MARGIN_X1 * 3 - DISPLAY_CHAR_WIDTH_X2 * 3 - DISPLAY_CHAR_SPACING_X2 * 2;
-        DrawVolumeBar(item, y0, maxWidth, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2);
-    }
-
     //---------------------------------------------------------
     // Screen Element Functions
     //---------------------------------------------------------
@@ -266,7 +252,7 @@ namespace Display
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
         DrawSelectionArrows(leftArrow, rightArrow);
-        DrawSelectionVolumeBar(item);
+        DrawVolumeBar(item, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
 
         if (isDefaultEndpoint)
             DrawSelectionChannelName('O');
@@ -280,7 +266,7 @@ namespace Display
 
         DrawDotGroup(modeIndex);
         DrawItemName("VOL", 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
-        DrawSelectionVolumeBar(item);
+        DrawVolumeBar(item, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
         DrawVolumeNumber(item->volume, DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH, 0);
 
         display->display();
@@ -296,7 +282,7 @@ namespace Display
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
         DrawSelectionArrows(leftArrow, rightArrow);
-        DrawSelectionVolumeBar(item);
+        DrawVolumeBar(item, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
 
         display->display();
     }
@@ -307,7 +293,7 @@ namespace Display
 
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X1);
-        DrawEditVolumeBar(item);
+        DrawVolumeBar(item, DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X2, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2);
         DrawVolumeNumber(item->volume, DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2);
 
         display->display();
@@ -323,7 +309,7 @@ namespace Display
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
         DrawSelectionArrows(leftArrow, rightArrow);
-        DrawSelectionVolumeBar(item);
+        DrawVolumeBar(item, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
         DrawSelectionChannelName(channel);
 
         display->display();
