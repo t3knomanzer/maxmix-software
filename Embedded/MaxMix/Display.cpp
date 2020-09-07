@@ -73,35 +73,22 @@ namespace Display
     //---------------------------------------------------------
     // Item Functions
     //---------------------------------------------------------
-    static SQ15x16 Scroll(uint8_t length, SQ15x16 time, SQ15x16 scrollMin, SQ15x16 scrollMax, SQ15x16 speed)
-    {
-        if (length <= DISPLAY_CHAR_MAX_X2)
-            return 0;
-
-        // Value mapping: (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-        SQ15x16 timeMax = length / speed;
-        SQ15x16 scroll = (time - 0) * (scrollMax - scrollMin) / (timeMax - 0) + scrollMin;
-
-        return scroll;
-    }
-
     static void DrawItemName(const char *name, uint8_t fontSize, uint8_t charWidth, uint8_t charHeight, uint8_t charSpacing, uint8_t x, uint8_t y, uint8_t timerIndex, SQ15x16 scrollSpeed)
     {
-        uint8_t nameCopies = 1;
         uint8_t nameLength = strlen(name);
-        SQ15x16 scrollMin = 0;
         SQ15x16 scrollMax = (nameLength + 1) * (charWidth + charSpacing);
-        SQ15x16 scroll = Scroll(nameLength, max(0, displayTimer[timerIndex] - DISPLAY_SCROLL_IDLE_TIME), scrollMin, scrollMax, scrollSpeed);
+        SQ15x16 scroll = 0;
+        if (nameLength > DISPLAY_CHAR_MAX_X1 / fontSize)
+            scroll = max(0, displayTimer[timerIndex] - DISPLAY_SCROLL_IDLE_TIME) * scrollMax / (nameLength / scrollSpeed);
 
         if (abs(scroll) >= abs(scrollMax))
             displayTimer[timerIndex] = 0;
 
-        if (abs(scroll) > 0)
-            nameCopies = 2;
-
         display.setTextSize(fontSize);
         display.setTextColor(WHITE);
         display.setCursor(x - scroll.getInteger(), y);
+
+        uint8_t nameCopies = scroll == 0 ? 1 : 2;
         while (nameCopies > 0)
         {
             display.print(name);
