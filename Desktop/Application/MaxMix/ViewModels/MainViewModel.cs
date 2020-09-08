@@ -167,7 +167,11 @@ namespace MaxMix.ViewModels
                                               _settingsViewModel.SleepAfterSeconds,
                                               _settingsViewModel.ContinuousScroll,
                                               _settingsViewModel.AccelerationPercentage,
-                                              _settingsViewModel.DoubleTapTime);
+                                              _settingsViewModel.DoubleTapTime,
+                                              _settingsViewModel.VolumeMinColor,
+                                              _settingsViewModel.VolumeMaxColor,
+                                              _settingsViewModel.MixChannelAColor,
+                                              _settingsViewModel.MixChannelBColor);
 
             _communicationService.Send(message);
         }

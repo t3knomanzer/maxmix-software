@@ -20,15 +20,15 @@ void UpdateLighting()
   }
   else if(mode == MODE_OUTPUT)
   {
-    LightingVolume(&devices[itemIndexOutput], &settings.volumeColor1, &settings.volumeColor2);
+    LightingVolume(&devices[itemIndexOutput], &settings.volumeMinColor, &settings.volumeMaxColor);
   }
   else if(mode == MODE_APPLICATION)
   {
-    LightingVolume(&sessions[itemIndexApp], &settings.volumeColor1, &settings.volumeColor2);
+    LightingVolume(&sessions[itemIndexApp], &settings.volumeMinColor, &settings.volumeMaxColor);
   }
   else if(mode == MODE_GAME)
   {
-    LightingVolume(&sessions[itemIndexGameA], &settings.gameVolumeColor1, &settings.gameVolumeColor2);
+    LightingVolume(&sessions[itemIndexGameA], &settings.mixChannelAColor, &settings.mixChannelBColor);
   }
 
   // Push the colors to the pixels strip

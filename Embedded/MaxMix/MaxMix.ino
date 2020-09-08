@@ -54,10 +54,10 @@ struct Settings
   uint8_t sleepAfterSeconds = 5;
   uint8_t continuousScroll = 1;
   uint8_t accelerationPercentage = 60;
-  Color volumeColor1 = {0x00, 0x00, 0xFF};
-  Color volumeColor2 = {0xFF, 0x00, 0x00};
-  Color gameVolumeColor1 = {0x00, 0xFF, 0xFF};
-  Color gameVolumeColor2 = {0xFF, 0x00, 0xFF};
+  Color volumeMinColor = {0x00, 0x00, 0xFF};
+  Color volumeMaxColor = {0xFF, 0x00, 0x00};
+  Color mixChannelAColor = {0x00, 0xFF, 0xFF};
+  Color mixChannelBColor = {0xFF, 0x00, 0xFF};
 };
 
 //********************************************************

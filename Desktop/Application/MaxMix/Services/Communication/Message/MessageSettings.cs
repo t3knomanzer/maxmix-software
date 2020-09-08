@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Bson;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,17 @@ namespace MaxMix.Services.Communication
     internal class MessageSettings : IMessage
     {
         #region Constructor
-        public MessageSettings(bool displayNewSession, bool sleepWhenInactive, int sleepAfterSeconds, bool continuousScroll, uint accelerationPercentage, ushort doubleTapTime)
+        public MessageSettings(
+            bool displayNewSession,
+            bool sleepWhenInactive,
+            int sleepAfterSeconds,
+            bool continuousScroll,
+            uint accelerationPercentage,
+            ushort doubleTapTime,
+            uint volumeMinColor,
+            uint volumeMaxColor,
+            uint mixChannelAColor,
+            uint mixChannelBColor)
         {
             _displayNewSession = displayNewSession;
             _sleepWhenInactive = sleepWhenInactive;
@@ -17,6 +28,10 @@ namespace MaxMix.Services.Communication
             _continuousScroll = continuousScroll;
             _accelerationPercentage = accelerationPercentage;
             _doubleTapTime = doubleTapTime;
+            _volumeMinColor = volumeMinColor;
+            _volumeMaxColor = volumeMaxColor;
+            _mixChannelAColor = mixChannelAColor;
+            _mixChannelBColor = mixChannelBColor;
         }
         #endregion
 
@@ -24,12 +39,16 @@ namespace MaxMix.Services.Communication
         #endregion
 
         #region Fields
-        public bool _displayNewSession;
-        public bool _sleepWhenInactive;
-        public int _sleepAfterSeconds;
-        public bool _continuousScroll;
-        public uint _accelerationPercentage;
-        public ushort _doubleTapTime;
+        private bool _displayNewSession;
+        private bool _sleepWhenInactive;
+        private int _sleepAfterSeconds;
+        private bool _continuousScroll;
+        private uint _accelerationPercentage;
+        private ushort _doubleTapTime;
+        private uint _volumeMinColor;
+        private uint _volumeMaxColor;
+        private uint _mixChannelAColor;
+        private uint _mixChannelBColor;
         #endregion
 
         #region Properties
@@ -39,6 +58,10 @@ namespace MaxMix.Services.Communication
         public bool ContinuousScroll { get => _continuousScroll; }
         public uint AccelerationPercentage { get => _accelerationPercentage; }
         public ushort DoubleTapTime { get => _doubleTapTime; }
+        public uint VolumeMinColor { get => _volumeMinColor; }
+        public uint VolumeMaxColor { get => _volumeMaxColor; }
+        public uint MixChannelAColor { get => _mixChannelAColor; }
+        public uint MixChannelBColor { get => _mixChannelBColor; }
         #endregion
 
         #region Private Methods
@@ -56,6 +79,10 @@ namespace MaxMix.Services.Communication
         * CONTINUOUSSCROLL          BYTE        1
         * ACCELERATIONPERCENTAGE    BYTE        1
         * DOUBLETAPTIME             USHORT      2
+        * VOLUMEMINCOLOR            BYTE[]      3
+        * VOLUMEMAXCOLOR            BYTE[]      3
+        * MIXCHANNELACOLOR          BYTE[]      3
+        * MIXCHANNELBCOLOR          BYTE[]      3
         * ---------------------------------------------------
         */
 
@@ -69,6 +96,10 @@ namespace MaxMix.Services.Communication
             result.Add(Convert.ToByte(ContinuousScroll));
             result.Add(Convert.ToByte(AccelerationPercentage));
             result.AddRange(BitConverter.GetBytes(DoubleTapTime));
+            result.AddRange(GetColorTriplet(VolumeMinColor));
+            result.AddRange(GetColorTriplet(VolumeMaxColor));
+            result.AddRange(GetColorTriplet(MixChannelAColor));
+            result.AddRange(GetColorTriplet(MixChannelBColor));
 
             return result.ToArray();
         }
@@ -78,5 +109,14 @@ namespace MaxMix.Services.Communication
             throw new NotImplementedException("Should never be called");
         }
         #endregion
+
+        private byte[] GetColorTriplet(UInt32 color)
+        {
+            // For colors we don't send the alpha component.
+            byte[] rgba = BitConverter.GetBytes(color);
+            Array.Resize(ref rgba, 3); // Drop the alpha channel
+            return rgba;
+        }
+
     }
 }
