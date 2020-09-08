@@ -32,14 +32,14 @@ void UpdateLighting()
   }
 
   // Push the colors to the pixels strip
-  pixels->show();
+  pixels.show();
 }
 
 //---------------------------------------------------------
 void LightingBlackOut()
 {
   // All black
-  pixels->clear();
+  pixels.clear();
 }
 
 //---------------------------------------------------------
@@ -47,7 +47,7 @@ void LightingCircularFunk()
 {
   uint32_t t = millis();
   uint16_t hue = t * 20;
-  uint32_t rgbColor = pixels->ColorHSV(hue);
+  uint32_t rgbColor = pixels.ColorHSV(hue);
   uint16_t period = 500;
 
   uint8_t startOffset = 0;
@@ -56,11 +56,11 @@ void LightingCircularFunk()
     startOffset = 1;
   }
 
-  pixels->clear();
-  pixels->setPixelColor(startOffset, rgbColor);
-  pixels->setPixelColor(startOffset+2, rgbColor);
-  pixels->setPixelColor(startOffset+4, rgbColor);
-  pixels->setPixelColor(startOffset+6, rgbColor);
+  pixels.clear();
+  pixels.setPixelColor(startOffset, rgbColor);
+  pixels.setPixelColor(startOffset+2, rgbColor);
+  pixels.setPixelColor(startOffset+4, rgbColor);
+  pixels.setPixelColor(startOffset+6, rgbColor);
 }
 
 //---------------------------------------------------------
@@ -76,7 +76,8 @@ void LightingVolume(Item * item, Color * c1, Color * c2)
 
       // Linear interpolation to get the final color of each pixel.
       Color c = LerpColor(c1, c2, amp);
-      pixels->setPixelColor(i, c.r, c.g, c.b);
+      pixels.setPixelColor(i, c.r, c.g, c.b);
+
     }
   }
   else
@@ -89,13 +90,14 @@ void LightingVolume(Item * item, Color * c1, Color * c2)
 
     Color c = LerpColor(c1, c2, amp);
     uint32_t color32 = ((uint32_t)c.r << 16) | ((uint32_t)c.g << 8) | (uint32_t)c.b;
-    pixels->fill(color32);
+    pixels.fill(color32);
   }
 }
 
 //---------------------------------------------------------
 Color LerpColor(Color * c1, Color * c2, uint8_t coeff)
 {
+
   SQ15x16 amount = SQ15x16(coeff) / 255;
   SQ15x16 invAmount = 1 - amount;
   uint8_t r = ((invAmount * c1->r) + (amount * c2->r)).getInteger();
