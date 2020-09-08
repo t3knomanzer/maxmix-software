@@ -81,18 +81,13 @@ void LightingVolume(Item * item, Color * c1, Color * c2)
   }
   else
   {
-    // Pulsing/breathing on the second color.
+    // Fast pulse between the first and second color.
     // Both 't' and 'period' need to be signed for the formula to work.
     int32_t t = millis();
     int32_t period = 500;
     uint8_t amp = (period - abs(t % (2*period) - period)) * 255 / period; // Triangular wave
 
-    Color c = {
-      (uint8_t)((uint16_t)c2->r * amp / 255),
-      (uint8_t)((uint16_t)c2->g * amp / 255),
-      (uint8_t)((uint16_t)c2->b * amp / 255),
-    };
-
+    Color c = LerpColor(c1, c2, amp);
     uint32_t color32 = ((uint32_t)c.r << 16) | ((uint32_t)c.g << 8) | (uint32_t)c.b;
     pixels->fill(color32);
   }
@@ -101,30 +96,11 @@ void LightingVolume(Item * item, Color * c1, Color * c2)
 //---------------------------------------------------------
 Color LerpColor(Color * c1, Color * c2, uint8_t coeff)
 {
-  // Boundary cases don't work with bitwise stuff below.
-  if (coeff == 0)
-  {
-    return *c1;
-  }
-  else if (coeff == 255)
-  {
-    return *c2;
-  }
+  SQ15x16 amount = SQ15x16(coeff) / 255;
+  SQ15x16 invAmount = 1 - amount;
+  uint8_t r = ((invAmount * c1->r) + (amount * c2->r)).getInteger();
+  uint8_t g = ((invAmount * c1->g) + (amount * c2->g)).getInteger();
+  uint8_t b = ((invAmount * c1->b) + (amount * c2->b)).getInteger();
 
-  uint16_t invFadeMod = (255 - coeff) + 1;
-  uint16_t fadeMod = coeff + 1;
-
-  Color cA = {
-    (uint8_t)((uint16_t(c1->r) * invFadeMod) >> 8),
-    (uint8_t)((uint16_t(c1->g) * invFadeMod) >> 8),
-    (uint8_t)((uint16_t(c1->b) * invFadeMod) >> 8)
-  };
-
-  Color cB = {
-    (uint8_t)((uint16_t(c2->r >> 16) * fadeMod) >> 8),
-    (uint8_t)((uint16_t(c2->g >> 8) * fadeMod) >> 8),
-    (uint8_t)((uint16_t(c2->b >> 0) * fadeMod) >> 8)
-  };
-
-  return {(c1->r + c2->r), (c1->g + c1->g), (c1->b + c2->b)};
+  return {r, g, b};
 }
