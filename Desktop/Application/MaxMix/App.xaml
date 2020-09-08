@@ -75,9 +75,12 @@
 
             <SolidColorBrush x:Key="Brush_WindowBackground" Color="{StaticResource Color_White}" />
 
-            <!-- Value Converters -->
+            <!--====================================================-->
+            <!-- Converters -->
+            <!--====================================================-->
             <cnv:BoolToVisibilityConverter x:Key="Cnv_BoolToVisibility" />
             <cnv:BoolToStringConverter x:Key="Cnv_BoolToString" />
+            <cnv:ColorToUint32Converter x:Key="Cnv_ColorToUint32" />
 
             <!--====================================================-->
             <!-- Styles -->
