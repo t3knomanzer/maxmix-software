@@ -106,10 +106,24 @@ void UpdateSettingsCommand(uint8_t* packageBuffer, Settings* settings)
   settings->continuousScroll = packageBuffer[5];
   settings->accelerationPercentage = packageBuffer[6];
 
-  uint16_t dblTapTime = ((uint16_t)packageBuffer[7]) |
-                        ((uint16_t)packageBuffer[8] << 8);
-
+  uint16_t dblTapTime = ((uint16_t)packageBuffer[7]) | ((uint16_t)packageBuffer[8] << 8);
   encoderButton.doubleTapTime(dblTapTime);
+
+  settings->volumeMinColor.b = packageBuffer[9];
+  settings->volumeMinColor.g = packageBuffer[10];
+  settings->volumeMinColor.r = packageBuffer[11];
+
+  settings->volumeMaxColor.b = packageBuffer[12];
+  settings->volumeMaxColor.g = packageBuffer[13];
+  settings->volumeMaxColor.r = packageBuffer[14];
+
+  settings->mixChannelAColor.b = packageBuffer[15];
+  settings->mixChannelAColor.g = packageBuffer[16];
+  settings->mixChannelAColor.r = packageBuffer[17];
+
+  settings->mixChannelBColor.b = packageBuffer[18];
+  settings->mixChannelBColor.g = packageBuffer[19];
+  settings->mixChannelBColor.r = packageBuffer[20];
 }
 
 //---------------------------------------------------------

@@ -94,5 +94,53 @@ namespace MaxMix.Properties {
                 this["DoubleTapTime"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("4278190335")]
+        public uint VolumeMinColor {
+            get {
+                return ((uint)(this["VolumeMinColor"]));
+            }
+            set {
+                this["VolumeMinColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("4278255360")]
+        public uint VolumeMaxColor {
+            get {
+                return ((uint)(this["VolumeMaxColor"]));
+            }
+            set {
+                this["VolumeMaxColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("4294901760")]
+        public uint MixChannelAColor {
+            get {
+                return ((uint)(this["MixChannelAColor"]));
+            }
+            set {
+                this["MixChannelAColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("4278190335")]
+        public uint MixChanneBColor {
+            get {
+                return ((uint)(this["MixChanneBColor"]));
+            }
+            set {
+                this["MixChanneBColor"] = value;
+            }
+        }
     }
 }

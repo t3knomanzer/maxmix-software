@@ -106,6 +106,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Framework\AttachedProperties\BalloonMessageProperty.cs" />
+    <Compile Include="Framework\Converters\ColorToUint32Converter.cs" />
     <Compile Include="Framework\Converters\BoolToStringConverter.cs" />
     <Compile Include="Framework\Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Framework\Mvvm\DelegateCommand.cs" />

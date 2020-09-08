@@ -118,6 +118,61 @@ namespace MaxMix.ViewModels
                 RaisePropertyChanged();
             }
         }
+
+
+        /// <summary>
+        /// Value used to set the light color for minimum volume
+        /// </summary>
+        public uint VolumeMinColor
+        {
+            get => _settings.VolumeMinColor;
+            set
+            {
+                _settings.VolumeMinColor = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Value used to set the light color for maximum volume
+        /// </summary>
+        public uint VolumeMaxColor
+        {
+            get => _settings.VolumeMaxColor;
+            set
+            {
+                _settings.VolumeMaxColor = value;
+                RaisePropertyChanged();
+            }
+        }
+
+
+        /// <summary>
+        /// Value used to set the color of the channel A in mix mode
+        /// </summary>
+        public uint MixChannelAColor
+        {
+            get => _settings.MixChannelAColor;
+            set
+            {
+                _settings.MixChannelAColor = value;
+                RaisePropertyChanged();
+            }
+        }
+
+
+        /// <summary>
+        /// Value used to set the color of the channel B in mix mode
+        /// </summary>
+        public uint MixChannelBColor
+        {
+            get => _settings.MixChanneBColor;
+            set
+            {
+                _settings.MixChanneBColor = value;
+                RaisePropertyChanged();
+            }
+        }
         #endregion
 
         #region Commands

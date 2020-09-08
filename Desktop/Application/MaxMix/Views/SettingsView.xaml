@@ -13,7 +13,9 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -37,7 +39,7 @@
         <!-- SleepAfterSeconds -->
         <Label Grid.Column="0" Grid.Row="2"
                Content="Sleep after (seconds)" />
-        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="2"
+        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="2" MaxWidth="100" HorizontalAlignment="Left"
                             Foreground="{StaticResource Brush_White}"
                             Minimum="0" Maximum="60"
                             Value="{Binding SleepAfterSeconds}" />
@@ -50,7 +52,7 @@
         <!-- AccelerationPercentage -->
         <Label Grid.Column="0" Grid.Row="5"
                Content="Encoder acceleration (percentage)" />
-        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="5"
+        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="5" MaxWidth="100"
                             Foreground="{StaticResource Brush_White}"
                             Minimum="1" Maximum="100"
                             Value="{Binding AccelerationPercentage}" />
@@ -58,9 +60,24 @@
         <!-- Double Tap Time -->
         <Label Grid.Column="0" Grid.Row="6"
                Content="Double Tap Time (ms)" />
-        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="6"
+        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="6" MaxWidth="100"
                             Foreground="{StaticResource Brush_White}"
                             Minimum="1" Maximum="2000"
                             Value="{Binding DoubleTapTime}" />
+
+        <!-- Volume colors -->
+        <Label Grid.Column="0" Grid.Row="7" Content="Volume colors" />
+        <StackPanel Grid.Column="1" Grid.Row="7" Orientation="Horizontal">
+            <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding VolumeMinColor, Converter={StaticResource Cnv_ColorToUint32}}" />
+            <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding VolumeMaxColor,  Converter={StaticResource Cnv_ColorToUint32}}" />
+        </StackPanel>
+
+        <!-- Mix Channel colors -->
+        <Label Grid.Column="0" Grid.Row="8" Content="Mix channel colors" />
+        <StackPanel Grid.Column="1" Grid.Row="8" Orientation="Horizontal">
+            <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding MixChannelAColor, Converter={StaticResource Cnv_ColorToUint32}}" />
+            <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding MixChannelBColor,  Converter={StaticResource Cnv_ColorToUint32}}" />
+        </StackPanel>
     </Grid>
 </UserControl>
+
