@@ -56,7 +56,7 @@ struct Settings
   uint8_t accelerationPercentage = 60;
   Color volumeMinColor = {0x00, 0x00, 0xFF};
   Color volumeMaxColor = {0xFF, 0x00, 0x00};
-  Color mixChannelAColor = {0x00, 0xFF, 0xFF};
+  Color mixChannelAColor = {0x00, 0x00, 0xFF};
   Color mixChannelBColor = {0xFF, 0x00, 0xFF};
 };
 
