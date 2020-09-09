@@ -14,6 +14,22 @@
 #include "src/FixedPoints/FixedPointsCommon.h"
 
 //********************************************************
+// *** DEFINES
+//********************************************************
+#ifndef VERSION_MAJOR
+    #define VERSION_MAJOR 0
+#endif
+
+#ifndef VERSION_MINOR
+    #define VERSION_MINOR 0
+#endif
+
+#ifndef VERSION_PATCH
+    #define VERSION_PATCH 0
+#endif
+
+
+//********************************************************
 // *** CONSTS
 //********************************************************
 
@@ -27,10 +43,16 @@ static const uint8_t  PIN_ENCODER_OUTB = 16; //A2
 static const uint8_t  PIN_ENCODER_SWITCH = 17; //A3
 
 // --- States
+static const uint8_t  MODE_SPLASH = 255;
+
 static const uint8_t  MODE_OUTPUT = 0;
 static const uint8_t  MODE_APPLICATION = 1;
 static const uint8_t  MODE_GAME = 2;
 static const uint8_t  MODE_COUNT = 3;
+
+static const uint8_t  STATE_SPLASH_LOGO = 0;
+static const uint8_t  STATE_SPLASH_INFO = 1;
+static const uint8_t  STATE_SPLASH_COUNT = 2;
 
 static const uint8_t  STATE_OUTPUT_NAVIGATE = 0;
 static const uint8_t  STATE_OUTPUT_EDIT = 1;
