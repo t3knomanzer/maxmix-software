@@ -151,10 +151,13 @@ namespace MaxMix.Services.Audio
         #region IDisposable
         public void Dispose()
         {
-            _events.StateChanged -= OnStateChanged;
-            _events.SimpleVolumeChanged -= OnVolumeChanged;
+            if (_events != null)
+            {
+                _events.StateChanged -= OnStateChanged;
+                _events.SimpleVolumeChanged -= OnVolumeChanged;
 
-            Session.UnregisterAudioSessionNotification(_events);
+                Session.UnregisterAudioSessionNotification(_events);
+            }
             Session = null;
             _session2 = null;
             _simpleAudio = null;
