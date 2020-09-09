@@ -45,7 +45,8 @@ uint8_t sendBuffer[SEND_BUFFER_SIZE];
 uint8_t encodeBuffer[SEND_BUFFER_SIZE];
 
 // State
-uint8_t mode = MODE_OUTPUT;
+uint8_t mode = MODE_SPLASH;
+uint8_t stateSplash = STATE_SPLASH_LOGO;
 uint8_t stateOutput = STATE_OUTPUT_EDIT;
 uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
 uint8_t stateGame = STATE_GAME_SELECT_A;
@@ -198,7 +199,8 @@ void ClearSend()
 //---------------------------------------------------------
 void ResetState()
 {
-  mode = MODE_OUTPUT;
+  mode = MODE_SPLASH;
+  stateSplash = STATE_SPLASH_LOGO;
   stateOutput = STATE_OUTPUT_EDIT;
   stateApplication = STATE_APPLICATION_NAVIGATE;
   stateGame = STATE_GAME_SELECT_A;
@@ -227,6 +229,12 @@ bool ProcessPackage()
   }
   else if(command == MSG_COMMAND_ADD)
   {
+    
+    if(mode == MODE_SPLASH)
+    {
+      mode = MODE_OUTPUT;
+    }
+
     uint32_t id = GetIdFromPackage(decodeBuffer);
     bool isDevice = GetIsDeviceFromAddPackage(decodeBuffer);    
 
@@ -504,9 +512,15 @@ bool ProcessEncoderButton()
   if(encoderButton.tapped())
   {
     if(stateDisplay == STATE_DISPLAY_SLEEP)
+    {
       return true;
-
-    if(mode == MODE_OUTPUT)
+    }
+    else if(mode == MODE_SPLASH)
+    {
+      stateSplash = CycleState(stateSplash, STATE_SPLASH_COUNT);
+      Display::ResetTimers();
+    }
+    else if(mode == MODE_OUTPUT)
     {
       if(stateOutput == STATE_OUTPUT_NAVIGATE)
         SendSetDefaultEndpointCommand(&devices[itemIndexOutput], sendBuffer, encodeBuffer);
@@ -625,13 +639,18 @@ void UpdateDisplay()
   }
 
   // TODO: Update to include devices.
-  if(sessionCount == 0)
+  if(mode == MODE_SPLASH)
   {
-    Display::SplashScreen();
-    return;
-  }
-  
-  if(mode == MODE_OUTPUT)
+    if(stateSplash == STATE_SPLASH_LOGO)
+    {
+      Display::SplashScreen();
+    }
+    else if(stateSplash == STATE_SPLASH_INFO)
+    {
+      Display::InfoScreen();
+    }
+  }  
+  else if(mode == MODE_OUTPUT)
   {
     if(stateOutput == STATE_OUTPUT_NAVIGATE)
     {

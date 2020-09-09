@@ -16,6 +16,7 @@ namespace Display
     void Sleep(void);
     
     void SplashScreen(void);
+    void InfoScreen(void);
     
     void OutputSelectScreen(Item* item, bool isDefaultEndpoint, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex);
     void OutputEditScreen(Item* item, uint8_t modeIndex);
