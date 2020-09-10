@@ -224,7 +224,7 @@ namespace Display
         display.print(VERSION_PATCH);
 
         display.setCursor(0, (DISPLAY_HEIGHT / 2) + DISPLAY_CHAR_SPACING_X2);
-        display.print("Built " __DATE__);
+        display.print(F("Built " __DATE__));
 
         display.display();
     }
