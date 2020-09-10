@@ -36,9 +36,9 @@ and general hints on how to prepare your pull request. You can also ask for clar
 ## Community
 You can join these groups and chats to discuss your-project related questions:
 
-Website: https://maxmixproject.com  
-Twitter: https://www.twitter.com/maxmixproject  
-Reddit: https://www.reddit.com/r/maxmixproject/  
-Discord: https://discord.gg/TmvvgCw  
-Github: https://www.github.com/t3knomanzer/maxmix-software  
-Donate: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=SQS6XJZBCBZA8&currency_code=USD&source=url  
+[Website](https://maxmixproject.com)  
+[Twitter](https://www.twitter.com/maxmixproject)  
+[Reddit](https://www.reddit.com/r/maxmixproject)    
+[Discord](https://discord.gg/TmvvgCw)  
+[Github](https://www.github.com/t3knomanzer/maxmix-software)  
+[Donate](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=SQS6XJZBCBZA8&currency_code=USD&source=url)
