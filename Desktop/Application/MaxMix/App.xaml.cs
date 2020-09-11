@@ -44,8 +44,7 @@ namespace MaxMix
         private bool IsApplicationRunning()
         {
             var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
-            bool mutexAcquired;
-            _singleInstanceMutex = new Mutex(true, assemblyName, out mutexAcquired);
+            _singleInstanceMutex = new Mutex(true, assemblyName, out bool mutexAcquired);
             return mutexAcquired;
         }
 
@@ -53,14 +52,18 @@ namespace MaxMix
         {
             if (!IsApplicationRunning())
             {
-                // Application is already running !
+                // Application is already running
                 Debug.WriteLine("[App] Application is already running, exiting.");
                 Application.Current.Shutdown();
                 return;
             }
 
-            InitErrorReporting();
-            DispatcherUnhandledException += OnDispatcherUnhandledException;
+            if (!Debugger.IsAttached)
+            {
+                // Initialize error reporing only if not running from Visual Studio.
+                InitErrorReporting();
+                DispatcherUnhandledException += OnDispatcherUnhandledException;
+            }
 
             var window = new MainWindow();
 
@@ -83,9 +86,7 @@ namespace MaxMix
             // Calling dispose explicitly on closing so the icon dissapears from the windows task bar.
             var window = (MainWindow)Application.Current.MainWindow;            
             window.taskbarIcon.Dispose();
-
             _errorReporter.Dispose();
-
             _singleInstanceMutex.Dispose();
 
             Application.Current.Shutdown();
