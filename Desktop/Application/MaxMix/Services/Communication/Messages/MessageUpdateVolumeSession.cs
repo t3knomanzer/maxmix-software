@@ -1,10 +1,11 @@
-﻿using System;
+﻿using CSCore.MediaFoundation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MaxMix.Services.Communication
+namespace MaxMix.Services.Communication.Messages
 {
     internal class MessageUpdateVolumeSession : IMessage
     {
@@ -13,32 +14,20 @@ namespace MaxMix.Services.Communication
 
         public MessageUpdateVolumeSession(int id, int volume, bool isMuted, bool isDevice)
         {
-            _id = id;
-            _volume = volume;
-            _isMuted = isMuted;
-            _isDevice = isDevice;
+            Id = id;
+            Volume = volume;
+            IsMuted = isMuted;
+            IsDevice = isDevice;
         }
         #endregion
 
-        #region Consts
-        #endregion
-
-        #region Fields
-        private int _id;
-        private int _volume;
-        private bool _isMuted;
-        private bool _isDevice;
-        #endregion
-
         #region Properties
-        public int Id { get => _id; }
-        public int Volume { get => _volume; }
-        public bool IsMuted { get => _isMuted; }
-        public bool IsDevice { get => _isDevice; }
+        public int Id { get; private set; }
+        public int Volume { get; private set; }
+        public bool IsMuted { get; private set; }
+        public bool IsDevice { get; private set; }
         #endregion
 
-        #region Private Methods
-        #endregion
 
         #region Public Methods
 
@@ -56,7 +45,7 @@ namespace MaxMix.Services.Communication
 
         public byte[] GetBytes()
         {
-            var result = new List<byte>();           
+            var result = new List<byte>();
 
             result.AddRange(BitConverter.GetBytes(Id));
             result.Add(Convert.ToByte(Volume));
@@ -68,12 +57,11 @@ namespace MaxMix.Services.Communication
 
         public bool SetBytes(byte[] bytes)
         {
-            var idBytes = bytes.Take(4).Reverse().ToArray();
-            _id = BitConverter.ToInt32(idBytes, 0);
+            Id = BitConverter.ToInt32(new byte[] { bytes[3], bytes[2], bytes[1], bytes[0] }, 0);
 
-            _volume = Convert.ToInt16(bytes[4]);
-            _isMuted = Convert.ToBoolean(bytes[5]);
-            _isDevice = false;
+            Volume = Convert.ToInt16(bytes[4]);
+            IsMuted = Convert.ToBoolean(bytes[5]);
+            IsDevice = false;
 
             return true;
         }

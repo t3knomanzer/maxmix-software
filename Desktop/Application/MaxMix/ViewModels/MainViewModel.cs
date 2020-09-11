@@ -16,6 +16,8 @@ using System.Windows;
 using MaxMix.Framework.Mvvm;
 using MaxMix.Services.Communication;
 using MaxMix.Services.Audio;
+using MaxMix.Services.Communication.Messages;
+using MaxMix.Services.Communication.Serialization;
 
 namespace MaxMix.ViewModels
 {

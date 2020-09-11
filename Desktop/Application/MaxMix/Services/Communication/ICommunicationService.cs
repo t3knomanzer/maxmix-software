@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MaxMix.Services.Communication.Messages;
+using System;
 
 namespace MaxMix.Services.Communication
 {

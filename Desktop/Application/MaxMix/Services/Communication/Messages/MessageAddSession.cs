@@ -4,18 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MaxMix.Services.Communication
+namespace MaxMix.Services.Communication.Messages
 {
     internal class MessageAddSession : IMessage
     {
         #region Constructor
         public MessageAddSession(int id, string name, int volume, bool isMuted, bool isDevice)
         {
-            _id = id;
-            _name = name;
-            _volume = volume;
-            _isMuted = isMuted;
-            _isDevice = isDevice;
+            Id = id;
+            Name = name;
+            Volume = volume;
+            IsMuted = isMuted;
+            IsDevice = isDevice;
 
             EncodeName();
         }
@@ -25,36 +25,31 @@ namespace MaxMix.Services.Communication
         private readonly int _nameLength = 36;
         #endregion
         
-        #region Fields
-        private int _id;
-        private string _name;
-        private string _encodedName;
-        private int _volume;
-        private bool _isMuted;
-        private bool _isDevice;
-        #endregion
-
         #region Properties
-        public int Id { get => _id; }
-        public string Name { get => _name; }
-        public string EncodedName { get => _encodedName; }
-        public int Volume { get => _volume; }
-        public bool IsMuted { get => _isMuted; }
-        public bool IsDevice { get => _isDevice; }
+        public int Id { get; private set; }
+        public string Name { get; private set; }
+        public string EncodedName { get; private set; }
+        public int Volume { get; private set; }
+        public bool IsMuted { get; private set; }
+        public bool IsDevice { get; private set; }
         #endregion
 
         #region Private Methods
         private void EncodeName()
         {
-            _encodedName = _name.ToUpper();
+            EncodedName = Name.ToUpper();
 
-            if (_encodedName.Length > _nameLength)
-                _encodedName = _encodedName.Substring(0, _nameLength);
-            else if(_encodedName.Length < _nameLength)
-                while(_encodedName.Length < _nameLength)
+            if (EncodedName.Length > _nameLength)
+            {
+                EncodedName = EncodedName.Substring(0, _nameLength);
+            }
+            else if (EncodedName.Length < _nameLength)
+            {
+                while (EncodedName.Length < _nameLength)
                 {
-                    _encodedName += "\0";
+                    EncodedName += "\0";
                 }
+            }
         }
         #endregion
 
@@ -75,7 +70,7 @@ namespace MaxMix.Services.Communication
 
         public byte[] GetBytes()
         {
-            var result = new List<byte>();           
+            var result = new List<byte>();
 
             result.AddRange(BitConverter.GetBytes(Id));
             result.AddRange(Encoding.ASCII.GetBytes(EncodedName));
@@ -88,7 +83,7 @@ namespace MaxMix.Services.Communication
 
         public bool SetBytes(byte[] bytes)
         {
-            throw new NotImplementedException("Should never be called");
+            throw new NotImplementedException();
         }
         #endregion
     }

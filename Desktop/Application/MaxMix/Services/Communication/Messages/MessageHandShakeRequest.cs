@@ -4,21 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MaxMix.Services.Communication
+namespace MaxMix.Services.Communication.Messages
 {
     internal class MessageHandShakeRequest : IMessage
     {
         #region Constructor
         public MessageHandShakeRequest() { }
-        #endregion
-
-        #region Consts
-        #endregion
-
-        #region Fields
-        #endregion
-
-        #region Properties
         #endregion
 
         #region Public Methods
@@ -29,7 +20,7 @@ namespace MaxMix.Services.Communication
 
         public bool SetBytes(byte[] bytes)
         {
-            throw new NotImplementedException("Should never be called");
+            throw new NotImplementedException();
         }
         #endregion
     }
