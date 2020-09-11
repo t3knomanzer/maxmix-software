@@ -240,7 +240,7 @@ namespace MaxMix.Services.Communication
                                 RaiseMessageReceived(message);
                         }
                     }
-                    catch (ArgumentException e)
+                    catch (Exception e)
                     {
                         RaiseError("Deserialization error: " + e.Message);
                     }
