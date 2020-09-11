@@ -8,7 +8,7 @@ assignees:
 ---
 
 **Guidelines**
-- [ ] I have reviewed the [guidelines for contributing](../CONTRIBUTING.md) to this repository.
+- [ ] I have reviewed the [guidelines for contributing](https://github.com/t3knomanzer/maxmix-software/blob/master/.github/CONTRIBUTING.md) to this repository.
 
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
