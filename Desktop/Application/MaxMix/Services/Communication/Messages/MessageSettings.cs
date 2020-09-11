@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MaxMix.Services.Communication
+namespace MaxMix.Services.Communication.Messages
 {
     internal class MessageSettings : IMessage
     {
@@ -22,46 +22,30 @@ namespace MaxMix.Services.Communication
             uint mixChannelAColor,
             uint mixChannelBColor)
         {
-            _displayNewSession = displayNewSession;
-            _sleepWhenInactive = sleepWhenInactive;
-            _sleepAfterSeconds = sleepAfterSeconds;
-            _continuousScroll = continuousScroll;
-            _accelerationPercentage = accelerationPercentage;
-            _doubleTapTime = doubleTapTime;
-            _volumeMinColor = volumeMinColor;
-            _volumeMaxColor = volumeMaxColor;
-            _mixChannelAColor = mixChannelAColor;
-            _mixChannelBColor = mixChannelBColor;
+            DisplayNewSession = displayNewSession;
+            SleepWhenInactive = sleepWhenInactive;
+            SleepAfterSeconds = sleepAfterSeconds;
+            ContinuousScroll = continuousScroll;
+            AccelerationPercentage = accelerationPercentage;
+            DoubleTapTime = doubleTapTime;
+            VolumeMinColor = volumeMinColor;
+            VolumeMaxColor = volumeMaxColor;
+            MixChannelAColor = mixChannelAColor;
+            MixChannelBColor = mixChannelBColor;
         }
         #endregion
 
-        #region Consts
-        #endregion
-
-        #region Fields
-        private bool _displayNewSession;
-        private bool _sleepWhenInactive;
-        private int _sleepAfterSeconds;
-        private bool _continuousScroll;
-        private uint _accelerationPercentage;
-        private ushort _doubleTapTime;
-        private uint _volumeMinColor;
-        private uint _volumeMaxColor;
-        private uint _mixChannelAColor;
-        private uint _mixChannelBColor;
-        #endregion
-
         #region Properties
-        public bool DisplayNewSession { get => _displayNewSession; }
-        public bool SleepWhenInactive { get => _sleepWhenInactive; }
-        public int SleepAfterSeconds { get => _sleepAfterSeconds; }
-        public bool ContinuousScroll { get => _continuousScroll; }
-        public uint AccelerationPercentage { get => _accelerationPercentage; }
-        public ushort DoubleTapTime { get => _doubleTapTime; }
-        public uint VolumeMinColor { get => _volumeMinColor; }
-        public uint VolumeMaxColor { get => _volumeMaxColor; }
-        public uint MixChannelAColor { get => _mixChannelAColor; }
-        public uint MixChannelBColor { get => _mixChannelBColor; }
+        public bool DisplayNewSession { get; private set; }
+        public bool SleepWhenInactive { get; private set; }
+        public bool ContinuousScroll { get; private set; }
+        public int SleepAfterSeconds { get; private set; }
+        public uint AccelerationPercentage { get; private set; }
+        public ushort DoubleTapTime { get; private set; }
+        public uint VolumeMinColor { get; private set; }
+        public uint VolumeMaxColor { get; private set; }
+        public uint MixChannelAColor { get; private set; }
+        public uint MixChannelBColor { get; private set; }
         #endregion
 
         #region Private Methods
@@ -88,7 +72,7 @@ namespace MaxMix.Services.Communication
 
         public byte[] GetBytes()
         {
-            var result = new List<byte>();           
+            var result = new List<byte>();
 
             result.Add(Convert.ToByte(DisplayNewSession));
             result.Add(Convert.ToByte(SleepWhenInactive));
@@ -106,7 +90,7 @@ namespace MaxMix.Services.Communication
 
         public bool SetBytes(byte[] bytes)
         {
-            throw new NotImplementedException("Should never be called");
+            throw new NotImplementedException();
         }
         #endregion
 

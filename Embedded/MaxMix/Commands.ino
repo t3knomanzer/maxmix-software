@@ -17,8 +17,8 @@
 //---------------------------------------------------------
 void SendAcknowledgment(uint8_t* rawBuffer, uint8_t* packageBuffer, uint8_t revision)
 {
-  rawBuffer[0] = revision;
-  rawBuffer[1] = MSG_COMMAND_ACKNOWLEDGMENT;
+  rawBuffer[0] = MSG_COMMAND_ACKNOWLEDGMENT;
+  rawBuffer[1] = revision;
   uint8_t encodeSize =  EncodePackage(rawBuffer, 2, packageBuffer);
   Serial.write(packageBuffer, encodeSize);
 }
@@ -27,18 +27,17 @@ void SendAcknowledgment(uint8_t* rawBuffer, uint8_t* packageBuffer, uint8_t revi
 //---------------------------------------------------------
 void SendItemVolumeCommand(Item* item, uint8_t* rawBuffer, uint8_t* packageBuffer)
 {
-  rawBuffer[0] = packageRevision++;
-  rawBuffer[1] = MSG_COMMAND_UPDATE_VOLUME;
+  rawBuffer[0] = MSG_COMMAND_UPDATE_VOLUME;
   
-  rawBuffer[2] = (uint8_t)(item->id >> 24) & 0xFF;
-  rawBuffer[3] = (uint8_t)(item->id >> 16) & 0xFF;
-  rawBuffer[4] = (uint8_t)(item->id >> 8) & 0xFF;
-  rawBuffer[5] = (uint8_t)item->id & 0xFF;
+  rawBuffer[1] = (uint8_t)(item->id >> 24) & 0xFF;
+  rawBuffer[2] = (uint8_t)(item->id >> 16) & 0xFF;
+  rawBuffer[3] = (uint8_t)(item->id >> 8) & 0xFF;
+  rawBuffer[4] = (uint8_t)item->id & 0xFF;
 
-  rawBuffer[6] = item->volume;
-  rawBuffer[7] = item->isMuted;
+  rawBuffer[5] = item->volume;
+  rawBuffer[6] = item->isMuted;
   
-  uint8_t encodeSize =  EncodePackage(rawBuffer, 8, packageBuffer);
+  uint8_t encodeSize =  EncodePackage(rawBuffer, 7, packageBuffer);
   Serial.write(packageBuffer, encodeSize);
 }
 
@@ -46,15 +45,14 @@ void SendItemVolumeCommand(Item* item, uint8_t* rawBuffer, uint8_t* packageBuffe
 //---------------------------------------------------------
 void SendSetDefaultEndpointCommand(Item* item, uint8_t* rawBuffer, uint8_t* packageBuffer)
 {
-  rawBuffer[0] = packageRevision++;
-  rawBuffer[1] = MSG_COMMAND_SET_DEFAULT_ENDPOINT;
+  rawBuffer[0] = MSG_COMMAND_SET_DEFAULT_ENDPOINT;
   
-  rawBuffer[2] = (uint8_t)(item->id >> 24) & 0xFF;
-  rawBuffer[3] = (uint8_t)(item->id >> 16) & 0xFF;
-  rawBuffer[4] = (uint8_t)(item->id >> 8) & 0xFF;
-  rawBuffer[5] = (uint8_t)item->id & 0xFF;
+  rawBuffer[1] = (uint8_t)(item->id >> 24) & 0xFF;
+  rawBuffer[2] = (uint8_t)(item->id >> 16) & 0xFF;
+  rawBuffer[3] = (uint8_t)(item->id >> 8) & 0xFF;
+  rawBuffer[4] = (uint8_t)item->id & 0xFF;
  
-  uint8_t encodeSize =  EncodePackage(rawBuffer, 8, packageBuffer);
+  uint8_t encodeSize =  EncodePackage(rawBuffer, 5, packageBuffer);
   Serial.write(packageBuffer, encodeSize);
 }
 

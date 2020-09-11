@@ -7,6 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
+using MaxMix.Services.Communication.Messages;
+using MaxMix.Services.Communication.Serialization;
 
 namespace MaxMix.Services.Communication
 {

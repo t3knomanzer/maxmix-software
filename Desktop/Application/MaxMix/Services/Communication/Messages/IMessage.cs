@@ -1,4 +1,4 @@
-﻿namespace MaxMix.Services.Communication
+﻿namespace MaxMix.Services.Communication.Messages
 {
     internal interface IMessage
     {

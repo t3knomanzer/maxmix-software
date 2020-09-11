@@ -4,29 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MaxMix.Services.Communication
+namespace MaxMix.Services.Communication.Messages
 {
     internal class MessageRemoveSession : IMessage
     {
         #region Constructor
         public MessageRemoveSession(int id, bool isDevice)
         {
-            _id = id;
-            _isDevice = isDevice;
+            Id = id;
+            IsDevice = isDevice;
         }
         #endregion
 
-        #region Consts
-        #endregion
-
-        #region Fields
-        private int _id;
-        private bool _isDevice;
-        #endregion
-
         #region Properties
-        public int Id { get => _id; }
-        public bool IsDevice { get => _isDevice; }
+        public int Id { get; private set; }
+        public bool IsDevice { get; private set; }
         #endregion
 
         #region Private Methods
@@ -55,7 +47,7 @@ namespace MaxMix.Services.Communication
 
         public bool SetBytes(byte[] bytes)
         {
-            throw new NotImplementedException("Should never be called");
+            throw new NotImplementedException();
         }
         #endregion
     }

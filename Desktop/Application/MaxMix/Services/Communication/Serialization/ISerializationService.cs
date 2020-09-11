@@ -1,6 +1,7 @@
 ﻿using System;
+using MaxMix.Services.Communication.Messages;
 
-namespace MaxMix.Services.Communication
+namespace MaxMix.Services.Communication.Serialization
 {
     internal interface ISerializationService
     {

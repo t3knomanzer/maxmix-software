@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MaxMix.Services.Communication
+namespace MaxMix.Services.Communication.Messages
 {
     internal class MessageSetDefaultEndpoint : IMessage
     {
@@ -12,19 +12,12 @@ namespace MaxMix.Services.Communication
         public MessageSetDefaultEndpoint() { }
         public MessageSetDefaultEndpoint(int id)
         {
-            _id = id;
+            Id = id;
         }
         #endregion
 
-        #region Consts
-        #endregion
-
-        #region Fields
-        private int _id;
-        #endregion
-
         #region Properties
-        public int Id { get => _id; }
+        public int Id { get; private set; }
         #endregion
 
         #region Private Methods
@@ -43,15 +36,15 @@ namespace MaxMix.Services.Communication
 
         public byte[] GetBytes()
         {
-            var result = new List<byte>();           
+            var result = new List<byte>();
+
             result.AddRange(BitConverter.GetBytes(Id));
             return result.ToArray();
         }
 
         public bool SetBytes(byte[] bytes)
         {
-            var idBytes = bytes.Take(4).Reverse().ToArray();
-            _id = BitConverter.ToInt32(idBytes, 0);
+            Id = BitConverter.ToInt32(new byte[] { bytes[3], bytes[2], bytes[1], bytes[0] }, 0);
             return true;
         }
         #endregion

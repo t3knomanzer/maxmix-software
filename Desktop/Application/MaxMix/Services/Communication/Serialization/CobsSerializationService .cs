@@ -1,10 +1,11 @@
-﻿using System;
+﻿using MaxMix.Services.Communication.Messages;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MaxMix.Services.Communication
+namespace MaxMix.Services.Communication.Serialization
 {
     /// <summary>
     /// Implements the COBS serialization protocol for efficient communication
@@ -16,6 +17,7 @@ namespace MaxMix.Services.Communication
     /// CHUNK        TYPE        SIZE (BYTES)
     /// ---------------------------------------
     /// START        BYTE        1
+    /// REVISION     BYTE        1
     /// COMMAND      BYTE        1
     /// PAYLOAD      BYTE        ///
     /// LENGTH       BYTE        1
@@ -146,25 +148,27 @@ namespace MaxMix.Services.Communication
         public byte[] Serialize(IMessage message, byte revision)
         {
             if (!_registeredTypes.ContainsValue(message.GetType()))
+            {
                 throw new ArgumentException("Message type not registered");
+            }
 
             var packet = new List<byte>();
+            var command = (byte)_registeredTypes.First(o => o.Value == message.GetType()).Key;
+            var payload = message.GetBytes();
 
             packet.Add(revision);
-
-            var command = (byte)_registeredTypes.First(o => o.Value == message.GetType()).Key;
-            packet.Add(command);
-
-            var payload = message.GetBytes();
+            packet.Add(command);            
             packet.AddRange(payload);
-
+            
             var length = (byte)(packet.Count() + 1);
-            packet.Add(length);
+            packet.Add(length); 
 
             // Max length is 255. 1 byte reserved for the first 0 index.
             // This is so we can encode the packet length into a single byte.
             if (length >= 254)
+            {
                 throw new ArgumentOutOfRangeException("Message too long.");
+            }
 
             var result = Encode(packet, Delimiter);
             result.Add(Delimiter);
@@ -182,48 +186,51 @@ namespace MaxMix.Services.Communication
         public IMessage Deserialize(byte[] bytes)
         {
             if (bytes.Count() > 255)
+            {
                 throw new ArgumentException("Message too long.");
+            }
 
             // Drop last 0 (packet delimiter)
             var decoded = Decode(bytes.Take(bytes.Length - 1), Delimiter);
 
-            if(decoded == null || decoded.Count == 0)
+            if (decoded == null || decoded.Count == 0)
+            {
                 throw new ArgumentException("Error decoding message.");
+            }
 
             // Verify message length (last byte)
             byte length = decoded.Last();
             if (decoded.Count != length)
+            {
                 throw new ArgumentException("Message length missmatch.");
-
-            // Extract message version
-            byte revision = decoded[0];
+            }
 
             // Extract message index
-            byte command = decoded[1];
+            byte command = decoded[0];
             if (!_registeredTypes.ContainsKey(command))
+            {
                 throw new ArgumentException("Message type not registered.");
+            }
 
             // Extract payload (everything except first and last bytes)
-            byte[] payload = decoded.Skip(2).Take(length - 3).ToArray();
+            byte[] payload = decoded.Skip(1).Take(length - 2).ToArray();
 
             // Deserialize payload with message type instance
             IMessage message;
             Type type = _registeredTypes[command];
             if (type == null)
             {
-                // Message from an unregistered type, simply ignore it.
                 return null;
             }
-            else if (type == typeof(MessageAcknowledgment))
+            else 
             {
-                message = Activator.CreateInstance(type, revision) as MessageAcknowledgment;
-            }
-            else {
                 message = Activator.CreateInstance(type) as IMessage;
             }
 
             if (!message.SetBytes(payload))
+            {
                 throw new ArgumentException("Incorrect payload for message type.");
+            }
 
             return message;
         }
@@ -236,9 +243,13 @@ namespace MaxMix.Services.Communication
         public void RegisterType<T>(int id) where T : IMessage
         {
             if (_registeredTypes.ContainsKey(id))
+            {
                 _registeredTypes[id] = typeof(T);
+            }
             else
+            {
                 _registeredTypes.Add(id, typeof(T));
+            }
         }
         #endregion
 
