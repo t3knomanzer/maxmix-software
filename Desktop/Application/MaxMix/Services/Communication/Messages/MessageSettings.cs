@@ -68,7 +68,8 @@ namespace MaxMix.Services.Communication.Messages
         * MIXCHANNELACOLOR          BYTE[]      3
         * MIXCHANNELBCOLOR          BYTE[]      3
         * ---------------------------------------------------
-        */
+        *                                       19
+        */                                       
 
         public byte[] GetBytes()
         {

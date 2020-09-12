@@ -1,5 +1,7 @@
-﻿using System;
+﻿using ControlzEx.Standard;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +24,7 @@ namespace MaxMix.Services.Communication.Messages
         #endregion
 
         #region Consts
-        private readonly int _nameLength = 36;
+        private readonly int _nameLength = 24;
         #endregion
         
         #region Properties
@@ -38,12 +40,11 @@ namespace MaxMix.Services.Communication.Messages
         private void EncodeName()
         {
             EncodedName = Name.ToUpper();
-
-            if (EncodedName.Length > _nameLength)
+            if (EncodedName.Length >= _nameLength)
             {
-                EncodedName = EncodedName.Substring(0, _nameLength);
+                EncodedName = EncodedName.Substring(0, _nameLength - 1) + "\0";
             }
-            else if (EncodedName.Length < _nameLength)
+            else 
             {
                 while (EncodedName.Length < _nameLength)
                 {
@@ -60,12 +61,12 @@ namespace MaxMix.Services.Communication.Messages
         * CHUNK        TYPE        SIZE (BYTES)
         * ---------------------------------------
         * ID           INT32       4
-        * NAME         STRING      36
+        * NAME         STRING      24
         * VOLUME       BYTE        1
         * ISMUTED      BYTE        1
         * ISDEVICE     BYTE        1
         * ---------------------------------------
-        *                          43
+        *                          31
         */
 
         public byte[] GetBytes()
