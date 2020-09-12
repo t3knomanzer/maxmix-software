@@ -4,13 +4,13 @@
 
 typedef struct  __attribute__((__packed__)) {
   uint8_t r;  // 1 Byte 
-  uint8_t g;   // 1 Byte
+  uint8_t g;  // 1 Byte
   uint8_t b;  // 1 Byte
 } Color;
 
 typedef struct __attribute__((__packed__))
 {
-  char name[ITEM_BUFFER_NAME_SIZE]; // 24 Bytes ( Chars)
+  char name[ITEM_BUFFER_NAME_SIZE]; // 24 Bytes (Chars)
   uint32_t id;                      // 4 Bytes (32 bit)
   int8_t volume;                    // 1 Byte
   uint8_t isMuted;                  // 1 Byte

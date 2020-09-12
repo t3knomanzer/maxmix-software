@@ -40,12 +40,11 @@ namespace MaxMix.Services.Communication.Messages
         private void EncodeName()
         {
             EncodedName = Name.ToUpper();
-
-            if (EncodedName.Length > _nameLength)
+            if (EncodedName.Length >= _nameLength)
             {
-                EncodedName = EncodedName.Substring(0, _nameLength);
+                EncodedName = EncodedName.Substring(0, _nameLength - 1) + "\0";
             }
-            else if (EncodedName.Length < _nameLength)
+            else 
             {
                 while (EncodedName.Length < _nameLength)
                 {
