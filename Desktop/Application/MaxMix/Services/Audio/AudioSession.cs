@@ -116,13 +116,17 @@ namespace MaxMix.Services.Audio
         private void UpdateDisplayName()
         {
             var displayName = _session2.DisplayName;
-            if (IsSystemSound) { displayName = "System Sounds"; }
-            if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.MainWindowTitle; }
-            if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.GetProductName(); }
-            if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
-            if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
-            displayName = char.ToUpper(displayName[0]) + displayName.Substring(1);
-
+            if (IsSystemSound) {
+                displayName = "System Sounds";
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.GetProductName(); }
+                if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.MainWindowTitle; }
+                if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
+                if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
+                displayName = char.ToUpper(displayName[0]) + displayName.Substring(1);
+            }
             DisplayName = displayName;
         }
         #endregion
