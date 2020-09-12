@@ -121,23 +121,12 @@ namespace MaxMix.Services.Audio
             }
             else
             {
-                var productName = _session2.Process.GetProductName();
-                if (productName == "Spotify")
-                {
-                    // For Spotify we simply use the product name so we are not
-                    // stuck with an old song/window title after the song changes.
-                    displayName = productName;
-                }
-                else
-                {
-                    if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.MainWindowTitle; }
-                    if (string.IsNullOrEmpty(displayName)) { displayName = productName; }
-                    if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
-                    if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
-                }
+                if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.GetProductName(); }
+                if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.MainWindowTitle; }
+                if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
+                if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
+                displayName = char.ToUpper(displayName[0]) + displayName.Substring(1);
             }
-
-            displayName = char.ToUpper(displayName[0]) + displayName.Substring(1);
             DisplayName = displayName;
         }
         #endregion
