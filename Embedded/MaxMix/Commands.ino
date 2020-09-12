@@ -71,8 +71,8 @@ void UpdateItemCommand(uint8_t* packageBuffer, Item* itemsBuffer, uint8_t itemIn
 {
   itemsBuffer[itemIndex].id = GetIdFromPackage(packageBuffer);
   memcpy(itemsBuffer[itemIndex].name, &packageBuffer[6], ITEM_BUFFER_NAME_SIZE);
-  itemsBuffer[itemIndex].volume = (uint8_t)packageBuffer[42];
-  itemsBuffer[itemIndex].isMuted = (uint8_t)packageBuffer[43];
+  itemsBuffer[itemIndex].volume = (uint8_t)packageBuffer[30];
+  itemsBuffer[itemIndex].isMuted = (uint8_t)packageBuffer[31];
 }
 
 //---------------------------------------------------------
@@ -150,7 +150,7 @@ uint32_t GetIdFromPackage(uint8_t* packageBuffer)
 
 bool GetIsDeviceFromAddPackage(uint8_t* packageBuffer)
 {
-    return packageBuffer[44] > 0;
+    return packageBuffer[32] > 0;
 }
 
 bool GetIsDeviceFromRemovePackage(uint8_t* packageBuffer)

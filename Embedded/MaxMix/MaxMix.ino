@@ -39,9 +39,9 @@
 uint8_t receiveIndex = 0;
 uint8_t sendIndex = 0;
 uint8_t receiveBuffer[RECEIVE_BUFFER_SIZE];
-uint8_t decodeBuffer[RECEIVE_BUFFER_SIZE];
+uint8_t decodeBuffer[DECODE_BUFFER_SIZE];
 uint8_t sendBuffer[SEND_BUFFER_SIZE];
-uint8_t encodeBuffer[SEND_BUFFER_SIZE];
+uint8_t encodeBuffer[ENCODE_BUFFER_SIZE];
 
 // State
 uint8_t mode = MODE_SPLASH;

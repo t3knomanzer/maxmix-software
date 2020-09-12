@@ -1,5 +1,7 @@
-﻿using System;
+﻿using ControlzEx.Standard;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +24,7 @@ namespace MaxMix.Services.Communication.Messages
         #endregion
 
         #region Consts
-        private readonly int _nameLength = 36;
+        private readonly int _nameLength = 24;
         #endregion
         
         #region Properties
@@ -60,12 +62,12 @@ namespace MaxMix.Services.Communication.Messages
         * CHUNK        TYPE        SIZE (BYTES)
         * ---------------------------------------
         * ID           INT32       4
-        * NAME         STRING      36
+        * NAME         STRING      24
         * VOLUME       BYTE        1
         * ISMUTED      BYTE        1
         * ISDEVICE     BYTE        1
         * ---------------------------------------
-        *                          43
+        *                          31
         */
 
         public byte[] GetBytes()

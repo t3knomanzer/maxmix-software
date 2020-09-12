@@ -84,9 +84,11 @@ static const uint16_t ROTARY_ACCELERATION_DIVISOR_MAX = 400;
 // --- Messages
 static const uint8_t DEVICE_MAX_COUNT = 3;
 static const uint8_t SESSION_MAX_COUNT = 5;
-static const uint8_t ITEM_BUFFER_NAME_SIZE = 36;
-static const uint8_t RECEIVE_BUFFER_SIZE = 128;
-static const uint8_t SEND_BUFFER_SIZE = 9;
+static const uint8_t ITEM_BUFFER_NAME_SIZE = 24;
+static const uint8_t RECEIVE_BUFFER_SIZE = 36; // 1 overhead + 1 revision + 1 command + (31) payload + 1 length + 1 end byte.
+static const uint8_t DECODE_BUFFER_SIZE = 31; // Largest message received.
+static const uint8_t SEND_BUFFER_SIZE = 7; // Largest message sent (7) + 1 command.
+static const uint8_t ENCODE_BUFFER_SIZE = 10; //  1 overhead + (7) payload + 1 length + 1 end byte.
 
 // These values match exactly the ones in the C# application.
 static const uint8_t MSG_COMMAND_HANDSHAKE_REQUEST =  0;
