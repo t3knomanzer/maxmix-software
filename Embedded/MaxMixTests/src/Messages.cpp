@@ -62,6 +62,7 @@ namespace Message
                     Write(Command::PREVIOUS_SESSION);
                     Write(Command::CURRENT_SESSION);
                     Write(Command::NEXT_SESSION);
+                    Write(Command::VOLUME_CHANGE);
                     Write(Command::SCREEN_CHANGE);
                 }
                     break;
