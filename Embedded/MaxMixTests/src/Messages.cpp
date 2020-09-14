@@ -1,5 +1,6 @@
 #include <Messages.h>
 
+// Defined in main.cpp
 extern Message::Settings _settings;
 extern Message::SessionInfo _sessionInfo;
 extern Message::Session _session[3];
@@ -23,94 +24,125 @@ namespace Message
 
         if (Serial.available())
         {
-            uint8_t command = Serial.read(); 
+            Command command = (Command)Serial.read(); 
             switch (command)
             {
-                case Message::TEST:
+                case Command::TEST:
                     Write(command);
                     break;
-                case Message::SETTINGS:
-                    Serial.readBytes((uint8_t*)&_settings, sizeof(Message::Settings));
+                case Command::SETTINGS:
+                    Serial.readBytes((uint8_t*)&_settings, sizeof(Settings));
                     break;
-                case Message::SESSION_INFO:
-                    Serial.readBytes((uint8_t*)&_sessionInfo, sizeof(Message::SessionInfo));
+                case Command::SESSION_INFO:
+                    Serial.readBytes((uint8_t*)&_sessionInfo, sizeof(SessionInfo));
                     break;
-                case Message::CURRENT:
-                    Serial.readBytes((uint8_t*)&_session[1], sizeof(Message::Session));
+                case Command::CURRENT_SESSION:
+                    Serial.readBytes((uint8_t*)&_session[1], sizeof(Session));
                     break;
-                case Message::PREVIOUS:
-                    Serial.readBytes((uint8_t*)&_session[0], sizeof(Message::Session));
+                case Command::PREVIOUS_SESSION:
+                    Serial.readBytes((uint8_t*)&_session[0], sizeof(Session));
                     break;
-                case Message::NEXT:
-                    Serial.readBytes((uint8_t*)&_session[2], sizeof(Message::Session));
+                case Command::NEXT_SESSION:
+                    Serial.readBytes((uint8_t*)&_session[2], sizeof(Session));
                     break;
-                case Message::VOLUME:
-                    Serial.readBytes((uint8_t*)&_session[1].values, sizeof(Message::Volume));
+                case Command::VOLUME_CHANGE:
+                    Serial.readBytes((uint8_t*)&_session[1].values, sizeof(Volume));
                     break;
-                case Message::SCREEN:
-                    Serial.readBytes((uint8_t*)&_screen, sizeof(Message::Screen));
+                case Command::SCREEN_CHANGE:
+                    Serial.readBytes((uint8_t*)&_screen, sizeof(Screen));
                     break;
-                // Do nothing: OK
+                case Command::OK:
+                    // Do nothing;
+                    break;
+#ifdef TEST_HARNESS
+                case Command::DEBUG:
+                {
+                    Write(Command::SETTINGS);
+                    Write(Command::SESSION_INFO);
+                    Write(Command::PREVIOUS_SESSION);
+                    Write(Command::CURRENT_SESSION);
+                    Write(Command::NEXT_SESSION);
+                    Write(Command::SCREEN_CHANGE);
+                }
+                    break;
+#endif
             }
-            Write(Message::OK);
+            Write(Command::OK);
         }
     }
 
-    void Write(uint8_t command)
+    // Pretty sure this is not needed as we call Serial.flush() at the end of Write()
+    /*static void Write(Command command, const uint8_t* buffer, size_t size)
+    {
+        // Ensure there is enough buffer space for the command + payload
+        while(Serial.availableForWrite() < size + 1)
+            delay(1);
+        Serial.write(command);
+        Serial.write(buffer, size);
+        Serial.flush();
+    }*/
+
+    void Write(Command command)
     {
         switch (command)
         {
-            case Message::TEST:
+            case Command::TEST:
             {
                 Serial.write(command);
-                Serial.print(F(FIRMWARE_VERSION));
+                Serial.println(F(FIRMWARE_VERSION));
             }
                 break;
-            case Message::SESSION_INFO:
+            case Command::SESSION_INFO:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_sessionInfo, sizeof(Message::SessionInfo));
+                Serial.write((uint8_t*)&_sessionInfo, sizeof(SessionInfo));
             }
                 break;
-            case Message::VOLUME:
+            case Command::VOLUME_CHANGE:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_session[1].values, sizeof(Message::Volume));
+                Serial.write((uint8_t*)&_session[1].values, sizeof(Volume));
             }
                 break;
-            case Message::SCREEN:
+            case Command::SCREEN_CHANGE:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_screen, sizeof(Message::Screen));
+                Serial.write((uint8_t*)&_screen, sizeof(Screen));
             }
                 break;
-            case Message::OK:
+            case Command::OK:
+            {
                 Serial.write(command);
+            }
                 break;
-            // Do nothing: CURRENT, PREVIOUS, NEXT, SETTINGS
+            // Do nothing: CURRENT, PREVIOUS, NEXT, SETTINGS, DEBUG
 #ifdef TEST_HARNESS
-            case Message::CURRENT:
+            case Command::CURRENT_SESSION:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_session[1], sizeof(Message::Session));
+                Serial.write((uint8_t*)&_session[1], sizeof(Session));
             }
                 break;
-            case Message::PREVIOUS:
+            case Command::PREVIOUS_SESSION:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_session[0], sizeof(Message::Session));
+                Serial.write((uint8_t*)&_session[0], sizeof(Session));
             }
                 break;
-            case Message::NEXT:
+            case Command::NEXT_SESSION:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_session[2], sizeof(Message::Session));
+                Serial.write((uint8_t*)&_session[2], sizeof(Session));
             }
-            case Message::SETTINGS:
+                break;
+            case Command::SETTINGS:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_settings, sizeof(Message::Settings));
+                Serial.write((uint8_t*)&_settings, sizeof(Settings));
             }
+                break;
+            case Command::DEBUG:
+                // Do nothing
                 break;
 #endif
         }
