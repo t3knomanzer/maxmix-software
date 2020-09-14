@@ -25,9 +25,6 @@ namespace MaxMixTest
 
 
         static Random _rand = new Random(Guid.NewGuid().GetHashCode());
-
-        static DateTime _lastDebug = DateTime.Now;
-        static TimeSpan _debugDelay = new TimeSpan(0, 0, 0, 1);
         static DateTime _lastPrint = DateTime.Now;
         static TimeSpan _printDelay = new TimeSpan(0, 0, 30);
 
@@ -61,23 +58,16 @@ namespace MaxMixTest
                 if (_allClear)
                 {
                     var now = DateTime.Now;
-                    if (now - _lastDebug > _debugDelay)
-                    {
-                        _lastDebug = now;
-                        Write(Command.DEBUG);
-                    }
-                    else if (now - _lastPrint > _printDelay)
+                    if (now - _lastPrint > _printDelay)
                     {
                         _lastPrint = now;
                         double readBps = _readBytes / timer.Elapsed.TotalSeconds;
                         double writeBps = _writeBytes / timer.Elapsed.TotalSeconds;
                         Console.WriteLine($"Read {ToSize(_readBytes)} @ {readBps:n1}B/s ({_readCount}), Write {ToSize(_writeBytes)} @ {writeBps:n1}B/s ({_writeCount}), Errors {_errorCount}");
                     }
-                    else
-                    {
-                        // Do Test Fuzzing
-                        Write((Command)_rand.Next((int)Command.SETTINGS, (int)Command.DEBUG));
-                    }
+
+                    // Do Test Fuzzing
+                    Write((Command)_rand.Next((int)Command.SETTINGS, (int)Command.DEBUG + 1));
                 }
             }
         }
