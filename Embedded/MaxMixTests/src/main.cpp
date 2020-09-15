@@ -24,26 +24,26 @@ void loop(void)
 
 void PreviousSession(void)
 {
+    // TODO: 1 session & 2 session handling
     if (!_settings.continuousScroll && _sessionInfo.current == 0)
         return;
 
     if (_sessionInfo.current == 0)
         _sessionInfo.current = _sessionInfo.count;
     _sessionInfo.current--;
-    _session[0] = _session[2];
     _session[2] = _session[1];
-    memset((void *)&_session[0], 0, sizeof(Message::Session));
+    _session[1] = _session[0];
     Message::Write(Message::Command::SESSION_INFO);
 }
 
 void NextSession(void)
 {
+    // TODO: 1 session & 2 session handling
     if (!_settings.continuousScroll && _sessionInfo.current == _sessionInfo.count - 1)
         return;
 
     _sessionInfo.current = (_sessionInfo.current + 1) % _sessionInfo.count;
     _session[0] = _session[1];
     _session[1] = _session[2];
-    memset((void *)&_session[2], 0, sizeof(Message::Session));
     Message::Write(Message::Command::SESSION_INFO);
 }

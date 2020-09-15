@@ -63,7 +63,7 @@ namespace MaxMixTest
                         _lastPrint = now;
                         double readBps = _readBytes / timer.Elapsed.TotalSeconds;
                         double writeBps = _writeBytes / timer.Elapsed.TotalSeconds;
-                        double readPs = _readBytes / timer.Elapsed.TotalSeconds;
+                        double readPs = _readCount / timer.Elapsed.TotalSeconds;
                         double writePs = _writeCount / timer.Elapsed.TotalSeconds;
                         Console.WriteLine($"Read {ToSize(_readBytes)} @ {readBps:n1}B/s ({_readCount} @ {readPs:n1}/s), Write {ToSize(_writeBytes)} @ {writeBps:n1}B/s ({_writeCount} @ {writePs:n1}/s), Errors {_errorCount}");
                     }

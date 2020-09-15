@@ -4,7 +4,7 @@
 
 namespace Message
 {
-    enum Command : uint8_t 
+    enum Command : uint8_t
     { 
         TEST = 1,
         OK,
