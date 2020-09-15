@@ -45,8 +45,8 @@ namespace MaxMixTest
         static void Main(string[] args)
         {
             _serialPort = new SerialPort("COM5", 115200);
-            _serialPort.ReadTimeout = 10;
-            _serialPort.WriteTimeout = 10;
+            _serialPort.ReadTimeout = 20;
+            _serialPort.WriteTimeout = 20;
             _serialPort.Open();
 
             Stopwatch timer = Stopwatch.StartNew();
@@ -63,11 +63,13 @@ namespace MaxMixTest
                         _lastPrint = now;
                         double readBps = _readBytes / timer.Elapsed.TotalSeconds;
                         double writeBps = _writeBytes / timer.Elapsed.TotalSeconds;
-                        Console.WriteLine($"Read {ToSize(_readBytes)} @ {readBps:n1}B/s ({_readCount}), Write {ToSize(_writeBytes)} @ {writeBps:n1}B/s ({_writeCount}), Errors {_errorCount}");
+                        double readPs = _readBytes / timer.Elapsed.TotalSeconds;
+                        double writePs = _writeCount / timer.Elapsed.TotalSeconds;
+                        Console.WriteLine($"Read {ToSize(_readBytes)} @ {readBps:n1}B/s ({_readCount} @ {readPs:n1}/s), Write {ToSize(_writeBytes)} @ {writeBps:n1}B/s ({_writeCount} @ {writePs:n1}/s), Errors {_errorCount}");
                     }
 
                     // Do Test Fuzzing
-                    Write((Command)_rand.Next((int)Command.SETTINGS, (int)Command.DEBUG + 1));
+                    Write((Command)_rand.Next((int)Command.OK, (int)Command.DEBUG + 1));
                 }
             }
         }

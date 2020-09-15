@@ -12,7 +12,7 @@ namespace Message
     {
         Serial.begin(115200);
         // Default serial timeout is 1000 ms, at 115200 baud (bit/s)
-        // our longest message at 296 bits (37 bytes) takes 2.5694ms to send.
+        // our longest message at 296 bits (33 bytes) takes 2.29ms to send.
         Serial.setTimeout(5);
     }
 
@@ -31,25 +31,25 @@ namespace Message
                     Write(command);
                     break;
                 case Command::SETTINGS:
-                    Serial.readBytes((uint8_t*)&_settings, sizeof(Settings));
+                    Serial.readBytes((char*)&_settings, sizeof(Settings));
                     break;
                 case Command::SESSION_INFO:
-                    Serial.readBytes((uint8_t*)&_sessionInfo, sizeof(SessionInfo));
+                    Serial.readBytes((char*)&_sessionInfo, sizeof(SessionInfo));
                     break;
                 case Command::CURRENT_SESSION:
-                    Serial.readBytes((uint8_t*)&_session[1], sizeof(Session));
+                    Serial.readBytes((char*)&_session[1], sizeof(Session));
                     break;
                 case Command::PREVIOUS_SESSION:
-                    Serial.readBytes((uint8_t*)&_session[0], sizeof(Session));
+                    Serial.readBytes((char*)&_session[0], sizeof(Session));
                     break;
                 case Command::NEXT_SESSION:
-                    Serial.readBytes((uint8_t*)&_session[2], sizeof(Session));
+                    Serial.readBytes((char*)&_session[2], sizeof(Session));
                     break;
                 case Command::VOLUME_CHANGE:
-                    Serial.readBytes((uint8_t*)&_session[1].values, sizeof(Volume));
+                    Serial.readBytes((char*)&_session[1].values, sizeof(Volume));
                     break;
                 case Command::SCREEN_CHANGE:
-                    Serial.readBytes((uint8_t*)&_screen, sizeof(Screen));
+                    Serial.readBytes((char*)&_screen, sizeof(Screen));
                     break;
                 case Command::OK:
                     // Do nothing;
@@ -96,19 +96,19 @@ namespace Message
             case Command::SESSION_INFO:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_sessionInfo, sizeof(SessionInfo));
+                Serial.write((char*)&_sessionInfo, sizeof(SessionInfo));
             }
                 break;
             case Command::VOLUME_CHANGE:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_session[1].values, sizeof(Volume));
+                Serial.write((char*)&_session[1].values, sizeof(Volume));
             }
                 break;
             case Command::SCREEN_CHANGE:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_screen, sizeof(Screen));
+                Serial.write((char*)&_screen, sizeof(Screen));
             }
                 break;
             case Command::OK:
@@ -121,25 +121,25 @@ namespace Message
             case Command::CURRENT_SESSION:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_session[1], sizeof(Session));
+                Serial.write((char*)&_session[1], sizeof(Session));
             }
                 break;
             case Command::PREVIOUS_SESSION:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_session[0], sizeof(Session));
+                Serial.write((char*)&_session[0], sizeof(Session));
             }
                 break;
             case Command::NEXT_SESSION:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_session[2], sizeof(Session));
+                Serial.write((char*)&_session[2], sizeof(Session));
             }
                 break;
             case Command::SETTINGS:
             {
                 Serial.write(command);
-                Serial.write((uint8_t*)&_settings, sizeof(Settings));
+                Serial.write((char*)&_settings, sizeof(Settings));
             }
                 break;
             case Command::DEBUG:
