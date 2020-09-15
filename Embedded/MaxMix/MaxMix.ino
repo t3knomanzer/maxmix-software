@@ -44,7 +44,7 @@ uint8_t sendBuffer[SEND_BUFFER_SIZE];
 uint8_t encodeBuffer[ENCODE_BUFFER_SIZE];
 
 // State
-uint8_t mode = MODE_SPLASH;
+int8_t mode = MODE_SPLASH;
 uint8_t stateSplash = STATE_SPLASH_LOGO;
 uint8_t stateOutput = STATE_OUTPUT_EDIT;
 uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
@@ -73,6 +73,7 @@ Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
 uint32_t encoderLastTransition = 0;
 int8_t prevDir = 0;
 volatile int8_t steps = 0;
+volatile bool holdTurn = false;
 
 // Time & Sleep
 uint32_t now = 0;
@@ -93,6 +94,8 @@ void timerIsr()
     steps++;
   else if(encoderDir == DIR_CCW)
     steps--;
+  if(encoderDir != DIR_NONE && !digitalRead(PIN_ENCODER_SWITCH))
+    holdTurn = true;
 }
 
 //********************************************************
@@ -445,6 +448,17 @@ bool ProcessEncoderRotation()
   if(encoderDelta == 0)
     return false;
 
+  if(holdTurn)
+  {
+    mode += encoderDelta;
+    if(mode >= MODE_COUNT)
+      mode = 0;
+    else if(mode < 0)
+      mode = MODE_COUNT -1;
+
+    return true;
+  }
+
   uint32_t deltaTime = now - encoderLastTransition;
   encoderLastTransition = now;
 
@@ -508,6 +522,13 @@ bool ProcessEncoderRotation()
 //---------------------------------------------------------
 bool ProcessEncoderButton()
 {
+  if(holdTurn)
+  {
+    holdTurn = false;
+    encoderButton.reset();
+    return false;
+  }
+  
   if(encoderButton.tapped())
   {
     if(stateDisplay == STATE_DISPLAY_SLEEP)
