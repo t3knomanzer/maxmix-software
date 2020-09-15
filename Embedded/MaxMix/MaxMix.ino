@@ -44,7 +44,7 @@ uint8_t sendBuffer[SEND_BUFFER_SIZE];
 uint8_t encodeBuffer[ENCODE_BUFFER_SIZE];
 
 // State
-int8_t mode = MODE_SPLASH;
+uint8_t mode = MODE_SPLASH;
 uint8_t stateSplash = STATE_SPLASH_LOGO;
 uint8_t stateOutput = STATE_OUTPUT_EDIT;
 uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
@@ -451,9 +451,9 @@ bool ProcessEncoderRotation()
   if(holdTurn)
   {
     mode += encoderDelta;
-    if(mode >= MODE_COUNT)
+    if(mode == MODE_COUNT)
       mode = 0;
-    else if(mode < 0)
+    else if(mode > MODE_COUNT)
       mode = MODE_COUNT -1;
 
     return true;
