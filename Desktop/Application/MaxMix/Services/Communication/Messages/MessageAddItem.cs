@@ -11,7 +11,7 @@ namespace MaxMix.Services.Communication.Messages
     internal class MessageAddItem : IMessage
     {
         #region Constructor
-        public MessageAddItem(int id, string name, int volume, bool isMuted, bool isDevice, int deviceFlow)
+        public MessageAddItem(int id, string name, int volume, bool isMuted, bool isDevice, int deviceFlow = 0)
         {
             Id = id;
             Name = name;

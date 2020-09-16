@@ -9,7 +9,7 @@ namespace MaxMix.Services.Communication.Messages
     internal class MessageRemoveItem : IMessage
     {
         #region Constructor
-        public MessageRemoveItem(int id, bool isDevice, int deviceFlow)
+        public MessageRemoveItem(int id, bool isDevice, int deviceFlow = 0)
         {
             Id = id;
             IsDevice = isDevice;

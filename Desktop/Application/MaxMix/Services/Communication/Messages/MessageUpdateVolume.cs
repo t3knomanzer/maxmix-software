@@ -12,7 +12,7 @@ namespace MaxMix.Services.Communication.Messages
         #region Constructor
         public MessageUpdateVolume() { }
 
-        public MessageUpdateVolume(int id, int volume, bool isMuted, bool isDevice, int deviceFlow)
+        public MessageUpdateVolume(int id, int volume, bool isMuted, bool isDevice, int deviceFlow = 0)
         {
             Id = id;
             Volume = volume;
@@ -65,7 +65,6 @@ namespace MaxMix.Services.Communication.Messages
 
             Volume = Convert.ToInt16(bytes[4]);
             IsMuted = Convert.ToBoolean(bytes[5]);
-            IsDevice = false;
 
             return true;
         }
