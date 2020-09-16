@@ -122,9 +122,13 @@ namespace MaxMix.Services.Audio
             foreach (var device in _deviceEnumerator.EnumAudioEndpoints(DataFlow.All, DeviceState.Active))
                 OnDeviceAdded(device);
 
-            var defaultDevice = _devices.Values.FirstOrDefault(o => o.IsDefault);
-            if (defaultDevice != null)
-                OnDefaultDeviceChanged(defaultDevice);
+            foreach(var device in _devices.Values)
+            {
+                if (device.IsDefault)
+                {
+                    OnDefaultDeviceChanged(device);
+                }
+            }
         }
 
         /// <summary>
@@ -269,7 +273,7 @@ namespace MaxMix.Services.Audio
         /// <param name="device"></param>
         private void OnDefaultDeviceChanged(IAudioDevice device)
         {
-            RaiseDefaultDeviceChanged(device.Id);
+            RaiseDefaultDeviceChanged(device.Id, device.Flow);
         }
 
         /// <summary>
@@ -330,12 +334,12 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Event Dispatchers
-        private void RaiseDefaultDeviceChanged(int id)
+        private void RaiseDefaultDeviceChanged(int id, DeviceFlow deviceFlow)
         {
             if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => DefaultDeviceChanged?.Invoke(this, id), null);
+                _synchronizationContext.Post(o => DefaultDeviceChanged?.Invoke(this, id, deviceFlow), null);
             else
-                DefaultDeviceChanged.Invoke(this, id);
+                DefaultDeviceChanged.Invoke(this, id, deviceFlow);
         }
 
         private void RaiseDeviceCreated(int id, string displayName, int volume, bool isMuted, DeviceFlow deviceFlow)

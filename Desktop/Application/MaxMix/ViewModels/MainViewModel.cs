@@ -185,9 +185,9 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region EventHandlers
-        private void OnDefaultDeviceChanged(object sender, int id)
+        private void OnDefaultDeviceChanged(object sender, int id, DeviceFlow deviceFlow)
         {
-            var message = new MessageSetDefaultEndpoint(id);
+            var message = new MessageSetDefaultEndpoint(id, (int)deviceFlow);
             _communicationService.Send(message);
         }
 

@@ -153,6 +153,11 @@ bool GetIsDeviceFromAddPackage(uint8_t* packageBuffer)
     return packageBuffer[32] > 0;
 }
 
+uint8_t GetDeviceFlowFromAddPackage(uint8_t* packageBuffer)
+{
+    return packageBuffer[33];
+}
+
 bool GetIsDeviceFromRemovePackage(uint8_t* packageBuffer)
 {
     return packageBuffer[6] > 0;
@@ -161,4 +166,14 @@ bool GetIsDeviceFromRemovePackage(uint8_t* packageBuffer)
 bool GetIsDeviceFromUpdatePackage(uint8_t* packageBuffer)
 {
     return packageBuffer[8] > 0;
+}
+
+uint8_t GetDeviceFlowFromUpdatePackage(uint8_t* packageBuffer)
+{
+    return packageBuffer[9];
+}
+
+uint8_t GetDeviceFlowFromDefaultEndpointPackage(uint8_t* packageBuffer)
+{
+    return packageBuffer[6];
 }

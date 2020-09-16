@@ -14,13 +14,17 @@ void UpdateLighting()
   {
     LightingBlackOut();
   }
-  else if(sessionCount == 0)
+  else if(mode == MODE_SPLASH)
   {
     LightingCircularFunk();
   }
   else if(mode == MODE_OUTPUT)
   {
     LightingVolume(&devicesOutput[itemIndexOutput], &settings.volumeMinColor, &settings.volumeMaxColor);
+  }
+  else if(mode == MODE_INPUT)
+  {
+    LightingVolume(&devicesInput[itemIndexInput], &settings.volumeMinColor, &settings.volumeMaxColor);
   }
   else if(mode == MODE_APPLICATION)
   {

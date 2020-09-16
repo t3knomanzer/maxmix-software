@@ -11,7 +11,7 @@ namespace MaxMix.Services.Audio
     #endregion
 
     #region Delegates
-    public delegate void DefaultAudioDeviceChangedDelegate(object sender, int id);
+    public delegate void DefaultAudioDeviceChangedDelegate(object sender, int id, DeviceFlow deviceFlow);
     public delegate void AudioDeviceCreatedDelegate(object sender, int id, string displayName, int volume, bool isMuted, DeviceFlow deviceFlow);
     public delegate void AudioDeviceRemovedDelegate(object sender, int id, DeviceFlow deviceFlow);
     public delegate void AudioDeviceVolumeDelegate(object sender, int id, int volume, bool isMuted, DeviceFlow deviceFlow);
