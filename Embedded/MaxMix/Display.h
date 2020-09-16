@@ -19,7 +19,7 @@ namespace Display
     void InfoScreen(void);
     
     void DeviceSelectScreen(Item* item, bool isDefaultEndpoint, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex);
-    void DeviceEditScreen(Item* item, uint8_t modeIndex);
+    void DeviceEditScreen(Item* item, char* label, uint8_t modeIndex);
     
     void ApplicationSelectScreen(Item* item, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex);
     void ApplicationEditScreen(Item* item, uint8_t modeIndex);

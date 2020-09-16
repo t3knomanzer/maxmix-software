@@ -46,9 +46,10 @@ static const uint8_t  PIN_ENCODER_SWITCH = 17; //A3
 static const uint8_t  MODE_SPLASH = 255;
 
 static const uint8_t  MODE_OUTPUT = 0;
-static const uint8_t  MODE_APPLICATION = 1;
-static const uint8_t  MODE_GAME = 2;
-static const uint8_t  MODE_COUNT = 3;
+static const uint8_t  MODE_INPUT = 1;
+static const uint8_t  MODE_APPLICATION = 2;
+static const uint8_t  MODE_GAME = 3;
+static const uint8_t  MODE_COUNT = 4;
 
 static const uint8_t  STATE_SPLASH_LOGO = 0;
 static const uint8_t  STATE_SPLASH_INFO = 1;
@@ -57,6 +58,10 @@ static const uint8_t  STATE_SPLASH_COUNT = 2;
 static const uint8_t  STATE_OUTPUT_NAVIGATE = 0;
 static const uint8_t  STATE_OUTPUT_EDIT = 1;
 static const uint8_t  STATE_OUTPUT_COUNT = 2;
+
+static const uint8_t  STATE_INPUT_NAVIGATE = 0;
+static const uint8_t  STATE_INPUT_EDIT = 1;
+static const uint8_t  STATE_INPUT_COUNT = 2;
 
 static const uint8_t  STATE_APPLICATION_NAVIGATE = 0;
 static const uint8_t  STATE_APPLICATION_EDIT = 1;
@@ -82,7 +87,8 @@ static const uint8_t  PIXELS_BRIGHTNESS = 96; // Master brightness of all the pi
 static const uint16_t ROTARY_ACCELERATION_DIVISOR_MAX = 400;
 
 // --- Messages
-static const uint8_t DEVICE_MAX_COUNT = 4;
+static const uint8_t DEVICE_OUTPUT_MAX_COUNT = 4;
+static const uint8_t DEVICE_INPUT_MAX_COUNT = 2;
 static const uint8_t SESSION_MAX_COUNT = 6;
 static const uint8_t ITEM_BUFFER_NAME_SIZE = 24;
 static const uint8_t RECEIVE_BUFFER_SIZE = 37; // 1 overhead + 1 revision + 1 command + (31) payload + 1 length + 1 end byte.

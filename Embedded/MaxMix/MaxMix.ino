@@ -47,17 +47,21 @@ uint8_t encodeBuffer[ENCODE_BUFFER_SIZE];
 uint8_t mode = MODE_SPLASH;
 uint8_t stateSplash = STATE_SPLASH_LOGO;
 uint8_t stateOutput = STATE_OUTPUT_EDIT;
+uint8_t stateInput = STATE_INPUT_EDIT;
 uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
 uint8_t stateGame = STATE_GAME_SELECT_A;
 uint8_t stateDisplay = STATE_DISPLAY_AWAKE;
 uint8_t isDirty = true;
 
-Item devices[DEVICE_MAX_COUNT];
+Item devicesOutput[DEVICE_OUTPUT_MAX_COUNT];
+Item devicesInput[DEVICE_INPUT_MAX_COUNT];
 Item sessions[SESSION_MAX_COUNT];
-uint8_t deviceCount = 0;
+uint8_t devicesOutputCount = 0;
+uint8_t devicesInputCount = 0;
 uint8_t sessionCount = 0;
 
 int8_t itemIndexOutput = 0;
+int8_t itemIndexInput = 0;
 int8_t itemIndexApp = 0;
 int8_t itemIndexGameA = 0;
 int8_t itemIndexGameB = 0;
@@ -210,7 +214,7 @@ void ResetState()
   itemIndexGameA = 0;
   itemIndexGameB = 0;
   sessionCount = 0;
-  deviceCount = 0;
+  devicesOutputCount = 0;
 }
 
 
@@ -240,14 +244,14 @@ bool ProcessPackage()
     int8_t index;  
     if(isDevice)
     {
-      if(deviceCount == DEVICE_MAX_COUNT)
+      if(devicesOutputCount == DEVICE_OUTPUT_MAX_COUNT)
         return false;
 
-      index = FindItem(id, devices, deviceCount);
+      index = FindItem(id, devices, devicesOutputCount);
       if(index == -1)
       {
-        AddItemCommand(decodeBuffer, devices, &deviceCount);
-        index = deviceCount - 1;   
+        AddItemCommand(decodeBuffer, devices, &devicesOutputCount);
+        index = devicesOutputCount - 1;   
       }
       else
         UpdateItemCommand(decodeBuffer, devices, index);
@@ -284,17 +288,17 @@ bool ProcessPackage()
     int8_t index;
     if(isDevice)
     {
-      if(deviceCount == 0)
+      if(devicesOutputCount == 0)
         return false;
 
-      index = FindItem(id, devices, deviceCount);
+      index = FindItem(id, devices, devicesOutputCount);
       if(index == -1)
         return false;
 
-      RemoveItemCommand(decodeBuffer, devices, &deviceCount, index);
+      RemoveItemCommand(decodeBuffer, devices, &devicesOutputCount, index);
       
       bool isItemActive = IsItemActive(index);
-      itemIndexOutput = GetNextIndex(itemIndexOutput, deviceCount, 0, settings.continuousScroll);
+      itemIndexOutput = GetNextIndex(itemIndexOutput, devicesOutputCount, 0, settings.continuousScroll);
       if(isItemActive)
       {
         if(mode == MODE_OUTPUT)
@@ -331,7 +335,7 @@ bool ProcessPackage()
     int8_t index;
     if(isDevice)
     {
-      index = FindItem(id, devices, deviceCount);
+      index = FindItem(id, devices, devicesOutputCount);
       if(index == -1)
         return false;
 
@@ -368,7 +372,7 @@ bool ProcessPackage()
   else if(command == MSG_COMMAND_SET_DEFAULT_ENDPOINT)
   {
     uint32_t id = GetIdFromPackage(decodeBuffer);
-    int8_t index = FindItem(id, devices, deviceCount);
+    int8_t index = FindItem(id, devices, devicesOutputCount);
     if(index == -1)
         return false;
 
@@ -455,14 +459,14 @@ bool ProcessEncoderRotation()
   {
     if(stateOutput == STATE_OUTPUT_NAVIGATE)
     {
-      itemIndexOutput = GetNextIndex(itemIndexOutput, deviceCount, encoderDelta, settings.continuousScroll);
+      itemIndexOutput = GetNextIndex(itemIndexOutput, devicesOutputCount, encoderDelta, settings.continuousScroll);
       Display::ResetTimers();
     }
 
     else if(stateOutput == STATE_OUTPUT_EDIT)
     {
-      devices[itemIndexOutput].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, devices[itemIndexOutput].volume);
-      SendItemVolumeCommand(&devices[itemIndexOutput], sendBuffer, encodeBuffer);
+      devicesOutput[itemIndexOutput].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, devicesOutput[itemIndexOutput].volume);
+      SendItemVolumeCommand(&devicesOutput[itemIndexOutput], sendBuffer, encodeBuffer);
     }
   }
   else if(mode == MODE_APPLICATION)
@@ -522,7 +526,7 @@ bool ProcessEncoderButton()
     else if(mode == MODE_OUTPUT)
     {
       if(stateOutput == STATE_OUTPUT_NAVIGATE)
-        SendSetDefaultEndpointCommand(&devices[itemIndexOutput], sendBuffer, encodeBuffer);
+        SendSetDefaultEndpointCommand(&devicesOutput[itemIndexOutput], sendBuffer, encodeBuffer);
 
       stateOutput = CycleState(stateOutput, STATE_OUTPUT_COUNT);
       Display::ResetTimers();
@@ -601,7 +605,7 @@ bool ProcessDisplayScroll()
   bool result = false;
 
   if(mode == MODE_OUTPUT)
-    result = strlen(devices[itemIndexOutput].name) > DISPLAY_CHAR_MAX_X2;
+    result = strlen(devicesOutput[itemIndexOutput].name) > DISPLAY_CHAR_MAX_X2;
   else if(mode == MODE_APPLICATION)
     result = strlen(sessions[itemIndexApp].name) > DISPLAY_CHAR_MAX_X2;
   else if(mode == MODE_GAME)
@@ -653,14 +657,14 @@ void UpdateDisplay()
   {
     if(stateOutput == STATE_OUTPUT_NAVIGATE)
     {
-      uint8_t scrollLeft = CanScrollLeft(itemIndexOutput, deviceCount, settings.continuousScroll);
-      uint8_t scrollRight = CanScrollRight(itemIndexOutput, deviceCount, settings.continuousScroll);
-      uint8_t isDefaultEndpoint =  devices[itemIndexOutput].id == defaultEndpointId;
+      uint8_t scrollLeft = CanScrollLeft(itemIndexOutput, devicesOutputCount, settings.continuousScroll);
+      uint8_t scrollRight = CanScrollRight(itemIndexOutput, devicesOutputCount, settings.continuousScroll);
+      uint8_t isDefaultEndpoint =  devicesOutput[itemIndexOutput].id == defaultEndpointId;
 
-      Display::DeviceSelectScreen(&devices[itemIndexOutput], isDefaultEndpoint, scrollLeft, scrollRight, mode);
+      Display::DeviceSelectScreen(&devicesOutput[itemIndexOutput], isDefaultEndpoint, scrollLeft, scrollRight, mode);
     }
     else if(stateOutput == STATE_OUTPUT_EDIT)
-      Display::DeviceEditScreen(&devices[itemIndexOutput], mode);
+      Display::DeviceEditScreen(&devicesOutput[itemIndexOutput], "OUTPUT", mode);
   }
   else if(mode == MODE_APPLICATION)
   {

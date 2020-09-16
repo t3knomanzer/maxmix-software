@@ -20,7 +20,7 @@ void UpdateLighting()
   }
   else if(mode == MODE_OUTPUT)
   {
-    LightingVolume(&devices[itemIndexOutput], &settings.volumeMinColor, &settings.volumeMaxColor);
+    LightingVolume(&devicesOutput[itemIndexOutput], &settings.volumeMinColor, &settings.volumeMaxColor);
   }
   else if(mode == MODE_APPLICATION)
   {
