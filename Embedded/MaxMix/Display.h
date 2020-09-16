@@ -18,8 +18,8 @@ namespace Display
     void SplashScreen(void);
     void InfoScreen(void);
     
-    void OutputSelectScreen(Item* item, bool isDefaultEndpoint, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex);
-    void OutputEditScreen(Item* item, uint8_t modeIndex);
+    void DeviceSelectScreen(Item* item, bool isDefaultEndpoint, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex);
+    void DeviceEditScreen(Item* item, uint8_t modeIndex);
     
     void ApplicationSelectScreen(Item* item, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex);
     void ApplicationEditScreen(Item* item, uint8_t modeIndex);

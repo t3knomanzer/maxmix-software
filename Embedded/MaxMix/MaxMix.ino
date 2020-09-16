@@ -657,10 +657,10 @@ void UpdateDisplay()
       uint8_t scrollRight = CanScrollRight(itemIndexOutput, deviceCount, settings.continuousScroll);
       uint8_t isDefaultEndpoint =  devices[itemIndexOutput].id == defaultEndpointId;
 
-      Display::OutputSelectScreen(&devices[itemIndexOutput], isDefaultEndpoint, scrollLeft, scrollRight, mode);
+      Display::DeviceSelectScreen(&devices[itemIndexOutput], isDefaultEndpoint, scrollLeft, scrollRight, mode);
     }
     else if(stateOutput == STATE_OUTPUT_EDIT)
-      Display::OutputEditScreen(&devices[itemIndexOutput], mode);
+      Display::DeviceEditScreen(&devices[itemIndexOutput], mode);
   }
   else if(mode == MODE_APPLICATION)
   {
