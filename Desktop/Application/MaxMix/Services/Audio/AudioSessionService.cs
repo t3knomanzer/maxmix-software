@@ -119,7 +119,7 @@ namespace MaxMix.Services.Audio
         /// <param name="stateInfo"></param>
         private void Initialize(object stateInfo)
         {
-            foreach (var device in _deviceEnumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active))
+            foreach (var device in _deviceEnumerator.EnumAudioEndpoints(DataFlow.All, DeviceState.Active))
                 OnDeviceAdded(device);
 
             var defaultDevice = _devices.Values.FirstOrDefault(o => o.IsDefault);
@@ -221,16 +221,19 @@ namespace MaxMix.Services.Audio
             device.DeviceDefaultChanged += OnDefaultDeviceChanged;
             device.DeviceVolumeChanged += OnDeviceVolumeChanged;
 
-            var sessionManager = AudioSessionManager2.FromMMDevice(device.Device);
-            sessionManager.SessionCreated += OnSessionCreated;
-            _sessionManagers.Add(device.Id, sessionManager);
+            RaiseDeviceCreated(device.Id, device.DisplayName, device.Volume, device.IsMuted, device.Flow);
 
-            RaiseDeviceCreated(device.Id, device.DisplayName, device.Volume, device.IsMuted);
-
-            foreach (var session in sessionManager.GetSessionEnumerator())
+            if (device.Flow == DeviceFlow.Output)
             {
-                if (ValidateSession(session))
-                    OnSessionCreated(session);
+                var sessionManager = AudioSessionManager2.FromMMDevice(device.Device);
+                sessionManager.SessionCreated += OnSessionCreated;
+                _sessionManagers.Add(device.Id, sessionManager);
+
+                foreach (var session in sessionManager.GetSessionEnumerator())
+                {
+                    if (ValidateSession(session))
+                        OnSessionCreated(session);
+                }
             }
         }
 
@@ -252,7 +255,7 @@ namespace MaxMix.Services.Audio
             if (_devices.ContainsKey(device.Id))
             {
                 _devices.Remove(device.Id);
-                RaiseDeviceRemoved(device.Id);
+                RaiseDeviceRemoved(device.Id, device.Flow);
             }
 
             device.Dispose();
@@ -287,7 +290,7 @@ namespace MaxMix.Services.Audio
         /// <param name="device"></param>
         private void OnDeviceVolumeChanged(IAudioDevice device)
         {
-            RaiseDeviceVolumeChanged(device.Id, device.Volume, device.IsMuted);
+            RaiseDeviceVolumeChanged(device.Id, device.Volume, device.IsMuted, device.Flow);
         }
 
         private void OnSessionCreated(object sender, SessionCreatedEventArgs e)
@@ -335,28 +338,28 @@ namespace MaxMix.Services.Audio
                 DefaultDeviceChanged.Invoke(this, id);
         }
 
-        private void RaiseDeviceCreated(int id, string displayName, int volume, bool isMuted)
+        private void RaiseDeviceCreated(int id, string displayName, int volume, bool isMuted, DeviceFlow deviceFlow)
         {
             if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => DeviceCreated?.Invoke(this, id, displayName, volume, isMuted), null);
+                _synchronizationContext.Post(o => DeviceCreated?.Invoke(this, id, displayName, volume, isMuted, deviceFlow), null);
             else
-                DeviceCreated.Invoke(this, id, displayName, volume, isMuted);
+                DeviceCreated.Invoke(this, id, displayName, volume, isMuted, deviceFlow);
         }
 
-        private void RaiseDeviceRemoved(int id)
+        private void RaiseDeviceRemoved(int id, DeviceFlow deviceFlow)
         {
             if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => DeviceRemoved?.Invoke(this, id), null);
+                _synchronizationContext.Post(o => DeviceRemoved?.Invoke(this, id, deviceFlow), null);
             else
-                DeviceRemoved?.Invoke(this, id);
+                DeviceRemoved?.Invoke(this, id, deviceFlow);
         }
 
-        private void RaiseDeviceVolumeChanged(int id, int volume, bool isMuted)
+        private void RaiseDeviceVolumeChanged(int id, int volume, bool isMuted, DeviceFlow deviceFlow)
         {
             if (SynchronizationContext.Current != _synchronizationContext)
-                _synchronizationContext.Post(o => DeviceVolumeChanged?.Invoke(this, id, volume, isMuted), null);
+                _synchronizationContext.Post(o => DeviceVolumeChanged?.Invoke(this, id, volume, isMuted, deviceFlow), null);
             else
-                DeviceVolumeChanged?.Invoke(this, id, volume, isMuted);
+                DeviceVolumeChanged?.Invoke(this, id, volume, isMuted, deviceFlow);
         }
 
         private void RaiseSessionCreated(int id, string displayName, int volume, bool isMuted)

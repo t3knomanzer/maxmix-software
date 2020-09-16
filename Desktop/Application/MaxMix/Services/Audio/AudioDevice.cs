@@ -27,6 +27,7 @@ namespace MaxMix.Services.Audio
             _callback.NotifyRecived += OnEndpointVolumeChanged;
 
             UpdateDisplayName();
+            Flow = Device.DataFlow == DataFlow.Capture ? DeviceFlow.Input : DeviceFlow.Output;
         }
         #endregion
 
@@ -64,6 +65,9 @@ namespace MaxMix.Services.Audio
 
         /// <inheritdoc/>
         public string DisplayName { get; protected set; }
+
+        /// <inheritdoc/>
+        public DeviceFlow Flow { get; protected set; }
 
         /// <inheritdoc/>
         public bool IsDefault

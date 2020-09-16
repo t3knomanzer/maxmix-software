@@ -1,4 +1,5 @@
-﻿using CSCore.CoreAudioAPI;
+﻿using CSCore.Codecs.FLAC;
+using CSCore.CoreAudioAPI;
 using System;
 
 namespace MaxMix.Services.Audio
@@ -25,6 +26,11 @@ namespace MaxMix.Services.Audio
         /// The display name of the process that created this session.
         /// </summary>
         string DisplayName { get; }
+
+        /// <summary>
+        /// The direction of the audio flow for this device, input for capture devices and output for render devices.
+        /// </summary>
+        DeviceFlow Flow { get; }
 
         /// <summary>
         /// Current volume of this session (0-100).
