@@ -8,16 +8,17 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication.Messages
 {
-    internal class MessageAddSession : IMessage
+    internal class MessageAddItem : IMessage
     {
         #region Constructor
-        public MessageAddSession(int id, string name, int volume, bool isMuted, bool isDevice)
+        public MessageAddItem(int id, string name, int volume, bool isMuted, bool isDevice, int deviceFlow)
         {
             Id = id;
             Name = name;
             Volume = volume;
             IsMuted = isMuted;
             IsDevice = isDevice;
+            DeviceFlow = deviceFlow;
 
             EncodeName();
         }
@@ -34,6 +35,7 @@ namespace MaxMix.Services.Communication.Messages
         public int Volume { get; private set; }
         public bool IsMuted { get; private set; }
         public bool IsDevice { get; private set; }
+        public int DeviceFlow { get; private set; }
         #endregion
 
         #region Private Methods
@@ -65,8 +67,9 @@ namespace MaxMix.Services.Communication.Messages
         * VOLUME       BYTE        1
         * ISMUTED      BYTE        1
         * ISDEVICE     BYTE        1
+        * DEVICEFLOW   BYTE        1
         * ---------------------------------------
-        *                          31
+        *                          32
         */
 
         public byte[] GetBytes()
@@ -78,6 +81,7 @@ namespace MaxMix.Services.Communication.Messages
             result.Add(Convert.ToByte(Volume));
             result.Add(Convert.ToByte(IsMuted));
             result.Add(Convert.ToByte(IsDevice));
+            result.Add(Convert.ToByte(DeviceFlow));
 
             return result.ToArray();
         }
