@@ -76,7 +76,7 @@ namespace MaxMix.Services.Audio
             {
                 try
                 {
-                    var defaultDevice = _deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+                    var defaultDevice = _deviceEnumerator.GetDefaultAudioEndpoint(Device.DataFlow, Role.Console);
                     _isDefault = defaultDevice.DeviceID.GetHashCode() == Device.DeviceID.GetHashCode();
                 }
                 catch { }
@@ -98,7 +98,9 @@ namespace MaxMix.Services.Audio
             set
             {
                 if (_volume == value)
+                {
                     return;
+                }
 
                 _isNotifyEnabled = false;
                 _volume = value;
@@ -120,7 +122,9 @@ namespace MaxMix.Services.Audio
             set
             {
                 if (_isMuted == value)
+                {
                     return;
+                }
 
                 _isNotifyEnabled = false;
                 _isMuted = value;
@@ -151,31 +155,40 @@ namespace MaxMix.Services.Audio
             // For some reason this event triggers twice.
             // We keep track of the previous state, and only raise the event if
             // we are now the default device and were not before.
-            if (e.DeviceId.GetHashCode() == Device.DeviceID.GetHashCode())
-                if (!_wasDefault)
-                {
-                    _wasDefault = true;
-                    DeviceDefaultChanged?.Invoke(this);
-                }
+            if(IsDefault && !_wasDefault)
+            {
+                _wasDefault = true;
+                DeviceDefaultChanged?.Invoke(this);
+            }
             else
+            {
                 _wasDefault = false;
+            }
         }
 
         private void OnDeviceStateChanged(object sender, DeviceStateChangedEventArgs e)
         {
             if (e.DeviceState == DeviceState.NotPresent || e.DeviceState == DeviceState.UnPlugged)
             {
-                e.TryGetDevice(out var device);
-                if (device.DeviceID.GetHashCode() == Device.DeviceID.GetHashCode())
-                    DeviceRemoved?.Invoke(this);
+                if (e.TryGetDevice(out var device))
+                {
+                    if (device.DeviceID.GetHashCode() == Device.DeviceID.GetHashCode())
+                    {
+                        DeviceRemoved?.Invoke(this);
+                    }
+                }
             }
         }
 
         private void OnDeviceRemoved(object sender, DeviceNotificationEventArgs e)
         {
-            e.TryGetDevice(out var device);
-            if (device.DeviceID.GetHashCode() == Device.DeviceID.GetHashCode())              
-                DeviceRemoved?.Invoke(this);
+            if (e.TryGetDevice(out var device))
+            {
+                if (device.DeviceID.GetHashCode() == Device.DeviceID.GetHashCode())
+                {
+                    DeviceRemoved?.Invoke(this);
+                }
+            }
         }
         private void OnEndpointVolumeChanged(object sender, AudioEndpointVolumeCallbackEventArgs e)
         {
@@ -199,11 +212,15 @@ namespace MaxMix.Services.Audio
                 _deviceEnumerator.DeviceStateChanged -= OnDeviceStateChanged;
             }
 
-            if(_callback != null)
+            if (_callback != null)
+            {
                 _callback.NotifyRecived -= OnEndpointVolumeChanged;
+            }
 
             if(_endpointVolume != null)
+            {
                 _endpointVolume.UnregisterControlChangeNotify(_callback);
+            }
 
             _deviceEnumerator = null;
             _endpointVolume = null;

@@ -304,7 +304,7 @@ bool ProcessPackage()
     int8_t index;
     if(isDevice)
     {
-      uint8_t deviceFlow = GetDeviceFlowFromAddPackage(decodeBuffer);
+      uint8_t deviceFlow = GetDeviceFlowFromRemovePackage(decodeBuffer);
 
       Item* buffer;
       uint8_t* count;
