@@ -206,6 +206,7 @@ void ResetState()
   mode = MODE_SPLASH;
   stateSplash = STATE_SPLASH_LOGO;
   stateOutput = STATE_OUTPUT_EDIT;
+  stateInput = STATE_INPUT_EDIT;
   stateApplication = STATE_APPLICATION_NAVIGATE;
   stateGame = STATE_GAME_SELECT_A;
   stateDisplay = STATE_DISPLAY_AWAKE;
@@ -268,7 +269,7 @@ bool ProcessPackage()
       if(index == -1)
       {
         AddItemCommand(decodeBuffer, buffer, count);
-        index = devicesOutputCount - 1;   
+        index = *count - 1;
       }
       else
         UpdateItemCommand(decodeBuffer, buffer, index);
@@ -332,11 +333,16 @@ bool ProcessPackage()
       
       bool isItemActive = IsItemActive(index);
       *modeIndex = GetNextIndex(*modeIndex, *count, 0, settings.continuousScroll);
+      
+      if(*count == 0)
+      {
+        CycleMode();
+        return true;
+      }
+
       if(isItemActive)
       {
-        if(mode == MODE_OUTPUT)
-          stateOutput = STATE_OUTPUT_NAVIGATE;
-        return true;      
+        return true;    
       }
     }
     else
@@ -832,8 +838,20 @@ void UpdateDisplay()
 void CycleMode()
 {
   mode++;
+  if(mode == MODE_OUTPUT && devicesOutputCount == 0)
+  {
+    mode++;
+  }
+
+  if(mode == MODE_INPUT && devicesInputCount == 0)
+  {
+    mode++;
+  }
+
   if(mode == MODE_COUNT)
+  {
     mode = 0;
+  }
 }
 
 //---------------------------------------------------------
