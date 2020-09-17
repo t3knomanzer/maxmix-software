@@ -168,7 +168,7 @@ namespace MaxMix.Services.Audio
 
         private void OnDeviceStateChanged(object sender, DeviceStateChangedEventArgs e)
         {
-            if (e.DeviceState == DeviceState.NotPresent || e.DeviceState == DeviceState.UnPlugged)
+            if (e.DeviceState == DeviceState.NotPresent || e.DeviceState == DeviceState.UnPlugged || e.DeviceState == DeviceState.Disabled)
             {
                 if (e.TryGetDevice(out var device))
                 {
