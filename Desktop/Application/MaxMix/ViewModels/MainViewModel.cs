@@ -37,6 +37,7 @@ namespace MaxMix.ViewModels
             _serializationService.RegisterType<MessageUpdateVolume>(4);
             _serializationService.RegisterType<MessageSetDefaultEndpoint>(5);
             _serializationService.RegisterType<MessageSettings>(6);
+            _serializationService.RegisterType<MessageHeartbeat>(7);
 
             _settingsViewModel = new SettingsViewModel();
             _settingsViewModel.PropertyChanged += OnSettingsChanged;

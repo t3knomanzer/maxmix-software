@@ -84,6 +84,7 @@ uint32_t now = 0;
 uint32_t last = 0;
 uint32_t lastActivityTime = 0;
 uint32_t lastLightingUpdate = 0;
+uint32_t lastCommTime = 0;
 
 // Lighting
 Adafruit_NeoPixel pixels(PIXELS_COUNT, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
@@ -143,7 +144,7 @@ void loop()
 
       if(ProcessPackage())
       {
-        UpdateActivityTime();
+        lastCommTime = now;
         isDirty = true;
       }
     }      
@@ -152,16 +153,20 @@ void loop()
 
   if(ProcessEncoderRotation() || ProcessEncoderButton())
   {
-      UpdateActivityTime();
+      lastActivityTime = now;
       isDirty = true;
   }
 
   if(ProcessSleep())
+  {
     isDirty = true;
+  }
 
   // Check for buffer overflow
   if(receiveIndex == RECEIVE_BUFFER_SIZE)
+  {
     ClearReceive();
+  }
 
   ClearSend();
   encoderButton.update();
@@ -170,6 +175,8 @@ void loop()
   {
     UpdateDisplay();
   }
+  Display::UpdateTimers(now - last);
+  isDirty = false;
 
   // Update Lighting at 30Hz
   if(now >= (lastLightingUpdate + 33))
@@ -178,8 +185,12 @@ void loop()
     UpdateLighting();
   }
 
-  Display::UpdateTimers(now - last);
-  isDirty = false;
+  // Reset / Disconnect if no serial activity.
+  if (lastCommTime + 15000 < now) {
+    lastCommTime = now;
+    lastActivityTime = now;
+    ResetState();
+  }
 }
 
 //********************************************************
@@ -217,8 +228,8 @@ void ResetState()
   itemIndexGameB = 0;
   sessionCount = 0;
   devicesOutputCount = 0;
+  isDirty = true;
 }
-
 
 //---------------------------------------------------------
 // \brief Handles incoming commands.
@@ -230,6 +241,10 @@ bool ProcessPackage()
   if(command == MSG_COMMAND_HANDSHAKE_REQUEST)
   {
     ResetState();
+    lastActivityTime = millis();
+  }
+  else if(command == MSG_COMMAND_HEARTBEAT)
+  {
     return true;
   }
   else if(command == MSG_COMMAND_ADD)
@@ -333,7 +348,7 @@ bool ProcessPackage()
       
       bool isItemActive = IsItemActive(index);
       *modeIndex = GetNextIndex(*modeIndex, *count, 0, settings.continuousScroll);
-      
+
       if(*count == 0)
       {
         CycleMode();
@@ -342,7 +357,7 @@ bool ProcessPackage()
 
       if(isItemActive)
       {
-        return true;    
+        return true;
       }
     }
     else
@@ -742,13 +757,6 @@ bool ProcessDisplayScroll()
   }
 
   return result;
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void UpdateActivityTime()
-{
-  lastActivityTime = now;
 }
 
 //---------------------------------------------------------

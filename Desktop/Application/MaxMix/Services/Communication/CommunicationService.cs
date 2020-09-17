@@ -50,6 +50,7 @@ namespace MaxMix.Services.Communication
         private int _sendRetryCount;
 
         private Stopwatch _watch = new Stopwatch();
+        private Stopwatch _heartbeatWatch = new Stopwatch();
         #endregion
 
         #region Properties
@@ -77,6 +78,8 @@ namespace MaxMix.Services.Communication
             _reconnectionAlive = true;
             _reconnectionThread = new Thread(() => HandleReconnection());
             _reconnectionThread.Start();
+
+            _heartbeatWatch.Start();
         }
 
         /// <inheritdoc/>
@@ -198,6 +201,16 @@ namespace MaxMix.Services.Communication
                             _serialPort.Dispose();
                             _serialPort = null;
                         }
+                    }
+                }
+                else
+                {
+                    // Send a regular heartbeat
+                    if (_heartbeatWatch.Elapsed.TotalMilliseconds > 5000)
+                    {
+                        _heartbeatWatch.Restart();
+                        var message = new MessageHeartbeat();
+                        Send(message);
                     }
                 }
 

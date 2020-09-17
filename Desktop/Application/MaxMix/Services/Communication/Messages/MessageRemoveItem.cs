@@ -27,6 +27,7 @@ namespace MaxMix.Services.Communication.Messages
         #endregion
 
         #region Public Methods
+
         /*
         * ---------------------------------------
         * CHUNK        TYPE        SIZE (BYTES)

@@ -104,7 +104,7 @@ static const uint8_t MSG_COMMAND_REMOVE =  3;
 static const uint8_t MSG_COMMAND_UPDATE_VOLUME =  4;
 static const uint8_t MSG_COMMAND_SET_DEFAULT_ENDPOINT =  5;
 static const uint8_t MSG_COMMAND_SETTINGS =  6;
-
+static const uint8_t MSG_COMMAND_HEARTBEAT =  7;
 static const uint8_t MSG_PACKET_DELIMITER = 0;
 
 static const uint8_t DEVICE_FLOW_INPUT = 0;

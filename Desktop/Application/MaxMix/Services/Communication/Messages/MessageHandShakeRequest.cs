@@ -13,9 +13,16 @@ namespace MaxMix.Services.Communication.Messages
         #endregion
 
         #region Public Methods
+
+        /*
+        * ---------------------------------------------------
+        * CHUNK                     TYPE        SIZE (BYTES)
+        * ---------------------------------------------------
+        */
+
         public byte[] GetBytes()
         {
-            return new byte[] { 252 };
+            return new byte[] {};
         }
 
         public bool SetBytes(byte[] bytes)
