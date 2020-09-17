@@ -646,6 +646,15 @@ bool ProcessEncoderButton()
   
   else if(encoderButton.doubleTapped())
   {
+    if(stateDisplay == STATE_DISPLAY_SLEEP)
+    {
+      return true;
+    }
+
+    if(mode == MODE_SPLASH)
+    {
+      return false;
+    }
     if(mode == MODE_OUTPUT)
     {
       ToggleMute(devicesOutput, itemIndexOutput);
@@ -668,11 +677,17 @@ bool ProcessEncoderButton()
   else if(encoderButton.held())
   {
     if(stateDisplay == STATE_DISPLAY_SLEEP)
+    {
       return true;
+    }
+
+    if(mode == MODE_SPLASH)
+    {
+      return false;
+    }
       
     CycleMode();
     Display::ResetTimers();
-
     return true;
   }
 
