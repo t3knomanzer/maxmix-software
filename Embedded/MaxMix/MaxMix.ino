@@ -245,20 +245,21 @@ bool ProcessPackage()
     int8_t index;  
     if(isDevice)
     {
-      if(devicesOutputCount == DEVICE_OUTPUT_MAX_COUNT)
-        return false;
-
       uint8_t deviceFlow = GetDeviceFlowFromAddPackage(decodeBuffer);
       
       Item* buffer;
       uint8_t* count;
-      if(deviceFlow == 0)
+      if(deviceFlow == DEVICE_FLOW_INPUT)
       {
+        if(devicesInputCount == DEVICE_INPUT_MAX_COUNT)
+          return false;
         buffer = devicesInput;
         count = &devicesInputCount;
       }
       else
       {
+        if(devicesOutputCount == DEVICE_OUTPUT_MAX_COUNT)
+          return false;
         buffer = devicesOutput;
         count = &devicesOutputCount;
       }      
@@ -310,7 +311,7 @@ bool ProcessPackage()
       uint8_t* count;
       int8_t* modeIndex;
 
-      if(deviceFlow == 0)
+      if(deviceFlow == DEVICE_FLOW_INPUT)
       {
         buffer = devicesInput;
         count = &devicesInputCount;

@@ -107,6 +107,9 @@ static const uint8_t MSG_COMMAND_SETTINGS =  6;
 
 static const uint8_t MSG_PACKET_DELIMITER = 0;
 
+static const uint8_t DEVICE_FLOW_INPUT = 0;
+static const uint8_t DEVICE_FLOW_OUTPUT = 1;
+
 // --- Screen Drawing
 static const uint8_t DISPLAY_WIDTH = 128;
 static const uint8_t DISPLAY_HEIGHT = 32;
