@@ -139,12 +139,12 @@ void loop()
   {
     if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
     {
+      lastCommTime = now;
       uint8_t revision = GetRevisionFromPackage(decodeBuffer);
       SendAcknowledgment(sendBuffer, encodeBuffer, revision);
 
       if(ProcessPackage())
       {
-        lastCommTime = now;
         isDirty = true;
       }
     }      
@@ -188,7 +188,6 @@ void loop()
   // Reset / Disconnect if no serial activity.
   if (lastCommTime + resetAfterInactivity < now) {
     lastCommTime = now;
-    lastActivityTime = now;
     ResetState();
   }
 }
@@ -228,7 +227,6 @@ void ResetState()
   itemIndexGameB = 0;
   sessionCount = 0;
   devicesOutputCount = 0;
-  isDirty = true;
 }
 
 //---------------------------------------------------------
