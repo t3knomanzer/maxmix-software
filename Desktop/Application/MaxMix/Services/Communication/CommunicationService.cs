@@ -32,6 +32,7 @@ namespace MaxMix.Services.Communication
         private const int _ackTimeout = 100;
         private const int _checkPortInterval = 500;
         private const int _sendRetryMax = 3;
+        private const int _heartbeatInterval = 2000;
         #endregion
 
         #region Fields
@@ -119,6 +120,7 @@ namespace MaxMix.Services.Communication
 
                         Debug.WriteLine($"[CommunicationService] Message sent: {message.GetType()} Revision: {_messageRevision}");
                         _watch.Restart();
+                        _heartbeatWatch.Restart();
                     }
                     catch (Exception e)
                     {
@@ -206,11 +208,9 @@ namespace MaxMix.Services.Communication
                 else
                 {
                     // Send a regular heartbeat
-                    if (_heartbeatWatch.Elapsed.TotalMilliseconds > 5000)
+                    if (_heartbeatWatch.Elapsed.TotalMilliseconds >= _heartbeatInterval)
                     {
-                        _heartbeatWatch.Restart();
-                        var message = new MessageHeartbeat();
-                        Send(message);
+                        Send(new MessageHeartbeat());
                     }
                 }
 

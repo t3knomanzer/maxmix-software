@@ -186,7 +186,7 @@ void loop()
   }
 
   // Reset / Disconnect if no serial activity.
-  if (lastCommTime + 15000 < now) {
+  if (lastCommTime + resetAfterInactivity < now) {
     lastCommTime = now;
     lastActivityTime = now;
     ResetState();

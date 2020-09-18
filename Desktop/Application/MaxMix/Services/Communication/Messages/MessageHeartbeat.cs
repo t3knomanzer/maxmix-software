@@ -13,7 +13,6 @@ namespace MaxMix.Services.Communication.Messages
         #endregion
 
         #region Properties
-        public byte Revision { get; private set; }
         #endregion
 
         #region Public Methods
