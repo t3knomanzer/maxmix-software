@@ -82,6 +82,7 @@ Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
 uint32_t encoderLastTransition = 0;
 int8_t prevDir = 0;
 volatile int8_t steps = 0;
+volatile bool holdTurn = false;
 
 // Time & Sleep
 uint32_t now = 0;
@@ -103,7 +104,11 @@ void timerIsr()
   else if(encoderDir == DIR_CCW)
     steps--;
 
-  if(buttonEvent == none && encoderButton.update())
+  if(encoderDir != DIR_NONE && !digitalRead(PIN_ENCODER_SWITCH))
+  {
+    holdTurn = true;
+  }
+  else if(buttonEvent == none && encoderButton.update())
   {
     buttonEvent = encoderButton.event();
   }
@@ -536,6 +541,22 @@ bool ProcessEncoderRotation()
   if(encoderDelta == 0)
     return false;
 
+  if(holdTurn)
+  {
+    mode += encoderDelta;
+    if(mode == MODE_COUNT)
+    {
+      mode = 0;
+    }
+    else if(mode > MODE_COUNT)
+    {
+      mode = MODE_COUNT -1;
+    }
+    //holdTurn = false;
+
+    return true;
+  }
+
   uint32_t deltaTime = now - encoderLastTransition;
   encoderLastTransition = now;
 
@@ -613,6 +634,13 @@ bool ProcessEncoderRotation()
 //---------------------------------------------------------
 bool ProcessEncoderButton()
 {
+  if(holdTurn)
+  {
+    holdTurn = false;
+    encoderButton.reset();
+    return false;
+  }
+  
   cli();
   ButtonEvent readButtonEvent = buttonEvent;
   buttonEvent = none;
