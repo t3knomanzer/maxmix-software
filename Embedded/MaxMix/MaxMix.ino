@@ -53,7 +53,6 @@ uint8_t stateGame = STATE_GAME_SELECT_A;
 uint8_t stateDisplay = STATE_DISPLAY_AWAKE;
 uint8_t isDirty = true;
 
-// Items
 Item devicesOutput[DEVICE_OUTPUT_MAX_COUNT];
 Item devicesInput[DEVICE_INPUT_MAX_COUNT];
 Item sessions[SESSION_MAX_COUNT];
@@ -73,11 +72,8 @@ uint32_t defaultInputEndpointId;
 // Settings
 Settings settings;
 
-// Encoder Button
-ButtonEvents encoderButton;
-volatile ButtonEvent buttonEvent = none;
-
 // Rotary Encoder
+ButtonEvents encoderButton;
 Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
 uint32_t encoderLastTransition = 0;
 int8_t prevDir = 0;
@@ -102,11 +98,6 @@ void timerIsr()
     steps++;
   else if(encoderDir == DIR_CCW)
     steps--;
-
-  if(buttonEvent == none && encoderButton.update())
-  {
-    buttonEvent = encoderButton.event();
-  }
 }
 
 //********************************************************
@@ -131,7 +122,6 @@ void setup()
   // --- Encoder
   pinMode(PIN_ENCODER_SWITCH, INPUT_PULLUP);
   encoderButton.attach(PIN_ENCODER_SWITCH);
-  encoderButton.debounceTime(15);
   encoderRotary.begin(true);
   Timer1.initialize(1000);
   Timer1.attachInterrupt(timerIsr);
@@ -613,16 +603,7 @@ bool ProcessEncoderRotation()
 //---------------------------------------------------------
 bool ProcessEncoderButton()
 {
-  cli();
-  ButtonEvent readButtonEvent = buttonEvent;
-  buttonEvent = none;
-  sei();
-  
-  if(readButtonEvent == none)
-  {
-    return false;
-  }
-  else if(readButtonEvent == tap)
+  if(encoderButton.tapped())
   {
     if(stateDisplay == STATE_DISPLAY_SLEEP)
     {
@@ -663,8 +644,13 @@ bool ProcessEncoderButton()
     return true;
   }
   
-  else if(readButtonEvent == doubleTap)
+  else if(encoderButton.doubleTapped())
   {
+    if(stateDisplay == STATE_DISPLAY_SLEEP)
+    {
+      return true;
+    }
+
     if(mode == MODE_SPLASH)
     {
       return false;
@@ -688,7 +674,7 @@ bool ProcessEncoderButton()
 
     return true;
   }
-  else if(readButtonEvent == hold)
+  else if(encoderButton.held())
   {
     if(stateDisplay == STATE_DISPLAY_SLEEP)
     {
