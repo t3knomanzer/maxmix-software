@@ -142,12 +142,12 @@
     <Compile Include="Services\Communication\ICommunicationService.cs" />
     <Compile Include="Services\Communication\Messages\IMessage.cs" />
     <Compile Include="Services\Communication\Serialization\ISerializationService.cs" />
-    <Compile Include="Services\Communication\Messages\MessageAddSession.cs" />
+    <Compile Include="Services\Communication\Messages\MessageAddItem.cs" />
     <Compile Include="Services\Communication\Messages\MessageHandShakeRequest.cs" />
     <Compile Include="Services\Communication\Messages\MessageAcknowledgment.cs" />
-    <Compile Include="Services\Communication\Messages\MessageRemoveSession.cs" />
+    <Compile Include="Services\Communication\Messages\MessageRemoveItem.cs" />
     <Compile Include="Services\Communication\Messages\MessageSettings.cs" />
-    <Compile Include="Services\Communication\Messages\MessageUpdateVolumeSession.cs" />
+    <Compile Include="Services\Communication\Messages\MessageUpdateVolume.cs" />
     <Compile Include="Services\Audio\PolicyConfig.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />

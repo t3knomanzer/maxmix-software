@@ -6,19 +6,21 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication.Messages
 {
-    internal class MessageRemoveSession : IMessage
+    internal class MessageRemoveItem : IMessage
     {
         #region Constructor
-        public MessageRemoveSession(int id, bool isDevice)
+        public MessageRemoveItem(int id, bool isDevice, int deviceFlow = 0)
         {
             Id = id;
             IsDevice = isDevice;
+            DeviceFlow = deviceFlow;
         }
         #endregion
 
         #region Properties
         public int Id { get; private set; }
         public bool IsDevice { get; private set; }
+        public int DeviceFlow { get; private set; }
         #endregion
 
         #region Private Methods
@@ -31,8 +33,9 @@ namespace MaxMix.Services.Communication.Messages
         * ---------------------------------------
         * ID           INT32       4
         * ISDEVICE     BYTE        1
+        * DEVICEFLOW   BYTE        1
         * ---------------------------------------
-        *                          5
+        *                          6
         */
 
         public byte[] GetBytes()
@@ -41,6 +44,7 @@ namespace MaxMix.Services.Communication.Messages
 
             result.AddRange(BitConverter.GetBytes(Id));
             result.Add(Convert.ToByte(IsDevice));
+            result.Add(Convert.ToByte(DeviceFlow));
 
             return result.ToArray();
         }
