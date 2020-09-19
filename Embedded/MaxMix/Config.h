@@ -104,7 +104,7 @@ static const uint8_t MSG_COMMAND_REMOVE =  3;
 static const uint8_t MSG_COMMAND_UPDATE_VOLUME =  4;
 static const uint8_t MSG_COMMAND_SET_DEFAULT_ENDPOINT =  5;
 static const uint8_t MSG_COMMAND_SETTINGS =  6;
-
+static const uint8_t MSG_COMMAND_HEARTBEAT =  7;
 static const uint8_t MSG_PACKET_DELIMITER = 0;
 
 static const uint8_t DEVICE_FLOW_INPUT = 0;
@@ -152,3 +152,5 @@ static const uint8_t DISPLAY_GAME_EDIT_CHAR_MAX = 7;
 static const uint8_t DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH = DISPLAY_GAME_EDIT_CHAR_MAX * DISPLAY_CHAR_WIDTH_X1 + DISPLAY_GAME_EDIT_CHAR_MAX - 1;
 static const uint8_t DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT = 7;
 static const uint8_t DISPLAY_GAME_VOLUMEBAR_WIDTH = DISPLAY_AREA_CENTER_WIDTH - DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH - DISPLAY_MARGIN_X2 - 2 - DISPLAY_MARGIN_X1 * 2;
+
+static const uint32_t resetAfterInactivity = 4000;

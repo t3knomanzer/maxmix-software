@@ -10,13 +10,13 @@
 //---------------------------------------------------------
 void UpdateLighting()
 {
-  if(stateDisplay == STATE_DISPLAY_SLEEP)
-  {
-    LightingBlackOut();
-  }
-  else if(mode == MODE_SPLASH)
+  if(mode == MODE_SPLASH)
   {
     LightingCircularFunk();
+  }
+  else if(stateDisplay == STATE_DISPLAY_SLEEP)
+  {
+    LightingBlackOut();
   }
   else if(mode == MODE_OUTPUT)
   {

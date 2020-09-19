@@ -37,7 +37,6 @@ namespace MaxMix.Services.Communication.Messages
         * ---------------------------------------
         *                          5
         */
-
         public byte[] GetBytes()
         {
             var result = new List<byte>();
