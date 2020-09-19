@@ -174,7 +174,6 @@ void loop()
     ClearReceive();
 
   ClearSend();
-  encoderButton.update();
 
   if(isDirty || ProcessDisplayScroll())
   {
@@ -613,8 +612,9 @@ bool ProcessEncoderRotation()
 //---------------------------------------------------------
 bool ProcessEncoderButton()
 {
+  ButtonEvent readButtonEvent = none;
   cli();
-  ButtonEvent readButtonEvent = buttonEvent;
+  readButtonEvent = buttonEvent;
   buttonEvent = none;
   sei();
   
