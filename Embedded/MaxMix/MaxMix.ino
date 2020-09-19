@@ -227,6 +227,7 @@ void ResetState()
   itemIndexGameB = 0;
   sessionCount = 0;
   devicesOutputCount = 0;
+  isDirty = true;
 }
 
 //---------------------------------------------------------
