@@ -53,6 +53,7 @@ uint8_t stateGame = STATE_GAME_SELECT_A;
 uint8_t stateDisplay = STATE_DISPLAY_AWAKE;
 uint8_t isDirty = true;
 
+// Items
 Item devicesOutput[DEVICE_OUTPUT_MAX_COUNT];
 Item devicesInput[DEVICE_INPUT_MAX_COUNT];
 Item sessions[SESSION_MAX_COUNT];
@@ -72,8 +73,11 @@ uint32_t defaultInputEndpointId;
 // Settings
 Settings settings;
 
-// Rotary Encoder
+// Encoder Button
 ButtonEvents encoderButton;
+volatile ButtonEvent buttonEvent = none;
+
+// Rotary Encoder
 Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
 uint32_t encoderLastTransition = 0;
 int8_t prevDir = 0;
@@ -99,6 +103,11 @@ void timerIsr()
     steps++;
   else if(encoderDir == DIR_CCW)
     steps--;
+
+  if(buttonEvent == none && encoderButton.update())
+  {
+    buttonEvent = encoderButton.event();
+  }
 }
 
 //********************************************************
@@ -123,6 +132,7 @@ void setup()
   // --- Encoder
   pinMode(PIN_ENCODER_SWITCH, INPUT_PULLUP);
   encoderButton.attach(PIN_ENCODER_SWITCH);
+  encoderButton.debounceTime(15);
   encoderRotary.begin(true);
   Timer1.initialize(1000);
   Timer1.attachInterrupt(timerIsr);
@@ -169,7 +179,6 @@ void loop()
   }
 
   ClearSend();
-  encoderButton.update();
 
   if(isDirty || ProcessDisplayScroll())
   {
@@ -617,7 +626,17 @@ bool ProcessEncoderRotation()
 //---------------------------------------------------------
 bool ProcessEncoderButton()
 {
-  if(encoderButton.tapped())
+  ButtonEvent readButtonEvent = none;
+  cli();
+  readButtonEvent = buttonEvent;
+  buttonEvent = none;
+  sei();
+  
+  if(readButtonEvent == none)
+  {
+    return false;
+  }
+  else if(readButtonEvent == tap)
   {
     if(stateDisplay == STATE_DISPLAY_SLEEP)
     {
@@ -658,13 +677,8 @@ bool ProcessEncoderButton()
     return true;
   }
   
-  else if(encoderButton.doubleTapped())
+  else if(readButtonEvent == doubleTap)
   {
-    if(stateDisplay == STATE_DISPLAY_SLEEP)
-    {
-      return true;
-    }
-
     if(mode == MODE_SPLASH)
     {
       return false;
@@ -688,7 +702,7 @@ bool ProcessEncoderButton()
 
     return true;
   }
-  else if(encoderButton.held())
+  else if(readButtonEvent == hold)
   {
     if(stateDisplay == STATE_DISPLAY_SLEEP)
     {
