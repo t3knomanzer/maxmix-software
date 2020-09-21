@@ -2,10 +2,11 @@
 using System.Diagnostics;
 using System.Linq;
 
-namespace MaxMixTest
+namespace MaxMix.Services.NewCommunication
 {
     public enum Command
     {
+        ERROR = -1,
         TEST = 1,
         OK,
         SETTINGS,
@@ -20,7 +21,8 @@ namespace MaxMixTest
 
     static class MessageUtils
     {
-        public static bool AreEqual(this IMessage message, IMessage other)
+        // Only use this in the test framework as it generates garbage arrays to test against
+        public static bool PayloadEquals(this IMessage message, IMessage other)
         {
             var bytes = message.GetBytes();
             var otherBytes = other.GetBytes();
@@ -62,7 +64,8 @@ namespace MaxMixTest
 
         public bool Equals(SessionInfo other)
         {
-            return this.AreEqual(other);
+            return current == other.current &&
+                count == other.count;
         }
 
         public byte[] GetBytes()
@@ -131,7 +134,10 @@ namespace MaxMixTest
 
         public bool Equals(Volume other)
         {
-            return this.AreEqual(other);
+            return _id == other._id &&
+                isDefault == other.isDefault &&
+                _volume == other._volume &&
+                isMuted == other.isMuted;
         }
     }
 
@@ -187,7 +193,8 @@ namespace MaxMixTest
 
         public bool Equals(Session other)
         {
-            return this.AreEqual(other);
+            return Enumerable.SequenceEqual(_name, other._name) &&
+                values.Equals(other.values);
         }
     }
 
@@ -216,7 +223,7 @@ namespace MaxMixTest
 
         public bool Equals(Screen other)
         {
-            return this.AreEqual(other);
+            return id == other.id;
         }
     }
 
@@ -241,6 +248,13 @@ namespace MaxMixTest
         public bool Equals(Color other)
         {
             return r == other.r && g == other.g && b == other.b;
+        }
+
+        public void GetBytes(byte[] buffer, int offset)
+        {
+            buffer[offset] = r;
+            buffer[offset + 1] = g;
+            buffer[offset + 2] = b;
         }
     }
 
@@ -280,18 +294,10 @@ namespace MaxMixTest
             byte[] buffer = new byte[14];
             buffer[0] = sleepAfterSeconds;
             buffer[1].Pack(_accelerationPercentage, continuousScroll);
-            buffer[2] = volumeMinColor.r;
-            buffer[3] = volumeMinColor.g;
-            buffer[4] = volumeMinColor.b;
-            buffer[5] = volumeMaxColor.r;
-            buffer[6] = volumeMaxColor.g;
-            buffer[7] = volumeMaxColor.b;
-            buffer[8] = mixChannelAColor.r;
-            buffer[9] = mixChannelAColor.g;
-            buffer[10] = mixChannelAColor.b;
-            buffer[11] = mixChannelBColor.r;
-            buffer[12] = mixChannelBColor.g;
-            buffer[13] = mixChannelBColor.b;
+            volumeMinColor.GetBytes(buffer, 2);
+            volumeMaxColor.GetBytes(buffer, 5);
+            mixChannelAColor.GetBytes(buffer, 8);
+            mixChannelBColor.GetBytes(buffer, 11);
             return buffer;
         }
 
@@ -310,7 +316,13 @@ namespace MaxMixTest
 
         public bool Equals(Settings other)
         {
-            return this.AreEqual(other);
+            return sleepAfterSeconds == other.sleepAfterSeconds &&
+                _accelerationPercentage == other._accelerationPercentage &&
+                continuousScroll == other.continuousScroll &&
+                volumeMinColor.Equals(other.volumeMinColor) &&
+                volumeMaxColor.Equals(other.volumeMaxColor) &&
+                mixChannelAColor.Equals(other.mixChannelAColor) &&
+                mixChannelBColor.Equals(other.mixChannelBColor);
         }
     }
 }

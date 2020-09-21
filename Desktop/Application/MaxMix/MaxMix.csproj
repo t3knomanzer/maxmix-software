@@ -149,6 +149,9 @@
     <Compile Include="Services\Communication\Messages\MessageSettings.cs" />
     <Compile Include="Services\Communication\Messages\MessageUpdateVolumeSession.cs" />
     <Compile Include="Services\Audio\PolicyConfig.cs" />
+    <Compile Include="Services\NewCommunication\CircularBuffer.cs" />
+    <Compile Include="Services\NewCommunication\Messages.cs" />
+    <Compile Include="Services\NewCommunication\NewCommunicationService.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
