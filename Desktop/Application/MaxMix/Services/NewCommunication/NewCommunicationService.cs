@@ -86,9 +86,10 @@ namespace MaxMix.Services.NewCommunication
                     m_SerialPort = null;
 
                     if (e is ArgumentException)
+                    {
                         Console.WriteLine(e);
-
-                    // TODO: Raise incompatible firmware event
+                        // TODO: Raise incompatible firmware event
+                    }
                 }
             }
         }
