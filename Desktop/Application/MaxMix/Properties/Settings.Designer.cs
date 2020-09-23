@@ -62,12 +62,12 @@ namespace MaxMix.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool LoopAroundApplications {
+        public bool LoopAroundItems {
             get {
-                return ((bool)(this["LoopAroundApplications"]));
+                return ((bool)(this["LoopAroundItems"]));
             }
             set {
-                this["LoopAroundApplications"] = value;
+                this["LoopAroundItems"] = value;
             }
         }
         

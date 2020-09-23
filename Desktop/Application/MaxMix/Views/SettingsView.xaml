@@ -6,82 +6,84 @@
              xmlns:local="clr-namespace:MaxMix.Views"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="300">
+             d:DesignHeight="350" d:DesignWidth="300">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="1.4*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Starts -->
-        <Label Grid.Column="0" Grid.Row="0"
+        <Label Grid.Column="0" Grid.Row="0" Margin="0,3,0,6" 
                Content="Run automatically at startup" />
         <CheckBox Grid.Column="1" Grid.Row="0"
-                  IsChecked="{Binding RunAutomaticallyStartup}" />
+                  IsChecked="{Binding RunAtStartup}" />
 
         <!-- DisplayNewSession -->
-        <Label Grid.Column="0" Grid.Row="1"
+        <Label Grid.Column="0" Grid.Row="1" Margin="0,3,0,6"
                Content="Switch to new application" />
         <CheckBox Grid.Column="1" Grid.Row="1"
                   IsChecked="{Binding DisplayNewSession}" />
 
-        <!-- SleepWhenInactive -->
-        <Label Grid.Column="0" Grid.Row="2"
-               Content="Sleep when inactive" />
+        <!-- LoopAroundItems -->
+        <Label Grid.Column="0" Grid.Row="2" Margin="0,3,0,6"
+               Content="Loop around items" />
         <CheckBox Grid.Column="1" Grid.Row="2"
+                  IsChecked="{Binding LoopAroundItems}" />
+
+        <!-- SleepWhenInactive -->
+        <Label Grid.Column="0" Grid.Row="3" Margin="0,3,0,6"
+               Content="Sleep when inactive" />
+        <CheckBox Grid.Column="1" Grid.Row="3"
                   IsChecked="{Binding SleepWhenInactive}" />
 
         <!-- SleepAfterSeconds -->
-        <Label Grid.Column="0" Grid.Row="3"
+        <Label Grid.Column="0" Grid.Row="4" Margin="0,3,0,6"
                Content="Sleep after (seconds)" />
-        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="3" MaxWidth="100" HorizontalAlignment="Left"
+        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="4" MinWidth="50" HorizontalAlignment="Left"
                             Foreground="{StaticResource Brush_White}"
                             Minimum="0" Maximum="60"
                             Value="{Binding SleepAfterSeconds}" />
 
-        <!-- LoopAroundApplications -->
-        <Label Grid.Column="0" Grid.Row="4"
-               Content="Loop around applications" />
-        <CheckBox Grid.Column="1" Grid.Row="4"
-                  IsChecked="{Binding LoopAroundApplications}" />
-
         <!-- AccelerationPercentage -->
-        <Label Grid.Column="0" Grid.Row="5"
+        <Label Grid.Column="0" Grid.Row="5" Margin="0,3,0,6"
                Content="Encoder acceleration (%)" />
-        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="5" MaxWidth="100"
+        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="5" MinWidth="50" HorizontalAlignment="Left"
                             Foreground="{StaticResource Brush_White}"
                             Minimum="1" Maximum="100"
                             Value="{Binding AccelerationPercentage}" />
 
         <!-- Double Tap Time -->
-        <Label Grid.Column="0" Grid.Row="6"
+        <Label Grid.Column="0" Grid.Row="6" Margin="0,3,0,6"
                Content="Double tap time (ms)" />
-        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="6" MaxWidth="100"
+        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="6" MinWidth="50" HorizontalAlignment="Left"
                             Foreground="{StaticResource Brush_White}"
                             Minimum="1" Maximum="2000"
                             Value="{Binding DoubleTapTime}" />
 
         <!-- Volume colors -->
-        <Label Grid.Column="0" Grid.Row="7" Content="Volume colors" />
+        <Label Grid.Column="0" Grid.Row="7" Margin="0,3,0,6"
+               Content="Volume colors" />
         <StackPanel Grid.Column="1" Grid.Row="7" Orientation="Horizontal">
             <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding VolumeMinColor, Converter={StaticResource Cnv_ColorToUint32}}" />
             <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding VolumeMaxColor,  Converter={StaticResource Cnv_ColorToUint32}}" />
         </StackPanel>
 
         <!-- Mix Channel colors -->
-        <Label Grid.Column="0" Grid.Row="8" Content="Mix channel colors" />
+        <Label Grid.Column="0" Grid.Row="8"  Margin="0,3,0,6"
+               Content="Mix channel colors" />
         <StackPanel Grid.Column="1" Grid.Row="8" Orientation="Horizontal">
             <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding MixChannelAColor, Converter={StaticResource Cnv_ColorToUint32}}" />
             <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding MixChannelBColor,  Converter={StaticResource Cnv_ColorToUint32}}" />

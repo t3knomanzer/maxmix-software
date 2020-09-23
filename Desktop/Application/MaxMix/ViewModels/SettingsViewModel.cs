@@ -42,13 +42,12 @@ namespace MaxMix.ViewModels
 
         #region Properties
         /// <summary>
-        /// When a new session is created, notify the device to make it
-        /// the current displayed item.
+        /// Should this app be run at Windows startup.
         /// </summary>
-        public bool RunAutomaticallyStartup
+        public bool RunAtStartup
         {
-            get => IsRunAutomaticallyAtStartup();
-            set => SetRunAutomaticallyAtStartup(value);
+            get => IsRunAtStartup();
+            set => SetRunAtStartup(value);
         }
 
         /// <summary>
@@ -96,12 +95,12 @@ namespace MaxMix.ViewModels
         /// <summary>
         /// Enable to loop around the applications list.
         /// </summary>
-        public bool LoopAroundApplications
+        public bool LoopAroundItems
         {
-            get => _settings.LoopAroundApplications;
+            get => _settings.LoopAroundItems;
             set
             {
-                _settings.LoopAroundApplications = value;
+                _settings.LoopAroundItems = value;
                 RaisePropertyChanged();
             }
         }
@@ -203,7 +202,7 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region Private Methods
-        private bool IsRunAutomaticallyAtStartup()
+        private bool IsRunAtStartup()
         {
             try
             {
@@ -216,7 +215,7 @@ namespace MaxMix.ViewModels
             }
             return false;
         }
-        private void SetRunAutomaticallyAtStartup(bool enabled)
+        private void SetRunAtStartup(bool enabled)
         {
             try
             {

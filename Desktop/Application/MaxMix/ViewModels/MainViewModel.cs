@@ -168,7 +168,7 @@ namespace MaxMix.ViewModels
             var message = new MessageSettings(_settingsViewModel.DisplayNewSession,
                                               _settingsViewModel.SleepWhenInactive,
                                               _settingsViewModel.SleepAfterSeconds,
-                                              _settingsViewModel.LoopAroundApplications,
+                                              _settingsViewModel.LoopAroundItems,
                                               _settingsViewModel.AccelerationPercentage,
                                               _settingsViewModel.DoubleTapTime,
                                               _settingsViewModel.VolumeMinColor,
