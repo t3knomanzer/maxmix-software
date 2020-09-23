@@ -22,32 +22,40 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- DisplayNewSession -->
+        <!-- Starts -->
         <Label Grid.Column="0" Grid.Row="0"
-               Content="Switch to new application" />
+               Content="Run automatically at startup" />
         <CheckBox Grid.Column="1" Grid.Row="0"
+                  IsChecked="{Binding RunAutomaticallyStartup}" />
+
+        <!-- DisplayNewSession -->
+        <Label Grid.Column="0" Grid.Row="1"
+               Content="Switch to new application" />
+        <CheckBox Grid.Column="1" Grid.Row="1"
                   IsChecked="{Binding DisplayNewSession}" />
 
         <!-- SleepWhenInactive -->
-        <Label Grid.Column="0" Grid.Row="1"
+        <Label Grid.Column="0" Grid.Row="2"
                Content="Sleep when inactive" />
-        <CheckBox Grid.Column="1" Grid.Row="1"
+        <CheckBox Grid.Column="1" Grid.Row="2"
                   IsChecked="{Binding SleepWhenInactive}" />
 
         <!-- SleepAfterSeconds -->
-        <Label Grid.Column="0" Grid.Row="2"
+        <Label Grid.Column="0" Grid.Row="3"
                Content="Sleep after (seconds)" />
-        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="2" MaxWidth="100" HorizontalAlignment="Left"
+        <xctk:IntegerUpDown Grid.Column="1" Grid.Row="3" MaxWidth="100" HorizontalAlignment="Left"
                             Foreground="{StaticResource Brush_White}"
                             Minimum="0" Maximum="60"
                             Value="{Binding SleepAfterSeconds}" />
 
-        <Label Grid.Column="0" Grid.Row="3"
+        <!-- LoopAroundApplications -->
+        <Label Grid.Column="0" Grid.Row="4"
                Content="Loop around applications" />
-        <CheckBox Grid.Column="1" Grid.Row="3"
-                  IsChecked="{Binding ContinuousScroll}" />
+        <CheckBox Grid.Column="1" Grid.Row="4"
+                  IsChecked="{Binding LoopAroundApplications}" />
 
         <!-- AccelerationPercentage -->
         <Label Grid.Column="0" Grid.Row="5"

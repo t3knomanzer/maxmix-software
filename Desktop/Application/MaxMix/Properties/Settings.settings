@@ -11,7 +11,7 @@
     <Setting Name="SleepAfterSeconds" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">5</Value>
     </Setting>
-    <Setting Name="ContinuousScroll" Type="System.Boolean" Scope="User">
+    <Setting Name="LoopAroundApplications" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="AccelerationPercentage" Type="System.UInt32" Scope="User">
