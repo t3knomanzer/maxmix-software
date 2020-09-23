@@ -195,9 +195,9 @@ void loop()
   }
 
   // Reset / Disconnect if no serial activity.
-  if (lastCommTime + resetAfterInactivity < now) {
-    lastCommTime = now;
+  if ((mode != MODE_SPLASH) && (lastCommTime + DEVICE_RESET_AFTER_INACTIVTY < now)) {
     ResetState();
+    lastActivityTime = now;
   }
 }
 
