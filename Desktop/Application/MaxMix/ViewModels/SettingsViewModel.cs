@@ -14,6 +14,7 @@ using System.Windows;
 using MaxMix.Framework.Mvvm;
 using MaxMix.Services.Communication;
 using System.Runtime.CompilerServices;
+using System.Reflection;
 
 namespace MaxMix.ViewModels
 {
@@ -40,6 +41,15 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region Properties
+        /// <summary>
+        /// Should this app be run at Windows startup.
+        /// </summary>
+        public bool RunAtStartup
+        {
+            get => IsRunAtStartup();
+            set => SetRunAtStartup(value);
+        }
+
         /// <summary>
         /// When a new session is created, notify the device to make it
         /// the current displayed item.
@@ -81,13 +91,16 @@ namespace MaxMix.ViewModels
             }
         }
 
-        // TODO: Delete, updates are checked automatically at application launch.
-        public bool ContinuousScroll
+
+        /// <summary>
+        /// Enable to loop around the applications list.
+        /// </summary>
+        public bool LoopAroundItems
         {
-            get => _settings.ContinuousScroll;
+            get => _settings.LoopAroundItems;
             set
             {
-                _settings.ContinuousScroll = value;
+                _settings.LoopAroundItems = value;
                 RaisePropertyChanged();
             }
         }
@@ -189,6 +202,39 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region Private Methods
+        private bool IsRunAtStartup()
+        {
+            try
+            {
+                Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+                Assembly curAssembly = Assembly.GetExecutingAssembly();
+                return ((string)(key.GetValue(curAssembly.GetName().Name)) == curAssembly.Location);
+            }
+            catch
+            {
+            }
+            return false;
+        }
+        private void SetRunAtStartup(bool enabled)
+        {
+            try
+            {
+                Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+                Assembly curAssembly = Assembly.GetExecutingAssembly();
+
+                if (enabled)
+                {
+                    key.SetValue(curAssembly.GetName().Name, curAssembly.Location);
+                }
+                else
+                {
+                    key.DeleteValue(curAssembly.GetName().Name);
+                }
+            }
+            catch
+            {
+            }
+        }
         #endregion
 
         #region EventHandlers

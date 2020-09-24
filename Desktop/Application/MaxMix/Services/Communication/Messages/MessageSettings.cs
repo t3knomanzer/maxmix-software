@@ -14,7 +14,7 @@ namespace MaxMix.Services.Communication.Messages
             bool displayNewSession,
             bool sleepWhenInactive,
             int sleepAfterSeconds,
-            bool continuousScroll,
+            bool loopAroundItems,
             uint accelerationPercentage,
             ushort doubleTapTime,
             uint volumeMinColor,
@@ -25,7 +25,7 @@ namespace MaxMix.Services.Communication.Messages
             DisplayNewSession = displayNewSession;
             SleepWhenInactive = sleepWhenInactive;
             SleepAfterSeconds = sleepAfterSeconds;
-            ContinuousScroll = continuousScroll;
+            LoopAroundItems = loopAroundItems;
             AccelerationPercentage = accelerationPercentage;
             DoubleTapTime = doubleTapTime;
             VolumeMinColor = volumeMinColor;
@@ -38,7 +38,7 @@ namespace MaxMix.Services.Communication.Messages
         #region Properties
         public bool DisplayNewSession { get; private set; }
         public bool SleepWhenInactive { get; private set; }
-        public bool ContinuousScroll { get; private set; }
+        public bool LoopAroundItems { get; private set; }
         public int SleepAfterSeconds { get; private set; }
         public uint AccelerationPercentage { get; private set; }
         public ushort DoubleTapTime { get; private set; }
@@ -60,7 +60,7 @@ namespace MaxMix.Services.Communication.Messages
         * DISPLAYNEWSESSION         BYTE        1
         * SLEEPWHENINACTIVE         BYTE        1
         * SLEEPAFTERSECONDS         BYTE        1
-        * CONTINUOUSSCROLL          BYTE        1
+        * LOOPAROUNDITEMS           BYTE        1
         * ACCELERATIONPERCENTAGE    BYTE        1
         * DOUBLETAPTIME             USHORT      2
         * VOLUMEMINCOLOR            BYTE[]      3
@@ -69,7 +69,7 @@ namespace MaxMix.Services.Communication.Messages
         * MIXCHANNELBCOLOR          BYTE[]      3
         * ---------------------------------------------------
         *                                       19
-        */                                       
+        */
 
         public byte[] GetBytes()
         {
@@ -78,7 +78,7 @@ namespace MaxMix.Services.Communication.Messages
             result.Add(Convert.ToByte(DisplayNewSession));
             result.Add(Convert.ToByte(SleepWhenInactive));
             result.Add(Convert.ToByte(SleepAfterSeconds));
-            result.Add(Convert.ToByte(ContinuousScroll));
+            result.Add(Convert.ToByte(LoopAroundItems));
             result.Add(Convert.ToByte(AccelerationPercentage));
             result.AddRange(BitConverter.GetBytes(DoubleTapTime));
             result.AddRange(GetColorTriplet(VolumeMinColor));
