@@ -37,10 +37,17 @@
 static const uint32_t BAUD_RATE = 115200;
 
 // --- Pins
+static const uint8_t  PIN_ONBOARD_LED = 13;
 static const uint8_t  PIN_PIXELS = 12; //D12
 static const uint8_t  PIN_ENCODER_OUTA = 15; //A1
 static const uint8_t  PIN_ENCODER_OUTB = 16; //A2
 static const uint8_t  PIN_ENCODER_SWITCH = 17; //A3
+
+// --- MOD: Pins
+static const uint8_t  PIN_BUTTON_A = 11; //D11
+static const uint8_t  PIN_BUTTON_B = 10; //D10
+static const uint8_t  PIN_BUTTON_A_GND = 9; //D9
+static const uint8_t  PIN_BUTTON_B_GND = 8; //D8
 
 // --- States
 static const uint8_t  MODE_SPLASH = 255;
@@ -105,6 +112,7 @@ static const uint8_t MSG_COMMAND_UPDATE_VOLUME =  4;
 static const uint8_t MSG_COMMAND_SET_DEFAULT_ENDPOINT =  5;
 static const uint8_t MSG_COMMAND_SETTINGS =  6;
 static const uint8_t MSG_COMMAND_HEARTBEAT =  7;
+static const uint8_t MSG_COMMAND_BUTTON_PRESSED =  8;
 static const uint8_t MSG_PACKET_DELIMITER = 0;
 
 static const uint8_t DEVICE_FLOW_INPUT = 0;
@@ -154,3 +162,7 @@ static const uint8_t DISPLAY_GAME_WIDGET_VOLUMEBAR_HEIGHT = 7;
 static const uint8_t DISPLAY_GAME_VOLUMEBAR_WIDTH = DISPLAY_AREA_CENTER_WIDTH - DISPLAY_GAME_EDIT_CHAR_MAX_WIDTH - DISPLAY_MARGIN_X2 - 2 - DISPLAY_MARGIN_X1 * 2;
 
 static const uint32_t DEVICE_RESET_AFTER_INACTIVTY = 5000;
+
+// --- MOD: Buttons
+static const uint8_t BUTTON_A_ID = 0;
+static const uint8_t BUTTON_B_ID = 1;

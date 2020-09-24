@@ -85,6 +85,9 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsInput, Version=1.0.4.0, Culture=neutral, PublicKeyToken=9b287f7dc5073cad, processorArchitecture=MSIL">
+      <HintPath>..\packages\InputSimulator.1.0.4.0\lib\net20\WindowsInput.dll</HintPath>
+    </Reference>
     <Reference Include="Xceed.Wpf.AvalonDock, Version=3.5.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>..\packages\Extended.Wpf.Toolkit.3.5.0\lib\net40\Xceed.Wpf.AvalonDock.dll</HintPath>
     </Reference>
@@ -136,6 +139,7 @@
     <Compile Include="Services\Audio\IAudioDevice.cs" />
     <Compile Include="Services\Audio\IAudioSession.cs" />
     <Compile Include="Services\Audio\IAudioSessionService.cs" />
+    <Compile Include="Services\Communication\Messages\MessageButtonPressed.cs" />
     <Compile Include="Services\Communication\Messages\MessageHeartbeat.cs" />
     <Compile Include="Services\Communication\Messages\MessageSetDefaultEndpoint.cs" />
     <Compile Include="Services\Communication\Serialization\CobsSerializationService .cs" />

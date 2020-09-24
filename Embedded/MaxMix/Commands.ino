@@ -15,6 +15,18 @@
 //********************************************************
 
 //---------------------------------------------------------
+// --- MOD: Send key presses
+//---------------------------------------------------------
+void SendButtonPressedCommand(uint8_t* rawBuffer, uint8_t* packageBuffer, uint8_t buttonId)
+{
+  rawBuffer[0] = MSG_COMMAND_BUTTON_PRESSED;
+  rawBuffer[1] = buttonId;
+  uint8_t encodeSize =  EncodePackage(rawBuffer, 2, packageBuffer);
+  Serial.write(packageBuffer, encodeSize);
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
 void SendAcknowledgment(uint8_t* rawBuffer, uint8_t* packageBuffer, uint8_t revision)
 {
   rawBuffer[0] = MSG_COMMAND_ACKNOWLEDGMENT;

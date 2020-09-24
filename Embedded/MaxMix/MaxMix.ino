@@ -31,6 +31,7 @@
 #include "src/ButtonEvents/ButtonEvents.h"
 #include "src/Rotary/Rotary.h"
 #include "src/TimerOne/TimerOne.h"
+#include "src/Bounce2/Bounce2.h"
 
 //********************************************************
 // *** VARIABLES
@@ -83,6 +84,12 @@ uint32_t encoderLastTransition = 0;
 int8_t prevDir = 0;
 volatile int8_t steps = 0;
 
+// MOD: Buttons
+Bounce buttonA = Bounce();
+Bounce buttonB = Bounce();
+volatile bool buttonAPressed = false;
+volatile bool buttonBPressed = false;
+
 // Time & Sleep
 uint32_t now = 0;
 uint32_t last = 0;
@@ -107,6 +114,16 @@ void timerIsr()
   if(buttonEvent == none && encoderButton.update())
   {
     buttonEvent = encoderButton.event();
+  }
+
+  if(buttonA.update() && buttonA.fell())
+  {
+    buttonAPressed = true;
+  }
+
+  if(buttonB.update() && buttonB.fell())
+  {
+    buttonBPressed = true;
   }
 }
 
@@ -134,6 +151,20 @@ void setup()
   encoderButton.attach(PIN_ENCODER_SWITCH);
   encoderButton.debounceTime(15);
   encoderRotary.begin(true);
+
+  // --- MOD: Buttons
+  buttonA.attach(PIN_BUTTON_A, INPUT_PULLUP);
+  buttonA.interval(5);
+
+  buttonB.attach(PIN_BUTTON_B, INPUT_PULLUP);
+  buttonB.interval(5);
+
+  pinMode(PIN_BUTTON_A_GND, OUTPUT);
+  pinMode(PIN_BUTTON_B_GND, OUTPUT);
+  digitalWrite(PIN_BUTTON_A_GND, LOW);
+  digitalWrite(PIN_BUTTON_B_GND, LOW);
+
+  // --- Timers
   Timer1.initialize(1000);
   Timer1.attachInterrupt(timerIsr);
 }
@@ -161,7 +192,7 @@ void loop()
     ClearReceive();
   }
 
-  if(ProcessEncoderRotation() || ProcessEncoderButton())
+  if(ProcessEncoderRotation() || ProcessEncoderButton() || ProcessButtons())
   {
       lastActivityTime = now;
       isDirty = true;
@@ -184,6 +215,7 @@ void loop()
   {
     UpdateDisplay();
   }
+
   Display::UpdateTimers(now - last);
   isDirty = false;
 
@@ -720,6 +752,27 @@ bool ProcessEncoderButton()
   }
 
   return false;
+}
+
+bool ProcessButtons()
+{
+  if(buttonAPressed)
+  {
+    cli();
+    buttonAPressed = false;
+    sei();
+
+    SendButtonPressedCommand(sendBuffer, encodeBuffer, BUTTON_A_ID);
+  }
+
+  if(buttonBPressed)
+  {
+    cli();
+    buttonBPressed = false;
+    sei();
+
+    SendButtonPressedCommand(sendBuffer, encodeBuffer, BUTTON_B_ID);
+  }
 }
 
 //---------------------------------------------------------

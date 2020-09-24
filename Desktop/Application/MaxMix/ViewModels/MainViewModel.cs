@@ -18,6 +18,8 @@ using MaxMix.Services.Communication;
 using MaxMix.Services.Audio;
 using MaxMix.Services.Communication.Messages;
 using MaxMix.Services.Communication.Serialization;
+using WindowsInput;
+using WindowsInput.Native;
 
 namespace MaxMix.ViewModels
 {
@@ -38,6 +40,7 @@ namespace MaxMix.ViewModels
             _serializationService.RegisterType<MessageSetDefaultEndpoint>(5);
             _serializationService.RegisterType<MessageSettings>(6);
             _serializationService.RegisterType<MessageHeartbeat>(7);
+            _serializationService.RegisterType<MessageButtonPressed>(8);
 
             _settingsViewModel = new SettingsViewModel();
             _settingsViewModel.PropertyChanged += OnSettingsChanged;
@@ -75,6 +78,9 @@ namespace MaxMix.ViewModels
         private ICommand _activateCommand;
         private ICommand _deactivateCommand;
         private ICommand _requestExitCommand;
+
+        // --- MOD: Input simulator
+        private readonly InputSimulator _inputSimulator = new InputSimulator();
         #endregion
 
         #region Properties
@@ -251,6 +257,20 @@ namespace MaxMix.ViewModels
             {
                 var message_ = message as MessageSetDefaultEndpoint;
                 _audioSessionService.SetDefaultEndpoint(message_.Id);
+            }
+
+            // --- MOD : Simulate key presses
+            else if (message.GetType() == typeof(MessageButtonPressed))
+            {
+                var message_ = message as MessageButtonPressed;
+                if (message_.ButtonId == 0)
+                {
+                    _inputSimulator.Keyboard.KeyPress(VirtualKeyCode.F13);
+                }
+                else if(message_.ButtonId == 1)
+                {
+                    _inputSimulator.Keyboard.KeyPress(VirtualKeyCode.F14);
+                }
             }
         }
 
