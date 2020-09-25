@@ -29,8 +29,11 @@
     <Setting Name="MixChannelAColor" Type="System.UInt32" Scope="User">
       <Value Profile="(Default)">4294901760</Value>
     </Setting>
-    <Setting Name="MixChanneBColor" Type="System.UInt32" Scope="User">
+    <Setting Name="MixChannelBColor" Type="System.UInt32" Scope="User">
       <Value Profile="(Default)">4278190335</Value>
+    </Setting>
+    <Setting Name="ItemsBlackList" Type="System.String" Scope="User">
+      <Value Profile="(Default)"></Value>
     </Setting>
   </Settings>
 </SettingsFile>

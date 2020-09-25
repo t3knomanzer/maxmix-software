@@ -26,6 +26,8 @@ namespace MaxMix.Framework.Mvvm
         {
             if (PropertyChanged != null && name != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(name));
+
+            Properties.Settings.Default.Save();
         }
         #endregion
     }

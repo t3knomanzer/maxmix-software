@@ -132,7 +132,6 @@ namespace MaxMix.ViewModels
             }
         }
 
-
         /// <summary>
         /// Value used to set the light color for minimum volume
         /// </summary>
@@ -179,10 +178,23 @@ namespace MaxMix.ViewModels
         /// </summary>
         public uint MixChannelBColor
         {
-            get => _settings.MixChanneBColor;
+            get => _settings.MixChannelBColor;
             set
             {
-                _settings.MixChanneBColor = value;
+                _settings.MixChannelBColor = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Value used to detect a double click from the encoder switch.
+        /// </summary>
+        public string ItemsBlackList
+        {
+            get => _settings.ItemsBlackList;
+            set
+            {
+                _settings.ItemsBlackList = value;
                 RaisePropertyChanged();
             }
         }

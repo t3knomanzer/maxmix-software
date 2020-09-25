@@ -134,12 +134,24 @@ namespace MaxMix.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("4278190335")]
-        public uint MixChanneBColor {
+        public uint MixChannelBColor {
             get {
-                return ((uint)(this["MixChanneBColor"]));
+                return ((uint)(this["MixChannelBColor"]));
             }
             set {
-                this["MixChanneBColor"] = value;
+                this["MixChannelBColor"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ItemsBlackList {
+            get {
+                return ((string)(this["ItemsBlackList"]));
+            }
+            set {
+                this["ItemsBlackList"] = value;
             }
         }
     }

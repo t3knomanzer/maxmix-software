@@ -183,6 +183,13 @@ namespace MaxMix.ViewModels
         {
             ExitRequested?.Invoke(this, EventArgs.Empty);
         }
+
+        private bool IsItemBlacklisted(string displayName)
+        {
+            string[] blackList = _settingsViewModel.ItemsBlackList.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            return (blackList.Contains(displayName, StringComparer.OrdinalIgnoreCase));
+        }
+
         #endregion
 
         #region EventHandlers
@@ -194,6 +201,10 @@ namespace MaxMix.ViewModels
 
         private void OnDeviceCreated(object sender, int id, string displayName, int volume, bool isMuted, DeviceFlow deviceFlow)
         {
+            if (IsItemBlacklisted(displayName))
+            {
+                return;
+            }
             var message = new MessageAddItem(id, displayName, volume, isMuted, true, (int)deviceFlow);
             _communicationService.Send(message);
         }
@@ -212,6 +223,10 @@ namespace MaxMix.ViewModels
 
         private void OnAudioSessionCreated(object sender, int id, string displayName, int volume, bool isMuted)
         {
+            if (IsItemBlacklisted(displayName))
+            {
+                return;
+            }
             var message = new MessageAddItem(id, displayName, volume, isMuted, false);
             _communicationService.Send(message);
         }
