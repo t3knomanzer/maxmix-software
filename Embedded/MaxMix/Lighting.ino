@@ -52,19 +52,12 @@ void LightingCircularFunk()
   uint32_t t = millis();
   uint16_t hue = t * 20;
   uint32_t rgbColor = pixels.ColorHSV(hue);
-  uint16_t period = 500;
-
-  uint8_t startOffset = 0;
-  if ((t % period) > (period / 2))
-  {
-    startOffset = 1;
-  }
 
   pixels.clear();
-  pixels.setPixelColor(startOffset, rgbColor);
-  pixels.setPixelColor(startOffset+2, rgbColor);
-  pixels.setPixelColor(startOffset+4, rgbColor);
-  pixels.setPixelColor(startOffset+6, rgbColor);
+  for (uint8_t i = (t % 500) / 250; i < PIXELS_COUNT; i += 2)
+  {
+    pixels.setPixelColor(i, rgbColor);
+  }
 }
 
 //---------------------------------------------------------
