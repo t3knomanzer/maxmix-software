@@ -32,11 +32,12 @@ namespace MaxMix.ViewModels
             _serializationService = new CobsSerializationService();
             _serializationService.RegisterType<MessageHandShakeRequest>(0);
             _serializationService.RegisterType<MessageAcknowledgment>(1);
-            _serializationService.RegisterType<MessageAddSession>(2);
-            _serializationService.RegisterType<MessageRemoveSession>(3);
-            _serializationService.RegisterType<MessageUpdateVolumeSession>(4);
+            _serializationService.RegisterType<MessageAddItem>(2);
+            _serializationService.RegisterType<MessageRemoveItem>(3);
+            _serializationService.RegisterType<MessageUpdateVolume>(4);
             _serializationService.RegisterType<MessageSetDefaultEndpoint>(5);
             _serializationService.RegisterType<MessageSettings>(6);
+            _serializationService.RegisterType<MessageHeartbeat>(7);
 
             _settingsViewModel = new SettingsViewModel();
             _settingsViewModel.PropertyChanged += OnSettingsChanged;
@@ -167,7 +168,7 @@ namespace MaxMix.ViewModels
             var message = new MessageSettings(_settingsViewModel.DisplayNewSession,
                                               _settingsViewModel.SleepWhenInactive,
                                               _settingsViewModel.SleepAfterSeconds,
-                                              _settingsViewModel.ContinuousScroll,
+                                              _settingsViewModel.LoopAroundItems,
                                               _settingsViewModel.AccelerationPercentage,
                                               _settingsViewModel.DoubleTapTime,
                                               _settingsViewModel.VolumeMinColor,
@@ -185,45 +186,45 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region EventHandlers
-        private void OnDefaultDeviceChanged(object sender, int id)
+        private void OnDefaultDeviceChanged(object sender, int id, DeviceFlow deviceFlow)
         {
-            var message = new MessageSetDefaultEndpoint(id);
+            var message = new MessageSetDefaultEndpoint(id, (int)deviceFlow);
             _communicationService.Send(message);
         }
 
-        private void OnDeviceCreated(object sender, int id, string displayName, int volume, bool isMuted)
+        private void OnDeviceCreated(object sender, int id, string displayName, int volume, bool isMuted, DeviceFlow deviceFlow)
         {
-            var message = new MessageAddSession(id, displayName, volume, isMuted, true);
+            var message = new MessageAddItem(id, displayName, volume, isMuted, true, (int)deviceFlow);
             _communicationService.Send(message);
         }
 
-        private void OnDeviceRemoved(object sender, int id)
+        private void OnDeviceRemoved(object sender, int id, DeviceFlow deviceFlow)
         {
-            var message = new MessageRemoveSession(id, true);
+            var message = new MessageRemoveItem(id, true, (int)deviceFlow);
             _communicationService.Send(message);
         }
 
-        private void OnDeviceVolumeChanged(object sender, int id, int volume, bool isMuted)
+        private void OnDeviceVolumeChanged(object sender, int id, int volume, bool isMuted, DeviceFlow deviceFlow)
         {
-            var message = new MessageUpdateVolumeSession(id, volume, isMuted, true);
+            var message = new MessageUpdateVolume(id, volume, isMuted, true, (int)deviceFlow);
             _communicationService.Send(message);
         }
 
         private void OnAudioSessionCreated(object sender, int id, string displayName, int volume, bool isMuted)
         {
-            var message = new MessageAddSession(id, displayName, volume, isMuted, false);
+            var message = new MessageAddItem(id, displayName, volume, isMuted, false);
             _communicationService.Send(message);
         }
          
         private void OnAudioSessionRemoved(object sender, int id)
         {
-            var message = new MessageRemoveSession(id, false);
+            var message = new MessageRemoveItem(id, false);
             _communicationService.Send(message);
         }
 
         private void OnAudioSessionVolumeChanged(object sender, int id, int volume, bool isMuted)
         {
-            var message = new MessageUpdateVolumeSession(id, volume, isMuted, false);
+            var message = new MessageUpdateVolume(id, volume, isMuted, false);
             _communicationService.Send(message);
         }
 
@@ -241,9 +242,9 @@ namespace MaxMix.ViewModels
 
         private void OnMessageReceived(object sender, IMessage message)
         {
-            if (message.GetType() == typeof(MessageUpdateVolumeSession))
+            if (message.GetType() == typeof(MessageUpdateVolume))
             {
-                var message_ = message as MessageUpdateVolumeSession;
+                var message_ = message as MessageUpdateVolume;
                 _audioSessionService.SetItemVolume(message_.Id, message_.Volume, message_.IsMuted);
             }
             else if (message.GetType() == typeof(MessageSetDefaultEndpoint))

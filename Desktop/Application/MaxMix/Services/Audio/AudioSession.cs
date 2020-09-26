@@ -23,6 +23,7 @@ namespace MaxMix.Services.Audio
             _events.SimpleVolumeChanged += OnVolumeChanged;
 
             UpdateDisplayName();
+            Id = _session2.SessionIdentifier.GetHashCode();
         }
         #endregion
 
@@ -49,7 +50,7 @@ namespace MaxMix.Services.Audio
         public AudioSessionControl Session { get; private set; }
 
         /// <inheritdoc/>
-        public int Id => _session2.SessionIdentifier.GetHashCode();
+        public int Id { get; protected set; }
 
         /// <inheritdoc/>
         public string DisplayName { get; protected set; }
@@ -155,13 +156,14 @@ namespace MaxMix.Services.Audio
         #region IDisposable
         public void Dispose()
         {
-            if (_events != null)
+            try
             {
                 _events.StateChanged -= OnStateChanged;
                 _events.SimpleVolumeChanged -= OnVolumeChanged;
-
                 Session.UnregisterAudioSessionNotification(_events);
             }
+            catch { }
+
             Session = null;
             _session2 = null;
             _simpleAudio = null;

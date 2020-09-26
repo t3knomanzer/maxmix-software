@@ -6,14 +6,13 @@ using System.Threading.Tasks;
 
 namespace MaxMix.Services.Communication.Messages
 {
-    internal class MessageAcknowledgment : IMessage
+    internal class MessageHeartbeat : IMessage
     {
         #region Constructor
-        public MessageAcknowledgment() { }
+        public MessageHeartbeat() { }
         #endregion
 
         #region Properties
-        public byte Revision { get; private set; }
         #endregion
 
         #region Public Methods
@@ -22,19 +21,16 @@ namespace MaxMix.Services.Communication.Messages
         * ---------------------------------------------------
         * CHUNK                     TYPE        SIZE (BYTES)
         * ---------------------------------------------------
-        * REVISION                   BYTE        1
-        * ---------------------------------------------------
         */
 
         public byte[] GetBytes()
         {
-            throw new NotImplementedException();
+            return new byte[] { };
         }
 
         public bool SetBytes(byte[] bytes)
         {
-            Revision = bytes[0];
-            return true;
+            throw new NotImplementedException();
         }
         #endregion
     }

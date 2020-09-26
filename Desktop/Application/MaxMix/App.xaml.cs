@@ -84,9 +84,12 @@ namespace MaxMix
             viewModel.Stop();
 
             // Calling dispose explicitly on closing so the icon dissapears from the windows task bar.
-            var window = (MainWindow)Application.Current.MainWindow;            
+            var window = (MainWindow)Application.Current.MainWindow;
             window.taskbarIcon.Dispose();
-            _errorReporter.Dispose();
+            if (_errorReporter != null)
+            {
+                _errorReporter.Dispose();
+            }
             _singleInstanceMutex.Dispose();
 
             Application.Current.Shutdown();

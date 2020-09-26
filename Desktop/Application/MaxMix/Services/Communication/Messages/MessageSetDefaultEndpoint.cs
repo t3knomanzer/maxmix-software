@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MaxMix.Services.Audio;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,14 +11,16 @@ namespace MaxMix.Services.Communication.Messages
     {
         #region Constructor
         public MessageSetDefaultEndpoint() { }
-        public MessageSetDefaultEndpoint(int id)
+        public MessageSetDefaultEndpoint(int id, int deviceFlow)
         {
             Id = id;
+            DeviceFlow = deviceFlow;
         }
         #endregion
 
         #region Properties
         public int Id { get; private set; }
+        public int DeviceFlow{ get; private set; }
         #endregion
 
         #region Private Methods
@@ -30,15 +33,16 @@ namespace MaxMix.Services.Communication.Messages
         * CHUNK        TYPE        SIZE (BYTES)
         * ---------------------------------------
         * ID           INT32       4
+        * DEVICEFLOW   BYTE        1
         * ---------------------------------------
-        *                          4
+        *                          5
         */
-
         public byte[] GetBytes()
         {
             var result = new List<byte>();
 
             result.AddRange(BitConverter.GetBytes(Id));
+            result.Add(Convert.ToByte(DeviceFlow));
             return result.ToArray();
         }
 
