@@ -1,4 +1,4 @@
-#include <Communications\Communications.h>
+#include "Communications.h"
 
 // Defined in the main file
 extern DeviceSettings g_Settings;

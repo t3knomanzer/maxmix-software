@@ -1,6 +1,4 @@
 #include "Display.h"
-
-#include "Config.h"
 #include "Logo.h"
 
 namespace Display

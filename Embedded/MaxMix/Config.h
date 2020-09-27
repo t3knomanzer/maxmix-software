@@ -11,7 +11,8 @@
 //********************************************************
 
 #include <Arduino.h>
-#include <Communications/Messages.h>
+#include "Enums.h"
+#include "Structs.h"
 #include "src/FixedPoints/FixedPoints.h"
 #include "src/FixedPoints/FixedPointsCommon.h"
 

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <Structs.h>
-#include <Communications/Messages.h>
+#include "Config.h"
 #include <Adafruit_SSD1306/Adafruit_SSD1306.h>
 
 namespace Display

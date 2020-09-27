@@ -14,10 +14,9 @@
 #include <Arduino.h>
 
 // Custom
-#include <Communications/Communications.h>
 #include "Config.h"
-#include "Structs.h"
 #include "Display.h"
+#include "Communications.h"
 
 // Third-party
 #include "src/Adafruit_GFX/Adafruit_GFX.h"
@@ -241,6 +240,22 @@ void NextSession(void)
     g_Sessions[SessionIndex::INDEX_PREVIOUS] = g_Sessions[SessionIndex::INDEX_CURRENT];
     g_Sessions[SessionIndex::INDEX_CURRENT] = g_Sessions[SessionIndex::INDEX_NEXT];
     Communications::Write(Command::SESSION_INFO);
+}
+
+bool CanScrollLeft(void)
+{
+    if ((g_Settings.continuousScroll && g_SessionInfo.count > 1) || (g_SessionInfo.count > 0))
+        return true;
+
+    return false;
+}
+
+bool CanScrollRight(void)
+{
+    if ((g_Settings.continuousScroll && g_SessionInfo.count > 1) || ((g_SessionInfo.count - g_SessionInfo.current - 1) > 0))
+        return true;
+
+    return false;
 }
 
 //---------------------------------------------------------
