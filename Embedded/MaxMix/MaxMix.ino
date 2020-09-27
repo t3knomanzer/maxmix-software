@@ -4,15 +4,9 @@
 // EMAIL: rhenares0@gmail.com
 //
 // DECRIPTION:
-// 
 //
 //
-// The AVR 328P chip has 2kB of SRAM. 
-// Program uses 825 bytes, leaving 1223 bytes for items. Each item is 42 bytes.
-// Therefore we can store a maximum (1223 / 42 bytes) of 29 items.
-// We currently this to 8 maximum items for safety.
 //********************************************************
-
 
 //********************************************************
 // *** INCLUDES
@@ -20,6 +14,7 @@
 #include <Arduino.h>
 
 // Custom
+#include <Communications/Communications.h>
 #include "Config.h"
 #include "Structs.h"
 #include "Display.h"
@@ -36,42 +31,15 @@
 // *** VARIABLES
 //*******************************************************
 // Serial Communication
-uint8_t receiveIndex = 0;
-uint8_t sendIndex = 0;
-uint8_t receiveBuffer[RECEIVE_BUFFER_SIZE];
-uint8_t decodeBuffer[DECODE_BUFFER_SIZE];
-uint8_t sendBuffer[SEND_BUFFER_SIZE];
-uint8_t encodeBuffer[ENCODE_BUFFER_SIZE];
+DeviceSettings g_Settings{};
+SessionInfo g_SessionInfo{};
+SessionData g_Sessions[SessionIndex::INDEX_MAX]{};
 
 // State
-uint8_t mode = MODE_SPLASH;
-uint8_t stateSplash = STATE_SPLASH_LOGO;
-uint8_t stateOutput = STATE_OUTPUT_EDIT;
-uint8_t stateInput = STATE_INPUT_EDIT;
-uint8_t stateApplication = STATE_APPLICATION_NAVIGATE;
-uint8_t stateGame = STATE_GAME_SELECT_A;
-uint8_t stateDisplay = STATE_DISPLAY_AWAKE;
-uint8_t isDirty = true;
-
-// Items
-Item devicesOutput[DEVICE_OUTPUT_MAX_COUNT];
-Item devicesInput[DEVICE_INPUT_MAX_COUNT];
-Item sessions[SESSION_MAX_COUNT];
-uint8_t devicesOutputCount = 0;
-uint8_t devicesInputCount = 0;
-uint8_t sessionCount = 0;
-
-int8_t itemIndexOutput = 0;
-int8_t itemIndexInput = 0;
-int8_t itemIndexApp = 0;
-int8_t itemIndexGameA = 0;
-int8_t itemIndexGameB = 0;
-
-uint32_t defaultOutputEndpointId;
-uint32_t defaultInputEndpointId;
-
-// Settings
-Settings settings;
+bool g_DisplayAsleep = false;
+DisplayData g_DisplayMode{};
+uint8_t g_DisplayState[DisplayMode::MODE_MAX] = {STATE_LOGO, STATE_EDIT, STATE_EDIT, STATE_NAVIGATE, STATE_SELECT_A};
+uint8_t g_DisplayDirty = true;
 
 // Encoder Button
 ButtonEvents encoderButton;
@@ -84,30 +52,29 @@ int8_t prevDir = 0;
 volatile int8_t steps = 0;
 
 // Time & Sleep
-uint32_t now = 0;
-uint32_t last = 0;
-uint32_t lastActivityTime = 0;
-uint32_t lastLightingUpdate = 0;
-uint32_t lastCommTime = 0;
+uint32_t g_Now = 0;
+uint32_t g_LastMessage = 0;
+uint32_t g_LastActivity = 0;
+uint32_t g_LastPixelUpdate = 0;
 
 // Lighting
-Adafruit_NeoPixel pixels(PIXELS_COUNT, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel g_Pixels(PIXELS_COUNT, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
 
 //********************************************************
 // *** INTERRUPTS
 //********************************************************
 void timerIsr()
 {
-  uint8_t encoderDir = encoderRotary.process();
-  if(encoderDir == DIR_CW)
-    steps++;
-  else if(encoderDir == DIR_CCW)
-    steps--;
+    uint8_t encoderDir = encoderRotary.process();
+    if (encoderDir == DIR_CW)
+        steps++;
+    else if (encoderDir == DIR_CCW)
+        steps--;
 
-  if(buttonEvent == none && encoderButton.update())
-  {
-    buttonEvent = encoderButton.event();
-  }
+    if (buttonEvent == none && encoderButton.update())
+    {
+        buttonEvent = encoderButton.event();
+    }
 }
 
 //********************************************************
@@ -117,381 +84,97 @@ void timerIsr()
 //---------------------------------------------------------
 void setup()
 {
-  // --- Comms
-  Serial.begin(BAUD_RATE);
+    // --- Comms
+    Communications::Initialize();
 
-  //--- Pixels
-  pixels.setBrightness(PIXELS_BRIGHTNESS);
-  pixels.begin();
-  pixels.show();
+    //--- Pixels
+    g_Pixels.setBrightness(PIXELS_BRIGHTNESS);
+    g_Pixels.begin();
+    g_Pixels.show();
 
-  // --- Display
-  Display::Initialize();
-  Display::SplashScreen();
+    // --- Display
+    Display::Initialize();
+    Display::SplashScreen();
 
-  // --- Encoder
-  pinMode(PIN_ENCODER_SWITCH, INPUT_PULLUP);
-  encoderButton.attach(PIN_ENCODER_SWITCH);
-  encoderButton.debounceTime(15);
-  encoderRotary.begin(true);
-  Timer1.initialize(1000);
-  Timer1.attachInterrupt(timerIsr);
+    // --- Encoder
+    pinMode(PIN_ENCODER_SWITCH, INPUT_PULLUP);
+    encoderButton.attach(PIN_ENCODER_SWITCH);
+    encoderButton.debounceTime(15);
+    encoderRotary.begin(true);
+    Timer1.initialize(1000);
+    Timer1.attachInterrupt(timerIsr);
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 void loop()
 {
-  last = now;
-  now = millis();
+    uint32_t last = g_Now;
+    g_Now = millis();
 
-  if(ReceiveData(receiveBuffer, &receiveIndex, MSG_PACKET_DELIMITER, RECEIVE_BUFFER_SIZE))
-  {
-    if(DecodePackage(receiveBuffer, receiveIndex, decodeBuffer))
+    Command command = Communications::Read();
+    // Returns the type of message we recieved, update oled if we recieved data that impacts what is currently on display
+    // This should really depend on a few things, like setings of continious scroll, vs new item index vs count, etc.
+    // for now lets be safe and check for any command that impacts a stored value, we can fine tune this later
+    g_DisplayDirty = (command >= Command::SETTINGS || command <= Command::DISPLAY_CHANGE);
+
+    if (ProcessEncoderRotation())
     {
-      lastCommTime = now;
-      uint8_t revision = GetRevisionFromPackage(decodeBuffer);
-      SendAcknowledgment(sendBuffer, encodeBuffer, revision);
+        g_LastActivity = g_Now;
+        g_DisplayDirty = true;
+    }
 
-      if(ProcessPackage())
-      {
-        isDirty = true;
-      }
-    }      
-    ClearReceive();
-  }
+    if (ProcessEncoderButton())
+    {
+        g_LastActivity = g_Now;
+        g_DisplayDirty = true;
+    }
 
-  if(ProcessEncoderRotation() || ProcessEncoderButton())
-  {
-      lastActivityTime = now;
-      isDirty = true;
-  }
+    if (ProcessSleep())
+    {
+        g_DisplayDirty = true;
+    }
 
-  if(ProcessSleep())
-  {
-    isDirty = true;
-  }
+    if (g_DisplayDirty || ProcessDisplayScroll())
+    {
+        UpdateDisplay();
+    }
 
-  // Check for buffer overflow
-  if(receiveIndex == RECEIVE_BUFFER_SIZE)
-  {
-    ClearReceive();
-  }
+    Display::UpdateTimers(g_Now - last);
+    g_DisplayDirty = false;
 
-  ClearSend();
+    // Update Lighting at 30Hz
+    if (g_Now >= (g_LastPixelUpdate + 33))
+    {
+        g_LastPixelUpdate = g_Now;
+        UpdateLighting();
+    }
 
-  if(isDirty || ProcessDisplayScroll())
-  {
-    UpdateDisplay();
-  }
-  Display::UpdateTimers(now - last);
-  isDirty = false;
-
-  // Update Lighting at 30Hz
-  if(now >= (lastLightingUpdate + 33))
-  {
-    lastLightingUpdate = now;
-    UpdateLighting();
-  }
-
-  // Reset / Disconnect if no serial activity.
-  if ((mode != MODE_SPLASH) && (lastCommTime + DEVICE_RESET_AFTER_INACTIVTY < now)) {
-    ResetState();
-    lastActivityTime = now;
-  }
-}
-
-//********************************************************
-// *** FUNCTIONS
-//********************************************************
-//---------------------------------------------------------
-//---------------------------------------------------------
-void ClearReceive()
-{
-  receiveIndex = 0;  
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void ClearSend()
-{
-  sendIndex = 0;
+    // Reset / Disconnect if no serial activity.
+    if ((g_DisplayMode.id != DisplayMode::MODE_SPLASH) && (g_LastMessage + DEVICE_RESET_AFTER_INACTIVTY < g_Now))
+    {
+        ResetState();
+        g_LastActivity = g_Now;
+    }
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 void ResetState()
 {
-  mode = MODE_SPLASH;
-  stateSplash = STATE_SPLASH_LOGO;
-  stateOutput = STATE_OUTPUT_EDIT;
-  stateInput = STATE_INPUT_EDIT;
-  stateApplication = STATE_APPLICATION_NAVIGATE;
-  stateGame = STATE_GAME_SELECT_A;
-  stateDisplay = STATE_DISPLAY_AWAKE;
+    g_DisplayMode = {};
+    g_DisplayState[DisplayMode::MODE_SPLASH] = STATE_LOGO;
+    g_DisplayState[DisplayMode::MODE_OUTPUT] = STATE_EDIT;
+    g_DisplayState[DisplayMode::MODE_INPUT] = STATE_EDIT;
+    g_DisplayState[DisplayMode::MODE_APPLICATION] = STATE_NAVIGATE;
+    g_DisplayState[DisplayMode::MODE_GAME] = STATE_SELECT_A;
 
-  itemIndexOutput = 0;
-  itemIndexApp = 0;
-  itemIndexGameA = 0;
-  itemIndexGameB = 0;
-  sessionCount = 0;
-  devicesOutputCount = 0;
-  isDirty = true;
+    g_SessionInfo = {};
+    g_Sessions[4] = {};
+    g_DisplayMode = {};
+    g_LastMessage = 0;
+    g_DisplayDirty = true;
 }
-
-//---------------------------------------------------------
-// \brief Handles incoming commands.
-// \returns true if screen update is required.
-//---------------------------------------------------------
-bool ProcessPackage()
-{
-  uint8_t command = GetCommandFromPackage(decodeBuffer);  
-  if(command == MSG_COMMAND_HANDSHAKE_REQUEST)
-  {
-    ResetState();
-    lastActivityTime = millis();
-  }
-  else if(command == MSG_COMMAND_HEARTBEAT)
-  {
-    return true;
-  }
-  else if(command == MSG_COMMAND_ADD)
-  {
-    
-    if(mode == MODE_SPLASH)
-    {
-      mode = MODE_OUTPUT;
-    }
-
-    uint32_t id = GetIdFromPackage(decodeBuffer);
-    bool isDevice = GetIsDeviceFromAddPackage(decodeBuffer); 
-
-    int8_t index;  
-    if(isDevice)
-    {
-      uint8_t deviceFlow = GetDeviceFlowFromAddPackage(decodeBuffer);
-      
-      Item* buffer;
-      uint8_t* count;
-      if(deviceFlow == DEVICE_FLOW_INPUT)
-      {
-        if(devicesInputCount == DEVICE_INPUT_MAX_COUNT)
-          return false;
-        buffer = devicesInput;
-        count = &devicesInputCount;
-      }
-      else
-      {
-        if(devicesOutputCount == DEVICE_OUTPUT_MAX_COUNT)
-          return false;
-        buffer = devicesOutput;
-        count = &devicesOutputCount;
-      }      
-
-      index = FindItem(id, buffer, *count);
-      if(index == -1)
-      {
-        AddItemCommand(decodeBuffer, buffer, count);
-        index = *count - 1;
-      }
-      else
-        UpdateItemCommand(decodeBuffer, buffer, index);
-    }
-    else
-    {
-      if(sessionCount == SESSION_MAX_COUNT)
-        return false;
-
-      index = FindItem(id, sessions, sessionCount);
-      if(index == -1)
-      {
-        AddItemCommand(decodeBuffer, sessions, &sessionCount);
-        index = sessionCount - 1;
-      }
-      else
-        UpdateItemCommand(decodeBuffer, sessions, index);
-
-      if(settings.displayNewItem)
-      {
-        itemIndexApp = index;
-        if(mode == MODE_APPLICATION)
-          stateApplication = STATE_APPLICATION_NAVIGATE;
-
-        return true;
-      }
-    }    
-  }
-  else if(command == MSG_COMMAND_REMOVE)
-  {
-    uint32_t id = GetIdFromPackage(decodeBuffer);
-    bool isDevice = GetIsDeviceFromRemovePackage(decodeBuffer);
-
-    int8_t index;
-    if(isDevice)
-    {
-      uint8_t deviceFlow = GetDeviceFlowFromRemovePackage(decodeBuffer);
-
-      Item* buffer;
-      uint8_t* count;
-      int8_t* modeIndex;
-
-      if(deviceFlow == DEVICE_FLOW_INPUT)
-      {
-        buffer = devicesInput;
-        count = &devicesInputCount;
-        modeIndex = &itemIndexInput;
-      }
-      else
-      {
-        buffer = devicesOutput;
-        count = &devicesOutputCount;
-        modeIndex = &itemIndexOutput;
-      }
-
-      index = FindItem(id, buffer, *count);
-      if(index == -1)
-        return false;
-
-      RemoveItemCommand(decodeBuffer, buffer, count, index);
-      
-      bool isItemActive = IsItemActive(index);
-      *modeIndex = GetNextIndex(*modeIndex, *count, 0, settings.continuousScroll);
-
-      if(*count == 0)
-      {
-        CycleMode();
-        return true;
-      }
-
-      if(isItemActive)
-      {
-        return true;
-      }
-    }
-    else
-    {
-      if(sessionCount == 0)
-        return false;
-
-      index = FindItem(id, sessions, sessionCount);
-      if(index == -1)
-        return false;
-
-      RemoveItemCommand(decodeBuffer, sessions, &sessionCount, index);
-      
-      bool isItemActive = IsItemActive(index);
-      itemIndexApp = GetNextIndex(itemIndexApp, sessionCount, 0, settings.continuousScroll);
-      if(isItemActive)
-      {
-        if(mode == MODE_APPLICATION)
-          stateApplication = STATE_APPLICATION_NAVIGATE;
-        return true;      
-      }    
-    }
-  }
-  else if(command == MSG_COMMAND_UPDATE_VOLUME)
-  {
-    uint32_t id = GetIdFromPackage(decodeBuffer);
-    bool isDevice = GetIsDeviceFromUpdatePackage(decodeBuffer);
-
-    int8_t index;
-    if(isDevice)
-    {
-      uint8_t deviceFlow = GetDeviceFlowFromUpdatePackage(decodeBuffer);
-      
-      Item* buffer;
-      uint8_t* count;
-      if(deviceFlow == 0)
-      {
-        buffer = devicesInput;
-        count = &devicesInputCount;
-      }
-      else
-      {
-        buffer = devicesOutput;
-        count = &devicesOutputCount;
-      }      
-
-      index = FindItem(id, buffer, *count);
-      if(index == -1)
-        return false;
-
-      UpdateItemVolumeCommand(decodeBuffer, buffer, index);
-
-      if(IsItemActive(index))
-        return true;
-
-      return false;
-    }
-    else
-    {
-      index = FindItem(id, sessions, sessionCount);
-      if(index == -1)
-        return false;
-
-      UpdateItemVolumeCommand(decodeBuffer, sessions, index);
-
-      if(IsItemActive(index))
-      {
-        if(mode == MODE_GAME)
-        {
-          if(index == itemIndexGameA && index != itemIndexGameB)
-            RebalanceGameVolume(sessions[itemIndexGameA].volume, itemIndexGameB);
-
-          if(index == itemIndexGameB && index != itemIndexGameA)
-            RebalanceGameVolume(sessions[itemIndexGameB].volume, itemIndexGameA);
-        }                
-        return true;
-      }
-      return false;
-    }    
-  }
-  else if(command == MSG_COMMAND_SET_DEFAULT_ENDPOINT)
-  {
-    uint32_t id = GetIdFromPackage(decodeBuffer);
-    
-    uint8_t deviceFlow = GetDeviceFlowFromDefaultEndpointPackage(decodeBuffer);
-
-    Item* buffer;
-    uint8_t* count;
-    int8_t* modeIndex;
-    uint32_t* defaultEndpointId;
-
-    if(deviceFlow == 0)
-    {
-      buffer = devicesInput;
-      count = &devicesInputCount;
-      modeIndex = &itemIndexInput;
-      defaultEndpointId = &defaultInputEndpointId;
-    }
-    else
-    {
-      buffer = devicesOutput;
-      count = &devicesOutputCount;
-      modeIndex = &itemIndexOutput;
-      defaultEndpointId = &defaultOutputEndpointId;
-    }      
-
-    int8_t index = FindItem(id, buffer, *count);
-    if(index == -1)
-        return false;
-
-    *modeIndex = index;
-    *defaultEndpointId = id;
-
-    if(mode == MODE_OUTPUT || mode == MODE_INPUT)
-      return true;
-  }
-  else if(command == MSG_COMMAND_SETTINGS)
-  {
-    UpdateSettingsCommand(decodeBuffer, &settings);
-    stateDisplay = STATE_DISPLAY_AWAKE;
-    return true;
-  }
-
-  return false;
-} 
-
 
 //---------------------------------------------------------
 // \brief Encoder acceleration algorithm (Exponential - speed squared)
@@ -502,466 +185,270 @@ bool ProcessPackage()
 //---------------------------------------------------------
 int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t volume)
 {
-  if (!encoderDelta)
-    return volume;
+    if (!encoderDelta)
+        return volume;
 
-  bool dirChanged = ((prevDir > 0) && (encoderDelta < 0)) || ((prevDir < 0) && (encoderDelta > 0));
+    bool dirChanged = ((prevDir > 0) && (encoderDelta < 0)) || ((prevDir < 0) && (encoderDelta > 0));
 
-  uint32_t step;
-  if (dirChanged)
-  {
-     step = 1;
-  }
-  else
-  {
-    // Compute acceleration using fixed point maths.
-    SQ15x16 speed = (SQ15x16)encoderDelta*1000/deltaTime;
-    SQ15x16 accelerationDivisor = max((1-(SQ15x16)settings.accelerationPercentage/100)*ROTARY_ACCELERATION_DIVISOR_MAX, 1);
-    SQ15x16 fstep = 1 + absFixed(speed*speed/accelerationDivisor);
-    step = fstep.getInteger();
-  }
+    uint32_t step;
+    if (dirChanged)
+    {
+        step = 1;
+    }
+    else
+    {
+        // Compute acceleration using fixed point maths.
+        SQ15x16 speed = (SQ15x16)encoderDelta * 1000 / deltaTime;
+        SQ15x16 accelerationDivisor = max((1 - (SQ15x16)g_Settings.accelerationPercentage / 100) * ROTARY_ACCELERATION_DIVISOR_MAX, 1);
+        SQ15x16 fstep = 1 + absFixed(speed * speed / accelerationDivisor);
+        step = fstep.getInteger();
+    }
 
-  prevDir = encoderDelta;
+    prevDir = encoderDelta;
 
-  if(encoderDelta > 0)
-  {
-    volume += step;
-  }
-  else if(encoderDelta < 0)
-  {
-    volume -= step;
-  }
-  
-  return constrain(volume, 0, 100);
+    if (encoderDelta > 0)
+    {
+        volume += step;
+    }
+    else if (encoderDelta < 0)
+    {
+        volume -= step;
+    }
+
+    return constrain(volume, 0, 100);
+}
+
+void PreviousSession(void)
+{
+    if (!g_Settings.continuousScroll && g_SessionInfo.current == 0)
+        return;
+
+    if (g_SessionInfo.current == 0)
+        g_SessionInfo.current = g_SessionInfo.count;
+
+    g_SessionInfo.current--;
+    g_Sessions[SessionIndex::INDEX_NEXT] = g_Sessions[SessionIndex::INDEX_CURRENT];
+    g_Sessions[SessionIndex::INDEX_CURRENT] = g_Sessions[SessionIndex::INDEX_PREVIOUS];
+    Communications::Write(Command::SESSION_INFO);
+}
+
+void NextSession(void)
+{
+    if (!g_Settings.continuousScroll && g_SessionInfo.current == g_SessionInfo.count - 1)
+        return;
+
+    g_SessionInfo.current = (g_SessionInfo.current + 1) % g_SessionInfo.count;
+    g_Sessions[SessionIndex::INDEX_PREVIOUS] = g_Sessions[SessionIndex::INDEX_CURRENT];
+    g_Sessions[SessionIndex::INDEX_CURRENT] = g_Sessions[SessionIndex::INDEX_NEXT];
+    Communications::Write(Command::SESSION_INFO);
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 bool ProcessEncoderRotation()
 {
-  int8_t encoderDelta;
-  cli();
-  encoderDelta = steps;
-  if(encoderDelta !=0)
-    steps = 0;
-  sei();
-  
-  if(encoderDelta == 0)
-    return false;
+    int8_t encoderDelta;
+    cli();
+    encoderDelta = steps;
+    if (encoderDelta != 0)
+        steps = 0;
+    sei();
 
-  uint32_t deltaTime = now - encoderLastTransition;
-  encoderLastTransition = now;
+    if (encoderDelta == 0)
+        return false;
 
-  if(stateDisplay == STATE_DISPLAY_SLEEP)
+    uint32_t deltaTime = g_Now - encoderLastTransition;
+    encoderLastTransition = g_Now;
+
+    if (g_DisplayAsleep || g_DisplayMode.id == DisplayMode::MODE_SPLASH)
+        return true;
+
+    if (g_DisplayState[g_DisplayMode.id] == STATE_EDIT)
+    {
+        if (g_DisplayMode.id != DisplayMode::MODE_GAME)
+        {
+            g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, g_Sessions[SessionIndex::INDEX_CURRENT].data.volume);
+            Communications::Write(Command::VOLUME_CHANGE);
+        }
+        else
+        {
+            // NOTES: Game mode works by selecting 2 sessions, to make things simpler for all "NAVIGATE" logic, CURRENT_SESSION/INDEX_CURRENT sould always be what we work with
+            // and when we "select" a session for A, we copy it into ALTERNATE_SESSION/INDEX_ALTERNATE. We could simplify this logic by swapping INDEX_CURRENT & INDEX_ALTERNATE after B is selected,
+            // but that just makes for a very messy logic for the App to keep PREVIOUS/NEXT/CURRENT logic in order. So lets just reverse it here so A = INDEX_ALTERNATE, B = INDEX_CURRENT
+            g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume);
+            Communications::Write(Command::VOLUME_ALT_CHANGE);
+
+            if (g_Sessions[SessionIndex::INDEX_ALTERNATE].data.id != g_Sessions[SessionIndex::INDEX_CURRENT].data.id)
+            {
+                g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = 100 - g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume;
+                Communications::Write(Command::VOLUME_CHANGE);
+            }
+        }
+    }
+    else
+    {
+        if (encoderDelta > 0)
+            NextSession();
+        else
+            PreviousSession();
+        Display::ResetTimers();
+    }
+
     return true;
-
-  if(mode == MODE_OUTPUT)
-  {
-    if(stateOutput == STATE_OUTPUT_NAVIGATE)
-    {
-      itemIndexOutput = GetNextIndex(itemIndexOutput, devicesOutputCount, encoderDelta, settings.continuousScroll);
-      Display::ResetTimers();
-    }
-
-    else if(stateOutput == STATE_OUTPUT_EDIT)
-    {
-      devicesOutput[itemIndexOutput].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, devicesOutput[itemIndexOutput].volume);
-      SendItemVolumeCommand(&devicesOutput[itemIndexOutput], sendBuffer, encodeBuffer);
-    }
-  }
-  else  if(mode == MODE_INPUT)
-  {
-    if(stateInput == STATE_INPUT_NAVIGATE)
-    {
-      itemIndexInput = GetNextIndex(itemIndexInput, devicesInputCount, encoderDelta, settings.continuousScroll);
-      Display::ResetTimers();
-    }
-
-    else if(stateInput == STATE_INPUT_EDIT)
-    {
-      devicesInput[itemIndexInput].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, devicesInput[itemIndexInput].volume);
-      SendItemVolumeCommand(&devicesInput[itemIndexInput], sendBuffer, encodeBuffer);
-    }
-  }
-  else if(mode == MODE_APPLICATION)
-  {
-    if(stateApplication == STATE_APPLICATION_NAVIGATE)
-    {
-      itemIndexApp = GetNextIndex(itemIndexApp, sessionCount, encoderDelta, settings.continuousScroll);
-      Display::ResetTimers();
-    }
-    else if(stateApplication == STATE_APPLICATION_EDIT)
-    {
-      sessions[itemIndexApp].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, sessions[itemIndexApp].volume);
-      SendItemVolumeCommand(&sessions[itemIndexApp], sendBuffer, encodeBuffer);
-    }
-  }
-  else if(mode == MODE_GAME)
-  {
-    if(stateGame == STATE_GAME_SELECT_A)
-    {
-      itemIndexGameA = GetNextIndex(itemIndexGameA, sessionCount, encoderDelta, settings.continuousScroll);
-      Display::ResetTimers();
-    }
-    else if(stateGame == STATE_GAME_SELECT_B)
-    {
-      itemIndexGameB = GetNextIndex(itemIndexGameB, sessionCount, encoderDelta, settings.continuousScroll);
-      Display::ResetTimers();
-    }
-
-    else if(stateGame == STATE_GAME_EDIT)
-    {
-      sessions[itemIndexGameA].volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, sessions[itemIndexGameA].volume);
-      SendItemVolumeCommand(&sessions[itemIndexGameA], sendBuffer, encodeBuffer);
-
-      if(itemIndexGameA != itemIndexGameB)
-        RebalanceGameVolume(sessions[itemIndexGameA].volume, itemIndexGameB);
-    } 
-  }
-  
-  return true;
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 bool ProcessEncoderButton()
 {
-  ButtonEvent readButtonEvent = none;
-  cli();
-  readButtonEvent = buttonEvent;
-  buttonEvent = none;
-  sei();
-  
-  if(readButtonEvent == none)
-  {
+    ButtonEvent readButtonEvent = none;
+    cli();
+    readButtonEvent = buttonEvent;
+    buttonEvent = none;
+    sei();
+
+    if (readButtonEvent == ButtonEvent::tap)
+    {
+        if (g_DisplayAsleep)
+            return true;
+
+        g_DisplayState[g_DisplayMode.id] = (g_DisplayState[g_DisplayMode.id] + 1) % g_DisplayMode.id != DisplayMode::MODE_GAME ? 2 : 3;
+
+        if (g_DisplayMode.id == DisplayMode::MODE_INPUT || g_DisplayMode.id == DisplayMode::MODE_OUTPUT)
+        {
+            for (uint8_t i = 0; i < SessionIndex::INDEX_MAX; i++)
+                g_Sessions[i].data.isDefault = false;
+            g_Sessions[SessionIndex::INDEX_CURRENT].data.isDefault = true;
+            Communications::Write(Command::VOLUME_CHANGE);
+        }
+        else if (g_DisplayMode.id == DisplayMode::MODE_GAME && g_DisplayState[g_DisplayMode.id] == STATE_SELECT_B)
+        {
+            g_Sessions[SessionIndex::INDEX_ALTERNATE] = g_Sessions[SessionIndex::INDEX_CURRENT];
+        }
+
+        Display::ResetTimers();
+        return true;
+    }
+    else if (readButtonEvent == ButtonEvent::doubleTap)
+    {
+        if (g_DisplayMode.id == DisplayMode::MODE_SPLASH)
+            return false;
+
+        if (g_DisplayMode.id != DisplayMode::MODE_GAME)
+        {
+            g_Sessions[SessionIndex::INDEX_CURRENT].data.isMuted = true;
+            Communications::Write(Command::VOLUME_CHANGE);
+        }
+        else
+        {
+            g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = 50;
+            g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume = 50;
+            Communications::Write(Command::VOLUME_CHANGE);
+        }
+        return true;
+    }
+    else if (readButtonEvent == ButtonEvent::hold)
+    {
+        if (g_DisplayAsleep)
+            return true;
+
+        if (g_DisplayMode.id == DisplayMode::MODE_SPLASH)
+            return false;
+
+        // TODO: So this is tricky as we need to wait for data from the pc at this point. Need a temp waiting for data screen or something
+        g_DisplayMode.id = (DisplayMode)((g_DisplayMode.id + 1) % DisplayMode::MODE_MAX);
+        if (g_DisplayMode.id == DisplayMode::MODE_SPLASH)
+            g_DisplayMode.id = (DisplayMode)(g_DisplayMode.id + 1);
+        // TODO: Also need to handle 0 data from PC for this mode
+
+        Communications::Write(Command::DISPLAY_CHANGE);
+        Display::ResetTimers();
+        return true;
+    }
+
     return false;
-  }
-  else if(readButtonEvent == tap)
-  {
-    if(stateDisplay == STATE_DISPLAY_SLEEP)
-    {
-      return true;
-    }
-    else if(mode == MODE_SPLASH)
-    {
-      stateSplash = CycleState(stateSplash, STATE_SPLASH_COUNT);
-      Display::ResetTimers();
-    }
-    else if(mode == MODE_OUTPUT)
-    {
-      if(stateOutput == STATE_OUTPUT_NAVIGATE)
-        SendSetDefaultEndpointCommand(&devicesOutput[itemIndexOutput], sendBuffer, encodeBuffer);
-
-      stateOutput = CycleState(stateOutput, STATE_OUTPUT_COUNT);
-      Display::ResetTimers();
-    }
-    else if(mode == MODE_INPUT)
-    {
-      if(stateInput == STATE_INPUT_NAVIGATE)
-        SendSetDefaultEndpointCommand(&devicesInput[itemIndexInput], sendBuffer, encodeBuffer);
-
-      stateInput = CycleState(stateInput, STATE_INPUT_COUNT);
-      Display::ResetTimers();
-    }
-    else if(mode == MODE_APPLICATION)
-    {
-      stateApplication = CycleState(stateApplication, STATE_APPLICATION_COUNT);
-      Display::ResetTimers();
-    }
-    else if(mode == MODE_GAME)
-    {
-      stateGame = CycleState(stateGame, STATE_GAME_COUNT);
-      Display::ResetTimers();
-    }
-
-    return true;
-  }
-  
-  else if(readButtonEvent == doubleTap)
-  {
-    if(mode == MODE_SPLASH)
-    {
-      return false;
-    }
-    if(mode == MODE_OUTPUT)
-    {
-      ToggleMute(devicesOutput, itemIndexOutput);
-    }
-    else if(mode == MODE_INPUT)
-    {
-      ToggleMute(devicesInput, itemIndexInput);
-    }
-    else if(mode == MODE_APPLICATION)
-    {
-      ToggleMute(sessions, itemIndexApp);
-    }
-    else if(mode == MODE_GAME && stateGame == STATE_GAME_EDIT)
-    {
-      ResetGameVolume();
-    }
-
-    return true;
-  }
-  else if(readButtonEvent == hold)
-  {
-    if(stateDisplay == STATE_DISPLAY_SLEEP)
-    {
-      return true;
-    }
-
-    if(mode == MODE_SPLASH)
-    {
-      return false;
-    }
-      
-    CycleMode();
-    Display::ResetTimers();
-    return true;
-  }
-
-  return false;
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 bool ProcessSleep()
 {
-  if(settings.sleepWhenInactive == 0)
+    if (g_Settings.sleepAfterSeconds > 0)
+        return false;
+
+    uint32_t activityTimeDelta = g_Now - g_LastActivity;
+    if (activityTimeDelta > g_Settings.sleepAfterSeconds * 1000)
+    {
+        g_DisplayAsleep = !g_DisplayAsleep;
+        return true;
+    }
+
     return false;
-
-  uint32_t activityTimeDelta = now - lastActivityTime;
-
-  if(stateDisplay == STATE_DISPLAY_AWAKE)
-  {
-    if(activityTimeDelta > settings.sleepAfterSeconds * 1000)
-    {
-      stateDisplay = STATE_DISPLAY_SLEEP;
-      return true;
-    }
-  }
-  else if(stateDisplay == STATE_DISPLAY_SLEEP)
-  {
-    if(activityTimeDelta < settings.sleepAfterSeconds * 1000)
-    {
-      stateDisplay = STATE_DISPLAY_AWAKE;
-      return true;
-    }
-  }
-
-  return false;
 }
 
 bool ProcessDisplayScroll()
 {
-  bool result = false;
-
-  if(mode == MODE_OUTPUT)
-  {
-    result = strlen(devicesOutput[itemIndexOutput].name) > DISPLAY_CHAR_MAX_X2;
-  }
-  if(mode == MODE_INPUT)
-  {
-    result = strlen(devicesInput[itemIndexInput].name) > DISPLAY_CHAR_MAX_X2;
-  }
-  else if(mode == MODE_APPLICATION)
-  {
-    result = strlen(sessions[itemIndexApp].name) > DISPLAY_CHAR_MAX_X2;
-  }
-  else if(mode == MODE_GAME)
-  {
-    if(stateGame == STATE_GAME_SELECT_A)
+    if (g_DisplayMode.id != DisplayMode::MODE_GAME)
     {
-      result = strlen(sessions[itemIndexGameA].name) > DISPLAY_CHAR_MAX_X2;
+        return strlen(g_Sessions[SessionIndex::INDEX_CURRENT].name) > DISPLAY_CHAR_MAX_X2;
     }
-    else if(stateGame == STATE_GAME_SELECT_B)
+    else
     {
-      result = strlen(sessions[itemIndexGameB].name) > DISPLAY_CHAR_MAX_X2;
+        if (g_DisplayState[g_DisplayMode.id] == STATE_EDIT)
+            return strlen(g_Sessions[SessionIndex::INDEX_CURRENT].name) > DISPLAY_GAME_EDIT_CHAR_MAX;
+        return strlen(g_Sessions[SessionIndex::INDEX_CURRENT].name) > DISPLAY_CHAR_MAX_X2;
     }
-    else if(stateGame == STATE_GAME_EDIT)
-    {
-      result = strlen(sessions[itemIndexGameA].name) > DISPLAY_GAME_EDIT_CHAR_MAX ||
-               strlen(sessions[itemIndexGameB].name) > DISPLAY_GAME_EDIT_CHAR_MAX;
-    }
-  }
-
-  return result;
+    return false;
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 void UpdateDisplay()
 {
-  if(stateDisplay == STATE_DISPLAY_SLEEP)
-  {
-    Display::Sleep();
-    return;
-  }
-
-  // TODO: Update to include devices.
-  if(mode == MODE_SPLASH)
-  {
-    if(stateSplash == STATE_SPLASH_LOGO)
+    if (g_DisplayAsleep)
     {
-      Display::SplashScreen();
+        Display::Sleep();
+        return;
     }
-    else if(stateSplash == STATE_SPLASH_INFO)
+
+    if (g_DisplayMode.id == DisplayMode::MODE_SPLASH)
     {
-      Display::InfoScreen();
+        if (g_DisplayState[g_DisplayMode.id] == STATE_LOGO)
+            Display::SplashScreen();
+        else
+            Display::InfoScreen();
     }
-  }  
-  else if(mode == MODE_OUTPUT)
-  {
-    if(stateOutput == STATE_OUTPUT_NAVIGATE)
+    else if (g_DisplayMode.id == DisplayMode::MODE_INPUT || g_DisplayMode.id == DisplayMode::MODE_OUTPUT)
     {
-      uint8_t scrollLeft = CanScrollLeft(itemIndexOutput, devicesOutputCount, settings.continuousScroll);
-      uint8_t scrollRight = CanScrollRight(itemIndexOutput, devicesOutputCount, settings.continuousScroll);
-      uint8_t isDefaultEndpoint =  devicesOutput[itemIndexOutput].id == defaultOutputEndpointId;
-
-      Display::DeviceSelectScreen(&devicesOutput[itemIndexOutput], isDefaultEndpoint, scrollLeft, scrollRight, mode);
+        if (g_DisplayState[g_DisplayMode.id] == STATE_NAVIGATE)
+        {
+            Display::DeviceSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], CanScrollLeft(), CanScrollRight(), g_DisplayMode.id);
+        }
+        else
+        {
+            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_DisplayMode.id == DisplayMode::MODE_INPUT ? "IN" : "OUT", g_DisplayMode.id);
+        }
     }
-    else if(stateOutput == STATE_OUTPUT_EDIT)
+    else if (g_DisplayMode.id == DisplayMode::MODE_APPLICATION)
     {
-      Display::DeviceEditScreen(&devicesOutput[itemIndexOutput], "OUT", mode);
+        if (g_DisplayState[g_DisplayMode.id] == STATE_NAVIGATE)
+        {
+            Display::ApplicationSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], CanScrollLeft(), CanScrollRight(), g_DisplayMode.id);
+        }
+        else
+        {
+            Display::ApplicationEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_DisplayMode.id);
+        }
     }
-  }
-  else if(mode == MODE_INPUT)
-  {
-    if(stateInput == STATE_INPUT_NAVIGATE)
+    else if (g_DisplayMode.id == DisplayMode::MODE_GAME)
     {
-      uint8_t scrollLeft = CanScrollLeft(itemIndexInput, devicesInputCount, settings.continuousScroll);
-      uint8_t scrollRight = CanScrollRight(itemIndexInput, devicesInputCount, settings.continuousScroll);
-      uint8_t isDefaultEndpoint =  devicesInput[itemIndexInput].id == defaultInputEndpointId;
-
-      Display::DeviceSelectScreen(&devicesInput[itemIndexInput], isDefaultEndpoint, scrollLeft, scrollRight, mode);
+        if (g_DisplayState[g_DisplayMode.id] != STATE_EDIT)
+        {
+            Display::GameSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_DisplayState[g_DisplayMode.id] == STATE_SELECT_A ? 'A' : 'B', CanScrollLeft(), CanScrollRight(), g_DisplayMode.id);
+        }
+        else
+        {
+            Display::ApplicationEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_DisplayMode.id);
+        }
     }
-    else if(stateInput == STATE_INPUT_EDIT)
-    {
-      Display::DeviceEditScreen(&devicesInput[itemIndexInput], "IN", mode);
-    }
-  }
-  else if(mode == MODE_APPLICATION)
-  {
-    if(stateApplication == STATE_APPLICATION_NAVIGATE)
-    {
-      uint8_t scrollLeft = CanScrollLeft(itemIndexApp, sessionCount, settings.continuousScroll);
-      uint8_t scrollRight = CanScrollRight(itemIndexApp, sessionCount, settings.continuousScroll);
-      Display::ApplicationSelectScreen(&sessions[itemIndexApp], scrollLeft, scrollRight, mode);
-    }
-    else if(stateApplication == STATE_APPLICATION_EDIT)
-      Display::ApplicationEditScreen(&sessions[itemIndexApp], mode);
-  }
-  else if(mode == MODE_GAME)
-  {
-    if(stateGame == STATE_GAME_SELECT_A)
-    {
-      uint8_t scrollLeft = CanScrollLeft(itemIndexGameA, sessionCount, settings.continuousScroll);
-      uint8_t scrollRight = CanScrollRight(itemIndexGameA, sessionCount, settings.continuousScroll);
-      Display::GameSelectScreen(&sessions[itemIndexGameA], 'A', scrollLeft, scrollRight, mode);
-    }
-    else if(stateGame == STATE_GAME_SELECT_B)
-    {
-      uint8_t scrollLeft = CanScrollLeft(itemIndexGameB, sessionCount, settings.continuousScroll);
-      uint8_t scrollRight = CanScrollRight(itemIndexGameB, sessionCount, settings.continuousScroll);
-      Display::GameSelectScreen(&sessions[itemIndexGameB], 'B', scrollLeft, scrollRight, mode);
-    }
-    else if(stateGame == STATE_GAME_EDIT)
-      Display::GameEditScreen(&sessions[itemIndexGameA], &sessions[itemIndexGameB], mode);
-  }
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void CycleMode()
-{
-  mode++;
-  if(mode == MODE_OUTPUT && devicesOutputCount == 0)
-  {
-    mode++;
-  }
-
-  if(mode == MODE_INPUT && devicesInputCount == 0)
-  {
-    mode++;
-  }
-
-  if(mode == MODE_COUNT)
-  {
-    mode = 0;
-  }
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-uint8_t CycleState(uint8_t state, uint8_t count)
-{
-  state++;
-  if(state == count)
-    state = 0;
-
-  return state;
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void ToggleMute(Item* items, int8_t index)
-{
-  items[index].isMuted = !items[index].isMuted;
-  SendItemVolumeCommand(&items[index], sendBuffer, encodeBuffer);
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-void ResetGameVolume()
-{
-  sessions[itemIndexGameA].volume = 50;
-  sessions[itemIndexGameB].volume = 50;
-
-  SendItemVolumeCommand(&sessions[itemIndexGameA], sendBuffer, encodeBuffer);
-  SendItemVolumeCommand(&sessions[itemIndexGameB], sendBuffer, encodeBuffer);
-}
-
-void RebalanceGameVolume(uint8_t sourceVolume, uint8_t targetIndex)
-{
-  sessions[targetIndex].volume = 100 - sourceVolume;
-  SendItemVolumeCommand(&sessions[targetIndex], sendBuffer, encodeBuffer);
-}
-
-//---------------------------------------------------------
-// Finds the item with the given id.
-// Returns the index of the item if found, -1 otherwise.
-//---------------------------------------------------------
-int8_t FindItem(uint32_t id, Item* items, uint8_t itemCount)
-{  
-  for(int8_t i = 0; i < itemCount; i++)
-    if(items[i].id == id)
-      return i;
-
-  return -1;
-}
-
-//---------------------------------------------------------
-// \brief Checks if target ID is the active application.
-// \param index The index of the item to be checked.
-// \returns true if ids match.
-//---------------------------------------------------------
-bool IsItemActive(int8_t index)
-{
-  if(mode == MODE_OUTPUT && itemIndexOutput == index)
-  {
-    return true;
-  }
-  else if(mode == MODE_INPUT && itemIndexInput == index)
-  {
-    return true;
-  }
-  else if(mode == MODE_APPLICATION && itemIndexApp == index)
-  {
-    return true;
-  }
-  else if(mode == MODE_GAME && (itemIndexGameA == index || itemIndexGameB == index))
-  {
-    return true;
-  }
-
-  return false;
 }

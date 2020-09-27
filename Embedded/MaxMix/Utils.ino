@@ -4,49 +4,30 @@
 // EMAIL: rhenares0@gmail.com
 //
 // DECRIPTION:
-// 
+//
 //
 //
 //********************************************************
-
 
 //********************************************************
 // *** FUNCTIONS
 //********************************************************
 //---------------------------------------------------------
 //---------------------------------------------------------
-uint8_t CanScrollLeft(uint8_t itemIndex, uint8_t itemCount, uint8_t continuousScroll)
+bool CanScrollLeft(void)
 {
-  if((continuousScroll && itemCount > 1) || (itemIndex > 0))
-    return true;
-  
-  return false;
+    if ((g_Settings.continuousScroll && g_SessionInfo.count > 1) || (g_SessionInfo.count > 0))
+        return true;
+
+    return false;
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-uint8_t CanScrollRight(uint8_t itemIndex, uint8_t itemCount, uint8_t continuousScroll)
+bool CanScrollRight(void)
 {
-  if((continuousScroll && itemCount > 1) || ((itemCount - itemIndex - 1) > 0))
-    return true;
+    if ((g_Settings.continuousScroll && g_SessionInfo.count > 1) || ((g_SessionInfo.count - g_SessionInfo.current - 1) > 0))
+        return true;
 
-  return false;
-}
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-int8_t GetNextIndex(int8_t itemIndex, uint8_t itemCount, int8_t direction, uint8_t loop)
-{
-  itemIndex += direction;
-  if(loop)
-  {
-    if(itemIndex >= itemCount)
-      itemIndex = 0;
-    else if(itemIndex < 0)
-      itemIndex = itemCount - 1;
-  }
-  else
-    itemIndex = constrain(itemIndex, 0, itemCount - 1);
-
-  return itemIndex;
+    return false;
 }

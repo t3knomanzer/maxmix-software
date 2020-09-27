@@ -2,10 +2,10 @@
 #include <Messages.h>
 
 // Defined and default initialized via {}
-Message::Settings _settings {};
+Message::DeviceSettings _settings {};
 Message::SessionInfo _sessionInfo {};
-Message::Session _session[3] {};
-Message::Screen _screen {};
+Message::session_t _session[3] {};
+Message::DisplayData _screen {};
 
 uint8_t _loopCount = 0;
 
