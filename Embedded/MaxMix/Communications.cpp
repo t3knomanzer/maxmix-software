@@ -4,7 +4,6 @@
 extern DeviceSettings g_Settings;
 extern SessionInfo g_SessionInfo;
 extern SessionData g_Sessions[4];
-extern DisplayData g_DisplayMode;
 extern uint32_t g_LastMessage;
 extern uint32_t g_Now;
 
@@ -44,8 +43,6 @@ namespace Communications
                 Serial.readBytes((char *)&g_Sessions[SessionIndex::INDEX_CURRENT].data, sizeof(VolumeData));
             else if (command == Command::VOLUME_ALT_CHANGE)
                 Serial.readBytes((char *)&g_Sessions[SessionIndex::INDEX_ALTERNATE].data, sizeof(VolumeData));
-            else if (command == Command::DISPLAY_CHANGE)
-                Serial.readBytes((char *)&g_DisplayMode, sizeof(DisplayData));
 #ifdef TEST_HARNESS
             else if (command == Command::DEBUG:
             {
@@ -57,7 +54,6 @@ namespace Communications
                 Write(Command::NEXT_SESSION);
                 Write(Command::VOLUME_CHANGE);
                 Write(Command::VOLUME_ALT_CHANGE);
-                Write(Command::DISPLAY_CHANGE);
             }
 #endif
             Write(Command::OK);
@@ -86,11 +82,6 @@ namespace Communications
         {
             Serial.write(command);
             Serial.write((char *)&g_Sessions[SessionIndex::INDEX_ALTERNATE].data, sizeof(VolumeData));
-        }
-        else if (command == Command::DISPLAY_CHANGE)
-        {
-            Serial.write(command);
-            Serial.write((char *)&g_DisplayMode, sizeof(DisplayData));
         }
         else if (command == Command::OK)
         {

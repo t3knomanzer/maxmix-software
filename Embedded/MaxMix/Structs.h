@@ -2,32 +2,16 @@
 
 #include "Config.h"
 
-// NOTES: Code might be simpler if we use an array of uint8_t and index into it using DisplayMode's value instead
-struct __attribute__((__packed__)) DisplayState
-{
-    // Splash (true) vs Firmware info (false)
-    bool splash : 1;
-    // Navigate (true) vs Edit (false)
-    bool output : 1;
-    bool input : 1;
-    bool application : 1;
-    // Select A (1), Select B (2) Edit (0)
-    uint8_t game : 2;
-    // new modes
-    uint8_t unused : 2;
-    DisplayState() : splash(true), output(false), input(false), application(true), game(1), unused(3) {}
-};
-static_assert(sizeof(DisplayState) == 1, "Invalid Expected Message Size");
-
 struct __attribute__((__packed__)) SessionInfo
 {
-    uint8_t current; // 8 bits
-    uint8_t count;   // 8 bits
-    // 16 bits - 2 bytes
+    DisplayMode mode;    // 8 bits
+    uint8_t current;     // 8 bits
+    uint8_t sessions[3]; // 24 bits - input, output, application
+    // 40 bits - 5 bytes
 
-    SessionInfo() : current(0), count(0) {}
+    SessionInfo() : mode(DisplayMode::MODE_SPLASH), current(0), sessions{0} {}
 };
-static_assert(sizeof(SessionInfo) == 2, "Invalid Expected Message Size");
+static_assert(sizeof(SessionInfo) == 5, "Invalid Expected Message Size");
 
 struct __attribute__((__packed__)) VolumeData
 {
@@ -51,15 +35,6 @@ struct __attribute__((__packed__)) SessionData
     SessionData() : name{0}, data{} {}
 };
 static_assert(sizeof(SessionData) == 32, "Invalid Expected Message Size");
-
-struct __attribute__((__packed__)) DisplayData
-{
-    DisplayMode id; // 8 bits
-    // 8 bits - 1 byte
-
-    DisplayData() : id(DisplayMode::MODE_SPLASH) {}
-};
-static_assert(sizeof(DisplayData) == 1, "Invalid Expected Message Size");
 
 struct __attribute__((__packed__)) Color
 {

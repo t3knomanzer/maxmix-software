@@ -14,11 +14,11 @@ void UpdateLighting()
     {
         LightingBlackOut();
     }
-    else if (g_DisplayMode.id == DisplayMode::MODE_SPLASH)
+    else if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
     {
         LightingCircularFunk();
     }
-    else if (g_DisplayMode.id == DisplayMode::MODE_GAME)
+    else if (g_SessionInfo.mode == DisplayMode::MODE_GAME)
     {
         LightingVolume(&g_Sessions[SessionIndex::INDEX_CURRENT], &g_Settings.mixChannelAColor, &g_Settings.mixChannelBColor);
     }

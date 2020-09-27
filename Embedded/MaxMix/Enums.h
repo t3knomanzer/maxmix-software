@@ -14,7 +14,6 @@ enum Command : int8_t
     NEXT_SESSION,
     VOLUME_CHANGE,
     VOLUME_ALT_CHANGE,
-    DISPLAY_CHANGE,
     DEBUG
 };
 

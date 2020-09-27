@@ -29,32 +29,29 @@
 //********************************************************
 // *** VARIABLES
 //*******************************************************
-// Serial Communication
-DeviceSettings g_Settings{};
-SessionInfo g_SessionInfo{};
-SessionData g_Sessions[SessionIndex::INDEX_MAX]{};
-
 // State
-bool g_DisplayAsleep = false;
-DisplayData g_DisplayMode{};
-uint8_t g_DisplayState[DisplayMode::MODE_MAX] = {STATE_LOGO, STATE_EDIT, STATE_EDIT, STATE_NAVIGATE, STATE_SELECT_A};
-uint8_t g_DisplayDirty = true;
+DeviceSettings g_Settings;
+SessionInfo g_SessionInfo;
+SessionData g_Sessions[SessionIndex::INDEX_MAX];
+uint8_t g_ModeState[DisplayMode::MODE_MAX];
+uint8_t g_DisplayDirty;
+bool g_DisplayAsleep;
 
 // Encoder Button
 ButtonEvents g_EncoderButton;
-volatile ButtonEvent g_ButtonEvent = none;
+volatile ButtonEvent g_ButtonEvent;
 
 // Rotary Encoder
 Rotary g_Encoder(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
-uint32_t g_LastSteps = 0;
-int8_t g_PreviousSteps = 0;
-volatile int8_t g_EncoderSteps = 0;
+int8_t g_PreviousSteps;
+volatile int8_t g_EncoderSteps;
 
 // Time & Sleep
-uint32_t g_Now = 0;
-uint32_t g_LastMessage = 0;
-uint32_t g_LastActivity = 0;
-uint32_t g_LastPixelUpdate = 0;
+uint32_t g_Now;
+uint32_t g_LastMessage;
+uint32_t g_LastActivity;
+uint32_t g_LastPixelUpdate;
+uint32_t g_LastSteps;
 
 // Lighting
 Adafruit_NeoPixel g_Pixels(PIXELS_COUNT, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
@@ -83,6 +80,8 @@ void timerIsr()
 //---------------------------------------------------------
 void setup()
 {
+    ResetState();
+
     // --- Comms
     Communications::Initialize();
 
@@ -115,7 +114,7 @@ void loop()
     // Returns the type of message we recieved, update oled if we recieved data that impacts what is currently on display
     // This should really depend on a few things, like setings of continious scroll, vs new item index vs count, etc.
     // for now lets be safe and check for any command that impacts a stored value, we can fine tune this later
-    g_DisplayDirty = (command >= Command::SETTINGS || command <= Command::DISPLAY_CHANGE);
+    g_DisplayDirty = (command >= Command::SETTINGS || command <= Command::VOLUME_ALT_CHANGE);
 
     if (ProcessEncoderRotation())
     {
@@ -150,29 +149,42 @@ void loop()
     }
 
     // Reset / Disconnect if no serial activity.
-    if ((g_DisplayMode.id != DisplayMode::MODE_SPLASH) && (g_LastMessage + DEVICE_RESET_AFTER_INACTIVTY < g_Now))
-    {
+    if ((g_SessionInfo.mode != DisplayMode::MODE_SPLASH) && (g_LastMessage + DEVICE_RESET_AFTER_INACTIVTY < g_Now))
         ResetState();
-        g_LastActivity = g_Now;
-    }
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 void ResetState()
 {
-    g_DisplayMode = {};
-    g_DisplayState[DisplayMode::MODE_SPLASH] = STATE_LOGO;
-    g_DisplayState[DisplayMode::MODE_OUTPUT] = STATE_EDIT;
-    g_DisplayState[DisplayMode::MODE_INPUT] = STATE_EDIT;
-    g_DisplayState[DisplayMode::MODE_APPLICATION] = STATE_NAVIGATE;
-    g_DisplayState[DisplayMode::MODE_GAME] = STATE_SELECT_A;
-
-    g_SessionInfo = {};
-    g_Sessions[4] = {};
-    g_DisplayMode = {};
-    g_LastMessage = 0;
+    // State
+    g_Settings = DeviceSettings();
+    g_SessionInfo = SessionInfo();
+    g_Sessions[SessionIndex::INDEX_PREVIOUS] = SessionData();
+    g_Sessions[SessionIndex::INDEX_CURRENT] = SessionData();
+    g_Sessions[SessionIndex::INDEX_ALTERNATE] = SessionData();
+    g_Sessions[SessionIndex::INDEX_NEXT] = SessionData();
+    g_ModeState[DisplayMode::MODE_SPLASH] = STATE_LOGO;
+    g_ModeState[DisplayMode::MODE_OUTPUT] = STATE_EDIT;
+    g_ModeState[DisplayMode::MODE_INPUT] = STATE_EDIT;
+    g_ModeState[DisplayMode::MODE_APPLICATION] = STATE_NAVIGATE;
+    g_ModeState[DisplayMode::MODE_GAME] = STATE_SELECT_A;
     g_DisplayDirty = true;
+    g_DisplayAsleep = false;
+
+    // Encoder Button
+    g_ButtonEvent = ButtonEvent::none;
+
+    // Rotary Encoder
+    g_PreviousSteps = 0;
+    g_EncoderSteps = 0;
+
+    // Time & Sleep
+    g_Now = millis();
+    g_LastSteps = 0;
+    g_LastMessage = 0;
+    g_LastActivity = g_Now;
+    g_LastPixelUpdate = 0;
 }
 
 //---------------------------------------------------------
@@ -216,7 +228,7 @@ void PreviousSession(void)
         return;
 
     if (g_SessionInfo.current == 0)
-        g_SessionInfo.current = g_SessionInfo.count;
+        g_SessionInfo.current = g_SessionInfo.sessions[g_SessionInfo.mode - DisplayMode::MODE_OUTPUT];
 
     g_SessionInfo.current--;
     g_Sessions[SessionIndex::INDEX_NEXT] = g_Sessions[SessionIndex::INDEX_CURRENT];
@@ -229,7 +241,7 @@ void NextSession(void)
     if (CanScrollRight())
         return;
 
-    g_SessionInfo.current = (g_SessionInfo.current + 1) % g_SessionInfo.count;
+    g_SessionInfo.current = (g_SessionInfo.current + 1) % g_SessionInfo.sessions[g_SessionInfo.mode - DisplayMode::MODE_OUTPUT];
     g_Sessions[SessionIndex::INDEX_PREVIOUS] = g_Sessions[SessionIndex::INDEX_CURRENT];
     g_Sessions[SessionIndex::INDEX_CURRENT] = g_Sessions[SessionIndex::INDEX_NEXT];
     Communications::Write(Command::SESSION_INFO);
@@ -244,7 +256,7 @@ inline bool CanScrollLeft(void)
 
 inline bool CanScrollRight(void)
 {
-    if (!g_Settings.continuousScroll && g_SessionInfo.current == g_SessionInfo.count - 1)
+    if (!g_Settings.continuousScroll && g_SessionInfo.current == g_SessionInfo.sessions[g_SessionInfo.mode - DisplayMode::MODE_OUTPUT] - 1)
         return false;
     return true;
 }
@@ -265,12 +277,12 @@ bool ProcessEncoderRotation()
     uint32_t deltaTime = g_Now - g_LastSteps;
     g_LastSteps = g_Now;
 
-    if (g_DisplayAsleep || g_DisplayMode.id == DisplayMode::MODE_SPLASH)
+    if (g_DisplayAsleep || g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
         return true;
 
-    if (g_DisplayState[g_DisplayMode.id] == STATE_EDIT)
+    if (g_ModeState[g_SessionInfo.mode] == STATE_EDIT)
     {
-        if (g_DisplayMode.id != DisplayMode::MODE_GAME)
+        if (g_SessionInfo.mode != DisplayMode::MODE_GAME)
         {
             g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = ComputeAcceleratedVolume(encoderSteps, deltaTime, g_Sessions[SessionIndex::INDEX_CURRENT].data.volume);
             Communications::Write(Command::VOLUME_CHANGE);
@@ -317,16 +329,16 @@ bool ProcessEncoderButton()
         if (g_DisplayAsleep)
             return true;
 
-        g_DisplayState[g_DisplayMode.id] = (g_DisplayState[g_DisplayMode.id] + 1) % (g_DisplayMode.id != DisplayMode::MODE_GAME ? 2 : 3);
+        g_ModeState[g_SessionInfo.mode] = (g_ModeState[g_SessionInfo.mode] + 1) % (g_SessionInfo.mode != DisplayMode::MODE_GAME ? 2 : 3);
 
-        if (g_DisplayMode.id == DisplayMode::MODE_INPUT || g_DisplayMode.id == DisplayMode::MODE_OUTPUT)
+        if (g_SessionInfo.mode == DisplayMode::MODE_INPUT || g_SessionInfo.mode == DisplayMode::MODE_OUTPUT)
         {
             for (uint8_t i = 0; i < SessionIndex::INDEX_MAX; i++)
                 g_Sessions[i].data.isDefault = false;
             g_Sessions[SessionIndex::INDEX_CURRENT].data.isDefault = true;
             Communications::Write(Command::VOLUME_CHANGE);
         }
-        else if (g_DisplayMode.id == DisplayMode::MODE_GAME && g_DisplayState[g_DisplayMode.id] == STATE_SELECT_B)
+        else if (g_SessionInfo.mode == DisplayMode::MODE_GAME && g_ModeState[g_SessionInfo.mode] == STATE_SELECT_B)
         {
             g_Sessions[SessionIndex::INDEX_ALTERNATE] = g_Sessions[SessionIndex::INDEX_CURRENT];
         }
@@ -336,10 +348,10 @@ bool ProcessEncoderButton()
     }
     else if (readButtonEvent == ButtonEvent::doubleTap)
     {
-        if (g_DisplayMode.id == DisplayMode::MODE_SPLASH)
+        if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
             return false;
 
-        if (g_DisplayMode.id != DisplayMode::MODE_GAME)
+        if (g_SessionInfo.mode != DisplayMode::MODE_GAME)
         {
             g_Sessions[SessionIndex::INDEX_CURRENT].data.isMuted = true;
             Communications::Write(Command::VOLUME_CHANGE);
@@ -357,17 +369,16 @@ bool ProcessEncoderButton()
         if (g_DisplayAsleep)
             return true;
 
-        if (g_DisplayMode.id == DisplayMode::MODE_SPLASH)
+        if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
             return false;
 
         // TODO: So this is tricky as we need to wait for data from the pc at this point. Need a temp waiting for data screen or something
-        g_DisplayMode.id = (DisplayMode)((g_DisplayMode.id + 1) % DisplayMode::MODE_MAX);
-        if (g_DisplayMode.id == DisplayMode::MODE_SPLASH)
-            g_DisplayMode.id = (DisplayMode)(g_DisplayMode.id + 1);
+        g_SessionInfo.mode = (DisplayMode)((g_SessionInfo.mode + 1) % DisplayMode::MODE_MAX);
+        if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
+            g_SessionInfo.mode = (DisplayMode)(g_SessionInfo.mode + 1);
         // TODO: Also need to handle 0 data from PC for this mode
-        // TODO: Maybe change g_SessionInfo to contain per type counts
 
-        Communications::Write(Command::DISPLAY_CHANGE);
+        Communications::Write(Command::SESSION_INFO);
         Display::ResetTimers();
         return true;
     }
@@ -394,13 +405,13 @@ bool ProcessSleep()
 
 bool ProcessDisplayScroll()
 {
-    if (g_DisplayMode.id != DisplayMode::MODE_GAME)
+    if (g_SessionInfo.mode != DisplayMode::MODE_GAME)
     {
         return strlen(g_Sessions[SessionIndex::INDEX_CURRENT].name) > DISPLAY_CHAR_MAX_X2;
     }
     else
     {
-        if (g_DisplayState[g_DisplayMode.id] == STATE_EDIT)
+        if (g_ModeState[g_SessionInfo.mode] == STATE_EDIT)
             return strlen(g_Sessions[SessionIndex::INDEX_CURRENT].name) > DISPLAY_GAME_EDIT_CHAR_MAX;
         return strlen(g_Sessions[SessionIndex::INDEX_CURRENT].name) > DISPLAY_CHAR_MAX_X2;
     }
@@ -417,44 +428,44 @@ void UpdateDisplay()
         return;
     }
 
-    if (g_DisplayMode.id == DisplayMode::MODE_SPLASH)
+    if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
     {
-        if (g_DisplayState[g_DisplayMode.id] == STATE_LOGO)
+        if (g_ModeState[g_SessionInfo.mode] == STATE_LOGO)
             Display::SplashScreen();
         else
             Display::InfoScreen();
     }
-    else if (g_DisplayMode.id == DisplayMode::MODE_INPUT || g_DisplayMode.id == DisplayMode::MODE_OUTPUT)
+    else if (g_SessionInfo.mode == DisplayMode::MODE_INPUT || g_SessionInfo.mode == DisplayMode::MODE_OUTPUT)
     {
-        if (g_DisplayState[g_DisplayMode.id] == STATE_NAVIGATE)
+        if (g_ModeState[g_SessionInfo.mode] == STATE_NAVIGATE)
         {
-            Display::DeviceSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], CanScrollLeft(), CanScrollRight(), g_DisplayMode.id);
+            Display::DeviceSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], CanScrollLeft(), CanScrollRight(), g_SessionInfo.mode);
         }
         else
         {
-            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_DisplayMode.id == DisplayMode::MODE_INPUT ? "IN" : "OUT", g_DisplayMode.id);
+            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode == DisplayMode::MODE_INPUT ? "IN" : "OUT", g_SessionInfo.mode);
         }
     }
-    else if (g_DisplayMode.id == DisplayMode::MODE_APPLICATION)
+    else if (g_SessionInfo.mode == DisplayMode::MODE_APPLICATION)
     {
-        if (g_DisplayState[g_DisplayMode.id] == STATE_NAVIGATE)
+        if (g_ModeState[g_SessionInfo.mode] == STATE_NAVIGATE)
         {
-            Display::ApplicationSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], CanScrollLeft(), CanScrollRight(), g_DisplayMode.id);
+            Display::ApplicationSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], CanScrollLeft(), CanScrollRight(), g_SessionInfo.mode);
         }
         else
         {
-            Display::ApplicationEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_DisplayMode.id);
+            Display::ApplicationEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode);
         }
     }
-    else if (g_DisplayMode.id == DisplayMode::MODE_GAME)
+    else if (g_SessionInfo.mode == DisplayMode::MODE_GAME)
     {
-        if (g_DisplayState[g_DisplayMode.id] != STATE_EDIT)
+        if (g_ModeState[g_SessionInfo.mode] != STATE_EDIT)
         {
-            Display::GameSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_DisplayState[g_DisplayMode.id] == STATE_SELECT_A ? 'A' : 'B', CanScrollLeft(), CanScrollRight(), g_DisplayMode.id);
+            Display::GameSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_ModeState[g_SessionInfo.mode] == STATE_SELECT_A ? 'A' : 'B', CanScrollLeft(), CanScrollRight(), g_SessionInfo.mode);
         }
         else
         {
-            Display::ApplicationEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_DisplayMode.id);
+            Display::ApplicationEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode);
         }
     }
 }
