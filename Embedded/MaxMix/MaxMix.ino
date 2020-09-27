@@ -327,7 +327,7 @@ bool ProcessEncoderButton()
         if (g_DisplayAsleep)
             return true;
 
-        g_DisplayState[g_DisplayMode.id] = (g_DisplayState[g_DisplayMode.id] + 1) % g_DisplayMode.id != DisplayMode::MODE_GAME ? 2 : 3;
+        g_DisplayState[g_DisplayMode.id] = (g_DisplayState[g_DisplayMode.id] + 1) % (g_DisplayMode.id != DisplayMode::MODE_GAME ? 2 : 3);
 
         if (g_DisplayMode.id == DisplayMode::MODE_INPUT || g_DisplayMode.id == DisplayMode::MODE_OUTPUT)
         {
@@ -388,17 +388,17 @@ bool ProcessEncoderButton()
 //---------------------------------------------------------
 bool ProcessSleep()
 {
-    if (g_Settings.sleepAfterSeconds > 0)
+    if (g_Settings.sleepAfterSeconds == 0)
         return false;
 
+    bool lastState = g_DisplayAsleep;
     uint32_t activityTimeDelta = g_Now - g_LastActivity;
     if (activityTimeDelta > g_Settings.sleepAfterSeconds * 1000)
-    {
-        g_DisplayAsleep = !g_DisplayAsleep;
-        return true;
-    }
+        g_DisplayAsleep = true;
+    else if (activityTimeDelta < g_Settings.sleepAfterSeconds * 1000)
+        g_DisplayAsleep = false;
 
-    return false;
+    return lastState != g_DisplayAsleep;
 }
 
 bool ProcessDisplayScroll()
