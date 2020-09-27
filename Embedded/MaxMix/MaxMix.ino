@@ -41,14 +41,14 @@ uint8_t g_DisplayState[DisplayMode::MODE_MAX] = {STATE_LOGO, STATE_EDIT, STATE_E
 uint8_t g_DisplayDirty = true;
 
 // Encoder Button
-ButtonEvents encoderButton;
-volatile ButtonEvent buttonEvent = none;
+ButtonEvents g_EncoderButton;
+volatile ButtonEvent g_ButtonEvent = none;
 
 // Rotary Encoder
-Rotary encoderRotary(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
-uint32_t encoderLastTransition = 0;
-int8_t prevDir = 0;
-volatile int8_t steps = 0;
+Rotary g_Encoder(PIN_ENCODER_OUTB, PIN_ENCODER_OUTA);
+uint32_t g_LastSteps = 0;
+int8_t g_PreviousSteps = 0;
+volatile int8_t g_EncoderSteps = 0;
 
 // Time & Sleep
 uint32_t g_Now = 0;
@@ -64,15 +64,15 @@ Adafruit_NeoPixel g_Pixels(PIXELS_COUNT, PIN_PIXELS, NEO_GRB + NEO_KHZ800);
 //********************************************************
 void timerIsr()
 {
-    uint8_t encoderDir = encoderRotary.process();
+    uint8_t encoderDir = g_Encoder.process();
     if (encoderDir == DIR_CW)
-        steps++;
+        g_EncoderSteps++;
     else if (encoderDir == DIR_CCW)
-        steps--;
+        g_EncoderSteps--;
 
-    if (buttonEvent == none && encoderButton.update())
+    if (g_ButtonEvent == none && g_EncoderButton.update())
     {
-        buttonEvent = encoderButton.event();
+        g_ButtonEvent = g_EncoderButton.event();
     }
 }
 
@@ -97,9 +97,9 @@ void setup()
 
     // --- Encoder
     pinMode(PIN_ENCODER_SWITCH, INPUT_PULLUP);
-    encoderButton.attach(PIN_ENCODER_SWITCH);
-    encoderButton.debounceTime(15);
-    encoderRotary.begin(true);
+    g_EncoderButton.attach(PIN_ENCODER_SWITCH);
+    g_EncoderButton.debounceTime(15);
+    g_Encoder.begin(true);
     Timer1.initialize(1000);
     Timer1.attachInterrupt(timerIsr);
 }
@@ -184,17 +184,14 @@ void ResetState()
 //---------------------------------------------------------
 int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t volume)
 {
-    if (!encoderDelta)
+    if (encoderDelta == 0)
         return volume;
 
-    bool dirChanged = ((prevDir > 0) && (encoderDelta < 0)) || ((prevDir < 0) && (encoderDelta > 0));
+    // Test the top bit (negative bit) for direction changed
+    bool dirChanged = (g_PreviousSteps & 0x80) != (encoderDelta & 0x80);
 
-    uint32_t step;
-    if (dirChanged)
-    {
-        step = 1;
-    }
-    else
+    uint32_t step = 1;
+    if (!dirChanged)
     {
         // Compute acceleration using fixed point maths.
         SQ15x16 speed = (SQ15x16)encoderDelta * 1000 / deltaTime;
@@ -203,23 +200,19 @@ int8_t ComputeAcceleratedVolume(int8_t encoderDelta, uint32_t deltaTime, int16_t
         step = fstep.getInteger();
     }
 
-    prevDir = encoderDelta;
+    g_PreviousSteps = encoderDelta;
 
     if (encoderDelta > 0)
-    {
         volume += step;
-    }
-    else if (encoderDelta < 0)
-    {
+    else
         volume -= step;
-    }
 
     return constrain(volume, 0, 100);
 }
 
 void PreviousSession(void)
 {
-    if (!g_Settings.continuousScroll && g_SessionInfo.current == 0)
+    if (!CanScrollLeft())
         return;
 
     if (g_SessionInfo.current == 0)
@@ -233,7 +226,7 @@ void PreviousSession(void)
 
 void NextSession(void)
 {
-    if (!g_Settings.continuousScroll && g_SessionInfo.current == g_SessionInfo.count - 1)
+    if (CanScrollRight())
         return;
 
     g_SessionInfo.current = (g_SessionInfo.current + 1) % g_SessionInfo.count;
@@ -242,38 +235,35 @@ void NextSession(void)
     Communications::Write(Command::SESSION_INFO);
 }
 
-bool CanScrollLeft(void)
+inline bool CanScrollLeft(void)
 {
-    if ((g_Settings.continuousScroll && g_SessionInfo.count > 1) || (g_SessionInfo.count > 0))
-        return true;
-
-    return false;
+    if (!g_Settings.continuousScroll && g_SessionInfo.current == 0)
+        return false;
+    return true;
 }
 
-bool CanScrollRight(void)
+inline bool CanScrollRight(void)
 {
-    if ((g_Settings.continuousScroll && g_SessionInfo.count > 1) || ((g_SessionInfo.count - g_SessionInfo.current - 1) > 0))
-        return true;
-
-    return false;
+    if (!g_Settings.continuousScroll && g_SessionInfo.current == g_SessionInfo.count - 1)
+        return false;
+    return true;
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 bool ProcessEncoderRotation()
 {
-    int8_t encoderDelta;
+    int8_t encoderSteps = 0;
     cli();
-    encoderDelta = steps;
-    if (encoderDelta != 0)
-        steps = 0;
+    encoderSteps = g_EncoderSteps;
+    g_EncoderSteps = 0;
     sei();
 
-    if (encoderDelta == 0)
+    if (encoderSteps == 0)
         return false;
 
-    uint32_t deltaTime = g_Now - encoderLastTransition;
-    encoderLastTransition = g_Now;
+    uint32_t deltaTime = g_Now - g_LastSteps;
+    g_LastSteps = g_Now;
 
     if (g_DisplayAsleep || g_DisplayMode.id == DisplayMode::MODE_SPLASH)
         return true;
@@ -282,7 +272,7 @@ bool ProcessEncoderRotation()
     {
         if (g_DisplayMode.id != DisplayMode::MODE_GAME)
         {
-            g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, g_Sessions[SessionIndex::INDEX_CURRENT].data.volume);
+            g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = ComputeAcceleratedVolume(encoderSteps, deltaTime, g_Sessions[SessionIndex::INDEX_CURRENT].data.volume);
             Communications::Write(Command::VOLUME_CHANGE);
         }
         else
@@ -290,7 +280,7 @@ bool ProcessEncoderRotation()
             // NOTES: Game mode works by selecting 2 sessions, to make things simpler for all "NAVIGATE" logic, CURRENT_SESSION/INDEX_CURRENT sould always be what we work with
             // and when we "select" a session for A, we copy it into ALTERNATE_SESSION/INDEX_ALTERNATE. We could simplify this logic by swapping INDEX_CURRENT & INDEX_ALTERNATE after B is selected,
             // but that just makes for a very messy logic for the App to keep PREVIOUS/NEXT/CURRENT logic in order. So lets just reverse it here so A = INDEX_ALTERNATE, B = INDEX_CURRENT
-            g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume = ComputeAcceleratedVolume(encoderDelta, deltaTime, g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume);
+            g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume = ComputeAcceleratedVolume(encoderSteps, deltaTime, g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume);
             Communications::Write(Command::VOLUME_ALT_CHANGE);
 
             if (g_Sessions[SessionIndex::INDEX_ALTERNATE].data.id != g_Sessions[SessionIndex::INDEX_CURRENT].data.id)
@@ -302,7 +292,7 @@ bool ProcessEncoderRotation()
     }
     else
     {
-        if (encoderDelta > 0)
+        if (encoderSteps > 0)
             NextSession();
         else
             PreviousSession();
@@ -318,8 +308,8 @@ bool ProcessEncoderButton()
 {
     ButtonEvent readButtonEvent = none;
     cli();
-    readButtonEvent = buttonEvent;
-    buttonEvent = none;
+    readButtonEvent = g_ButtonEvent;
+    g_ButtonEvent = none;
     sei();
 
     if (readButtonEvent == ButtonEvent::tap)
@@ -375,6 +365,7 @@ bool ProcessEncoderButton()
         if (g_DisplayMode.id == DisplayMode::MODE_SPLASH)
             g_DisplayMode.id = (DisplayMode)(g_DisplayMode.id + 1);
         // TODO: Also need to handle 0 data from PC for this mode
+        // TODO: Maybe change g_SessionInfo to contain per type counts
 
         Communications::Write(Command::DISPLAY_CHANGE);
         Display::ResetTimers();

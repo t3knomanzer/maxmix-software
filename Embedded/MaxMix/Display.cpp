@@ -8,9 +8,9 @@ namespace Display
     //---------------------------------------------------------
     static SQ15x16 displayTimer[] = {0, 0};
 
-    void UpdateTimers(uint32_t delta)
+    void UpdateTimers(uint32_t deltaTime)
     {
-        SQ15x16 dt = SQ15x16(delta) / 1000;
+        SQ15x16 dt = SQ15x16(deltaTime) / 1000;
         displayTimer[0] += dt;
         displayTimer[1] += dt;
     }
