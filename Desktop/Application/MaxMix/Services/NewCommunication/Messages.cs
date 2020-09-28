@@ -1,241 +1,256 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace MaxMix.Services.NewCommunication
 {
     public enum Command
     {
         ERROR = -1,
+        NONE = 0,
         TEST = 1,
         OK,
         SETTINGS,
         SESSION_INFO,
-        CURRENT,
-        PREVIOUS,
-        NEXT,
-        VOLUME,
-        SCREEN,
+        CURRENT_SESSION,
+        ALTERNATE_SESSION,
+        PREVIOUS_SESSION,
+        NEXT_SESSION,
+        VOLUME_CHANGE,
+        VOLUME_ALT_CHANGE,
         DEBUG
     }
 
-    static class MessageUtils
+    public enum SessionIndex
     {
-        // Only use this in the test framework as it generates garbage arrays to test against
-        public static bool PayloadEquals(this IMessage message, IMessage other)
+        INDEX_PREVIOUS,
+        INDEX_CURRENT,
+        INDEX_ALTERNATE,
+        INDEX_NEXT,
+        INDEX_MAX
+    };
+
+    public enum DisplayMode
+    {
+        MODE_SPLASH,
+        MODE_OUTPUT,
+        MODE_INPUT,
+        MODE_APPLICATION,
+        MODE_GAME,
+        MODE_MAX
+    };
+
+    internal static class MessageUtils
+    {
+        public static unsafe bool UnsafeEquals<T>(this T data, T other) where T : unmanaged, IMessage
         {
-            var bytes = message.GetBytes();
-            var otherBytes = other.GetBytes();
-            return Enumerable.SequenceEqual(bytes, otherBytes);
+            bool equal = true;
+            byte* ptr1 = (byte*)&data;
+            byte* ptr2 = (byte*)&other;
+            for (int i = 0; i < sizeof(T); i++)
+                equal = equal && ptr1[i] == ptr2[i];
+            return equal;
         }
 
-        public static void Extract(this byte data, ref byte value1, ref bool value2)
+        public static unsafe void UnsafeWriteTo<T>(this T data, MemoryStream stream) where T : unmanaged, IMessage
         {
-            value1 = (byte)(data & 0x7F);
-            value2 = (data & 0x80) == 0x80;
+            byte* ptr = (byte*)&data;
+            for (int i = 0; i < sizeof(T); i++)
+                stream.WriteByte(ptr[i]);
         }
 
-        public static void Pack(ref this byte data, byte value1, bool value2)
+        public static unsafe void UnsafeCopyFrom<T>(this T data, byte[] bytes) where T : unmanaged, IMessage
         {
-            data = (byte)(value1 | (value2 ? 0x80 : 0x00));
+            byte* ptr = (byte*)&data;
+            for (int i = 0; i < sizeof(T); i++)
+                ptr[i] = bytes[i];
+        }
+
+        public static byte Lower(this byte data)
+        {
+            return (byte)(data & 0x7F);
+        }
+
+        public static byte Lower(this byte data, byte value, byte maxVal = 127)
+        {
+            return (byte)(data & 0x80 | Math.Min(value, maxVal) & 0x7F);
+        }
+
+        public static bool Upper(this byte data)
+        {
+            return (data & 0x80) == 0x80;
+        }
+
+        public static byte Upper(this byte data, bool value)
+        {
+            return (byte)((value ? 0x80 : 0x00) | data & 0x7F);
         }
     }
 
 
-    public interface IMessage
+    public unsafe interface IMessage
     {
-        byte[] GetBytes();
+        void GetBytes(MemoryStream stream);
         void SetBytes(byte[] bytes);
     }
 
-    public struct SessionInfo : IMessage, IEquatable<SessionInfo>
+    public unsafe struct SessionInfo : IMessage, IEquatable<SessionInfo>
     {
-        public byte current;
-        public byte count;
+        fixed byte m_Data[5];
+
+        public DisplayMode mode
+        {
+            get => (DisplayMode)m_Data[0];
+            set => m_Data[0] = (byte)value;
+        }
+
+        public byte current
+        {
+            get => m_Data[1];
+            set => m_Data[1] = value;
+        }
+
+        public byte input
+        {
+            get => m_Data[2];
+            set => m_Data[2] = value;
+        }
+
+        public byte output
+        {
+            get => m_Data[3];
+            set => m_Data[3] = value;
+        }
+
+        public byte application
+        {
+            get => m_Data[4];
+            set => m_Data[4] = value;
+        }
 
         public static SessionInfo Default()
         {
-            return new SessionInfo
-            {
-                count = 0,
-                current = 0
-            };
+            return new SessionInfo();
         }
 
         public bool Equals(SessionInfo other)
         {
-            return current == other.current &&
-                count == other.count;
+            return this.UnsafeEquals(other);
         }
 
-        public byte[] GetBytes()
+        public unsafe void GetBytes(MemoryStream stream)
         {
-            byte[] buffer = new byte[2];
-            buffer[0] = current;
-            buffer[1] = count;
-            return buffer;
+            this.UnsafeWriteTo(stream);
         }
 
         public void SetBytes(byte[] bytes)
         {
-            Debug.Assert(bytes.Length == 2);
-            current = bytes[0];
-            count = bytes[1];
+            this.UnsafeCopyFrom(bytes);
         }
     }
 
-    public struct Volume : IMessage, IEquatable<Volume>
+    public unsafe struct VolumeData : IMessage, IEquatable<VolumeData>
     {
-        internal byte _id;
+        fixed byte m_Data[2];
+
         public byte id
         {
-            get => _id;
-            set => _id = Math.Min(value, (byte)127);
+            get => m_Data[0].Lower();
+            set => m_Data[0] = m_Data[0].Lower(value);
         }
 
-        public bool isDefault;
+        public bool isDefault
+        {
+            get => m_Data[0].Upper();
+            set => m_Data[0] = m_Data[0].Upper(value);
+        }
 
-        internal byte _volume;
         public byte volume
         {
-            get => _volume;
-            set => _volume = Math.Min(value, (byte)100);
+            get => m_Data[1].Lower();
+            set => m_Data[1] = m_Data[1].Lower(value);
         }
 
-        public bool isMuted;
-
-        public static Volume Default()
+        public bool isMuted
         {
-            return new Volume
-            {
-                _id = 0,
-                isDefault = false,
-                _volume = 0,
-                isMuted = false
-            };
+            get => m_Data[1].Upper();
+            set => m_Data[1] = m_Data[1].Upper(value);
         }
 
-        public byte[] GetBytes()
+        public static VolumeData Default()
         {
-            byte[] buffer = new byte[2];
-            buffer[0].Pack(_id, isDefault);
-            buffer[1].Pack(_volume, isMuted);
-            return buffer;
+            return new VolumeData();
         }
 
-        public void SetBytes(byte[] bytes)
+        public bool Equals(VolumeData other)
         {
-            Debug.Assert(bytes.Length == 2);
-            _id = (byte)(bytes[0] & 0x7F);
-            isDefault = (bytes[0] & 0x80) == 0x80;
-            _volume = (byte)(bytes[1] & 0x7F);
-            isMuted = (bytes[1] & 0x80) == 0x80;
+            return this.UnsafeEquals(other);
         }
 
-        public bool Equals(Volume other)
+        public unsafe void GetBytes(MemoryStream stream)
         {
-            return _id == other._id &&
-                isDefault == other.isDefault &&
-                _volume == other._volume &&
-                isMuted == other.isMuted;
-        }
-    }
-
-    public struct Session : IMessage, IEquatable<Session>
-    {
-        internal char[] _name;
-        public string name
-        {
-            get => new string(_name);
-            set
-            {
-                _name = value.ToCharArray(0, 30);
-                _name[29] = (char)0;
-            }
-        }
-
-        public Volume values;
-
-        public static Session Default()
-        {
-            return new Session
-            {
-                _name = new char[30],
-                values = Volume.Default()
-            };
-        }
-
-        public byte[] GetBytes()
-        {
-            if (_name == null)
-                _name = new char[30];
-
-            byte[] buffer = new byte[32];
-            for (int i = 0; i < _name.Length; i++)
-                buffer[i] = (byte)_name[i];
-            buffer[30].Pack(values._id, values.isDefault);
-            buffer[31].Pack(values._volume, values.isMuted);
-            return buffer;
+            this.UnsafeWriteTo(stream);
         }
 
         public void SetBytes(byte[] bytes)
         {
-            Debug.Assert(bytes.Length == 32);
-            if (_name == null)
-                _name = new char[30];
-
-            for (int i = 0; i < 30; i++)
-                _name[i] = (char)bytes[i];
-
-            bytes[30].Extract(ref values._id, ref values.isDefault);
-            bytes[31].Extract(ref values._volume, ref values.isMuted);
-        }
-
-        public bool Equals(Session other)
-        {
-            return Enumerable.SequenceEqual(_name, other._name) &&
-                values.Equals(other.values);
+            this.UnsafeCopyFrom(bytes);
         }
     }
 
-    public struct Screen : IMessage, IEquatable<Screen>
+    public unsafe struct SessionData : IMessage, IEquatable<SessionData>
     {
-        public byte id;
+        fixed byte m_Data[30];
 
-        public static Screen Default()
+        // this is annoying as string using 16 bit char sizes, device only accepts 8 bit char sizes...
+        // TODO: public string name { get; set; }
+
+        public VolumeData data;
+
+        public static SessionData Default()
         {
-            return new Screen
-            {
-                id = 0
-            };
+            return new SessionData();
         }
 
-        public byte[] GetBytes()
+        public bool Equals(SessionData other)
         {
-            return new[] { id };
+            return this.UnsafeEquals(other);
+        }
+
+        public unsafe void GetBytes(MemoryStream stream)
+        {
+            this.UnsafeWriteTo(stream);
         }
 
         public void SetBytes(byte[] bytes)
         {
-            Debug.Assert(bytes.Length == 1);
-            id = bytes[0];
-        }
-
-        public bool Equals(Screen other)
-        {
-            return id == other.id;
+            this.UnsafeCopyFrom(bytes);
         }
     }
 
-    public struct Color : IEquatable<Color>
+    public unsafe struct Color : IMessage, IEquatable<Color>
     {
-        public byte r;
-        public byte g;
-        public byte b;
+        fixed byte m_Data[3];
 
-        public static Color Default()
+        public byte r
         {
-            return new Color { r = 0, g = 0, b = 0, };
+            get => m_Data[0];
+            set => m_Data[0] = value;
+        }
+
+        public byte g
+        {
+            get => m_Data[1];
+            set => m_Data[1] = value;
+        }
+
+        public byte b
+        {
+            get => m_Data[2];
+            set => m_Data[2] = value;
         }
 
         public Color(byte _r, byte _g, byte _b)
@@ -245,39 +260,57 @@ namespace MaxMix.Services.NewCommunication
             b = _g;
         }
 
-        public bool Equals(Color other)
+        public static Color Default()
         {
-            return r == other.r && g == other.g && b == other.b;
+            return new Color();
         }
 
-        public void GetBytes(byte[] buffer, int offset)
+        public bool Equals(Color other)
         {
-            buffer[offset] = r;
-            buffer[offset + 1] = g;
-            buffer[offset + 2] = b;
+            return this.UnsafeEquals(other);
+        }
+
+        public unsafe void GetBytes(MemoryStream stream)
+        {
+            this.UnsafeWriteTo(stream);
+        }
+
+        public void SetBytes(byte[] bytes)
+        {
+            this.UnsafeCopyFrom(bytes);
         }
     }
 
-    public struct Settings : IMessage, IEquatable<Settings>
+    public unsafe struct DeviceSettings : IMessage, IEquatable<DeviceSettings>
     {
-        public byte sleepAfterSeconds;
+        fixed byte m_Data[2];
 
-        internal byte _accelerationPercentage;
-        public byte accelerationPercentage
+        public byte sleepAfterSeconds
         {
-            get => _accelerationPercentage;
-            set => _accelerationPercentage = Math.Min(value, (byte)100);
+            get => m_Data[0];
+            set => m_Data[0] = value;
         }
 
-        public bool continuousScroll;
+        public byte accelerationPercentage
+        {
+            get => m_Data[1].Lower();
+            set => m_Data[1] = m_Data[1].Lower(value, 100);
+        }
+
+        public bool continuousScroll
+        {
+            get => m_Data[2].Upper();
+            set => m_Data[2] = m_Data[2].Upper(value);
+        }
+
         public Color volumeMinColor;
         public Color volumeMaxColor;
         public Color mixChannelAColor;
         public Color mixChannelBColor;
 
-        public static Settings Default()
+        public static DeviceSettings Default()
         {
-            return new Settings
+            return new DeviceSettings
             {
                 sleepAfterSeconds = 5,
                 accelerationPercentage = 60,
@@ -289,40 +322,19 @@ namespace MaxMix.Services.NewCommunication
             };
         }
 
-        public byte[] GetBytes()
+        public bool Equals(DeviceSettings other)
         {
-            byte[] buffer = new byte[14];
-            buffer[0] = sleepAfterSeconds;
-            buffer[1].Pack(_accelerationPercentage, continuousScroll);
-            volumeMinColor.GetBytes(buffer, 2);
-            volumeMaxColor.GetBytes(buffer, 5);
-            mixChannelAColor.GetBytes(buffer, 8);
-            mixChannelBColor.GetBytes(buffer, 11);
-            return buffer;
+            return this.UnsafeEquals(other);
+        }
+
+        public unsafe void GetBytes(MemoryStream stream)
+        {
+            this.UnsafeWriteTo(stream);
         }
 
         public void SetBytes(byte[] bytes)
         {
-            Debug.Assert(bytes.Length == 14);
-            sleepAfterSeconds = bytes[0];
-
-            bytes[1].Extract(ref _accelerationPercentage, ref continuousScroll);
-
-            volumeMinColor = new Color(bytes[2], bytes[3], bytes[4]);
-            volumeMaxColor = new Color(bytes[5], bytes[6], bytes[7]);
-            mixChannelAColor = new Color(bytes[8], bytes[9], bytes[10]);
-            mixChannelBColor = new Color(bytes[11], bytes[12], bytes[13]);
-        }
-
-        public bool Equals(Settings other)
-        {
-            return sleepAfterSeconds == other.sleepAfterSeconds &&
-                _accelerationPercentage == other._accelerationPercentage &&
-                continuousScroll == other.continuousScroll &&
-                volumeMinColor.Equals(other.volumeMinColor) &&
-                volumeMaxColor.Equals(other.volumeMaxColor) &&
-                mixChannelAColor.Equals(other.mixChannelAColor) &&
-                mixChannelBColor.Equals(other.mixChannelBColor);
+            this.UnsafeCopyFrom(bytes);
         }
     }
 }

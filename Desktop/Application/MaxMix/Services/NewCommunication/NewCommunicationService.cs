@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Ports;
+using System.Runtime.InteropServices;
 
 namespace MaxMix.Services.NewCommunication
 {
@@ -9,6 +11,8 @@ namespace MaxMix.Services.NewCommunication
         // We replace messages of the same type, the queue only needs to hold the number of enums in Command, 11 currently, using 16 for space
         private CircularBuffer<KeyValuePair<Command, IMessage>> m_MessageQueue = new CircularBuffer<KeyValuePair<Command, IMessage>>(16);
         private readonly object m_Lock = new object();
+        private readonly byte[] m_ReadBuffer = new byte[128];
+        private MemoryStream m_WriteBuffer = new MemoryStream(128);
 
         private SerialPort m_SerialPort;
 
@@ -27,6 +31,8 @@ namespace MaxMix.Services.NewCommunication
             // TODO: start???
         }
 
+        // Usage of Interface on struct causes boxing which then causes garbage, fix this, use templates to pass in explicit message
+        // And update m_MessageQueue to use fixed size buffers for the Value
         public void SendMessage(Command command, IMessage message)
         {
             lock (m_Lock)
@@ -40,7 +46,7 @@ namespace MaxMix.Services.NewCommunication
 
         void Update()
         {
-            // TODO: while not wanting to close
+            // TODO: whiel thread is not wanting to close
             while (true)
             {
                 Connect();
@@ -109,28 +115,28 @@ namespace MaxMix.Services.NewCommunication
             // TODO: Raise device timeout event
         }
 
-        private void ReadMessage(Command command, IMessage message)
+        // Using a template, with a constraint of IMessage allows us to pass the message without boxing reducing garbage generation
+        private unsafe void ReadMessage<T>(Command command) where T : unmanaged, IMessage
         {
-            var buffer = message.GetBytes();
-
             int length = 0;
             try
             {
-                while (length < buffer.Length)
-                    length += m_SerialPort.Read(buffer, length, buffer.Length - length);
+                while (length < sizeof(T))
+                    length += m_SerialPort.Read(m_ReadBuffer, length, sizeof(T) - length);
 
-                if (length != buffer.Length)
-                    throw new ArgumentException($"Message Length: {length}. Expected Length: {buffer.Length}.");
+                if (length != sizeof(T))
+                    throw new ArgumentException($"Message Length: {length}. Expected Length: {sizeof(T)}.");
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[Exception]: ReadMessage({command}, {message.GetType().Name}");
+                Console.WriteLine($"[Exception]: ReadMessage({command}, {typeof(T).Name}");
                 Console.WriteLine(e);
                 m_ErrorCount++;
                 return;
             }
 
-            message.SetBytes(buffer);
+            T message = new T();
+            message.SetBytes(m_ReadBuffer);
 
             m_ReadBytes += length;
             m_LastMessage = DateTime.Now;
@@ -158,25 +164,25 @@ namespace MaxMix.Services.NewCommunication
                     }
                     break;
                 case Command.SETTINGS:
-                    ReadMessage(command, Settings.Default());
+                    ReadMessage<DeviceSettings>(command);
                     break;
                 case Command.SESSION_INFO:
-                    ReadMessage(command, SessionInfo.Default());
+                    ReadMessage<SessionInfo>(command);
                     break;
-                case Command.CURRENT:
-                case Command.PREVIOUS:
-                case Command.NEXT:
-                    ReadMessage(command, Session.Default());
+                case Command.CURRENT_SESSION:
+                case Command.PREVIOUS_SESSION:
+                case Command.NEXT_SESSION:
+                case Command.ALTERNATE_SESSION:
+                    ReadMessage<SessionData>(command);
                     break;
-                case Command.VOLUME:
-                    ReadMessage(command, Volume.Default());
+                case Command.VOLUME_ALT_CHANGE:
+                case Command.VOLUME_CHANGE:
+                    ReadMessage<VolumeData>(command);
                     break;
-                case Command.SCREEN:
-                    ReadMessage(command, Screen.Default());
-                    break;
+                case Command.ERROR:
+                case Command.NONE:
                 case Command.TEST:
                 case Command.DEBUG:
-                default:
                     m_ErrorCount++;
                     break;
             }
@@ -184,25 +190,17 @@ namespace MaxMix.Services.NewCommunication
 
         private void WriteMessage(Command command, IMessage message = null)
         {
-            byte[] bytes;
-            if (message != null)
-            {
-                byte[] payload = message.GetBytes();
-                bytes = new byte[payload.Length + 1];
-                Array.Copy(payload, 0, bytes, 1, payload.Length);
-            }
-            else
-            {
-                bytes = new byte[1];
-            }
+            m_WriteBuffer.Position = 0;
+            m_WriteBuffer.WriteByte((byte)command);
+            message?.GetBytes(m_WriteBuffer);
+            m_WriteBytes += (uint)m_WriteBuffer.Length;
 
-            bytes[0] = (byte)command;
-            m_WriteBytes += (uint)bytes.Length;
-
-            try { m_SerialPort.Write(bytes, 0, bytes.Length); }
+            // GetBuffer returns a reference to the underlying array
+            byte[] buffer = m_WriteBuffer.GetBuffer();
+            try { m_SerialPort.Write(buffer, 0, buffer.Length); }
             catch (Exception e)
             {
-                Console.WriteLine($"[Exception]: WriteMessage({command}, {BitConverter.ToString(bytes)}");
+                Console.WriteLine($"[Exception]: WriteMessage({command}, {BitConverter.ToString(buffer)}");
                 Console.WriteLine(e);
             }
         }
@@ -224,15 +222,17 @@ namespace MaxMix.Services.NewCommunication
                 case Command.OK:
                 case Command.SETTINGS:
                 case Command.SESSION_INFO:
-                case Command.CURRENT:
-                case Command.PREVIOUS:
-                case Command.NEXT:
-                case Command.VOLUME:
-                case Command.SCREEN:
+                case Command.CURRENT_SESSION:
+                case Command.PREVIOUS_SESSION:
+                case Command.NEXT_SESSION:
+                case Command.ALTERNATE_SESSION:
+                case Command.VOLUME_CHANGE:
+                case Command.VOLUME_ALT_CHANGE:
                 case Command.DEBUG:
                     WriteMessage(pair.Key, pair.Value);
                     break;
-                default:
+                case Command.ERROR:
+                case Command.NONE:
                     {
                         m_DeviceReady = true;
                         m_ErrorCount++;

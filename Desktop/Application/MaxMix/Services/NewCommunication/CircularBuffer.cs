@@ -51,7 +51,7 @@ namespace MaxMix.Services.NewCommunication
             if (Count == 0)
                 throw new InvalidOperationException("Empty CircularBuffer.");
             T result = m_Data[m_First];
-            m_Data[m_First] = default(T);
+            m_Data[m_First] = default;
             m_First = (m_First + 1) % m_Data.Length;
             Count--;
             return result;
