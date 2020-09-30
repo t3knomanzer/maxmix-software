@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace MaxMix.Services.NewCommunication
@@ -45,28 +42,41 @@ namespace MaxMix.Services.NewCommunication
 
     internal static class MessageUtils
     {
-        public static unsafe bool UnsafeEquals<T>(this T data, T other) where T : unmanaged, IMessage
+        public static unsafe bool UnsafeEquals<T>(this T data, T other, uint offset = 0, uint count = uint.MaxValue) where T : unmanaged, IMessage
         {
+            count = Math.Min(count, (uint)(sizeof(T) - offset));
             bool equal = true;
             byte* ptr1 = (byte*)&data;
             byte* ptr2 = (byte*)&other;
-            for (int i = 0; i < sizeof(T); i++)
+            for (uint i = offset; i < sizeof(T); i++)
                 equal = equal && ptr1[i] == ptr2[i];
             return equal;
         }
 
-        public static unsafe void UnsafeWriteTo<T>(this T data, MemoryStream stream) where T : unmanaged, IMessage
+        public static unsafe void UnsafeCopyTo<T>(this T data, MemoryStream stream, uint offset = 0, uint count = uint.MaxValue) where T : unmanaged, IMessage
         {
+            count = Math.Min(count, (uint)stream.Length);
+            count = Math.Min(count, (uint)(sizeof(T) - offset));
             byte* ptr = (byte*)&data;
-            for (int i = 0; i < sizeof(T); i++)
+            for (uint i = offset; i < count; i++)
                 stream.WriteByte(ptr[i]);
         }
 
-        public static unsafe void UnsafeCopyFrom<T>(this T data, byte[] bytes) where T : unmanaged, IMessage
+        public static unsafe void UnsafeCopyFrom<T>(this T data, byte[] bytes, uint offset = 0, uint count = uint.MaxValue) where T : unmanaged, IMessage
         {
+            count = Math.Min(count, (uint)bytes.Length);
+            count = Math.Min(count, (uint)(sizeof(T) - offset));
             byte* ptr = (byte*)&data;
-            for (int i = 0; i < sizeof(T); i++)
+            for (uint i = 0; i < count; i++)
                 ptr[i] = bytes[i];
+        }
+
+        public static unsafe void UnsafeClear<T>(this T data, uint offset = 0, uint count = uint.MaxValue) where T : unmanaged, IMessage
+        {
+            count = Math.Min(count, (uint)(sizeof(T) - offset));
+            byte* ptr = (byte*)&data;
+            for (int i = 0; i < count; i++)
+                ptr[i] = 0;
         }
 
         public static byte Lower(this byte data)
@@ -143,7 +153,7 @@ namespace MaxMix.Services.NewCommunication
 
         public unsafe void GetBytes(MemoryStream stream)
         {
-            this.UnsafeWriteTo(stream);
+            this.UnsafeCopyTo(stream);
         }
 
         public void SetBytes(byte[] bytes)
@@ -192,7 +202,7 @@ namespace MaxMix.Services.NewCommunication
 
         public unsafe void GetBytes(MemoryStream stream)
         {
-            this.UnsafeWriteTo(stream);
+            this.UnsafeCopyTo(stream);
         }
 
         public void SetBytes(byte[] bytes)
@@ -205,8 +215,23 @@ namespace MaxMix.Services.NewCommunication
     {
         fixed byte m_Data[30];
 
-        // this is annoying as string using 16 bit char sizes, device only accepts 8 bit char sizes...
-        // TODO: public string name { get; set; }
+        public string name
+        {
+            get
+            {
+                fixed (byte* ptr = m_Data)
+                    return new string((sbyte*)ptr, 0, 30);
+            }
+            set
+            {
+                this.UnsafeClear(0, 30);
+                if (string.IsNullOrEmpty(value))
+                    return;
+
+                var bytes = Encoding.UTF8.GetBytes(value);
+                this.UnsafeCopyFrom(bytes, 0, 30);
+            }
+        }
 
         public VolumeData data;
 
@@ -222,7 +247,7 @@ namespace MaxMix.Services.NewCommunication
 
         public unsafe void GetBytes(MemoryStream stream)
         {
-            this.UnsafeWriteTo(stream);
+            this.UnsafeCopyTo(stream);
         }
 
         public void SetBytes(byte[] bytes)
@@ -272,7 +297,7 @@ namespace MaxMix.Services.NewCommunication
 
         public unsafe void GetBytes(MemoryStream stream)
         {
-            this.UnsafeWriteTo(stream);
+            this.UnsafeCopyTo(stream);
         }
 
         public void SetBytes(byte[] bytes)
@@ -329,7 +354,7 @@ namespace MaxMix.Services.NewCommunication
 
         public unsafe void GetBytes(MemoryStream stream)
         {
-            this.UnsafeWriteTo(stream);
+            this.UnsafeCopyTo(stream);
         }
 
         public void SetBytes(byte[] bytes)
