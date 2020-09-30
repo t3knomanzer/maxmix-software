@@ -217,11 +217,7 @@ namespace Display
         
         display.setCursor(0, (DISPLAY_HEIGHT / 2) - DISPLAY_CHAR_HEIGHT_X1);
         display.print("FW: ");
-        display.print(VERSION_MAJOR);
-        display.print(".");
-        display.print(VERSION_MINOR);
-        display.print(".");
-        display.print(VERSION_PATCH);
+        display.print(VERSION);
 
         display.setCursor(0, (DISPLAY_HEIGHT / 2) + DISPLAY_CHAR_SPACING_X2);
         display.print(F("Built " __DATE__));
