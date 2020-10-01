@@ -9,6 +9,10 @@ jobs:
   build:
     runs-on: windows-latest
 
+    defaults:
+      run:
+        shell: cmd
+
     steps:
     - uses: actions/checkout@v2
       with:
@@ -16,19 +20,27 @@ jobs:
   
     - name: Get tag version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: |
+        echo VERSION="${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       shell: bash
 
-    - name: Setup Arduino CLI
-      run: choco install arduino-cli --version=0.12.1 -y    
-    - name: Install Arduino core
-      run: arduino-cli core install arduino:avr
+    - name: Check version
+      run: |
+        echo 1: ${{env.VERSION}}
+        echo 2: $VERSION
+
+    - name: Setup Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Setup PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install -U platformio
 
     - name: Build Firmware - Full step
-      run: arduino-cli.exe compile -b arduino:avr:nano:cpu=atmega328 -v --build-path ${{ github.workspace }}\Embedded\Builds\FullStep\ ${{ github.workspace }}\Embedded\MaxMix\MaxMix.ino
-
-    - name: Build Firmware - Half step
-      run: arduino-cli.exe compile -b arduino:avr:nano:cpu=atmega328 -v --build-path ${{ github.workspace }}\Embedded\Builds\HalfStep\ --build-properties build.extra_flags=-DHALF_STEP ${{ github.workspace }}\Embedded\MaxMix\MaxMix.ino
+      run: platformio run --project-dir .\Embedded\Maxmix -e nano-cli -e nano-cli-halfstep
 
     - name: Setup NuGet.exe
       uses: NuGet/setup-nuget@v1.0.2
@@ -40,17 +52,17 @@ jobs:
     - name: Restore Application packages
       run: nuget restore Desktop\Application\MaxMix.sln
     - name: Build Application
-      run: msbuild Desktop\Build.msbuild -p:SolutionDir=Application -p:Version=${{ steps.get_version.outputs.VERSION }}.0 -p:Configuration=Debug -p:Platform="Any CPU"
+      run: msbuild Desktop\Build.msbuild -p:SolutionDir=Application -p:Version=${{env.VERSION}}.0 -p:Configuration=Debug -p:Platform="Any CPU"
 
     - name: Restore DriverInstaller packages
       run: nuget restore Desktop\DriverInstaller\DriverInstaller.sln
     - name: Build DriverInstaller
-      run: msbuild Desktop\Build.msbuild -p:SolutionDir=DriverInstaller -p:Version=${{ steps.get_version.outputs.VERSION }}.0 -p:Configuration=Debug -p:Platform="Any CPU"
+      run: msbuild Desktop\Build.msbuild -p:SolutionDir=DriverInstaller -p:Version=${{env.VERSION}}.0 -p:Configuration=Debug -p:Platform="Any CPU"
 
     - name: Restore FirmwareInstaller packages
       run: nuget restore Desktop\FirmwareInstaller\FirmwareInstaller.sln
     - name: Build FirmwareInstaller
-      run: msbuild Desktop\Build.msbuild -p:SolutionDir=FirmwareInstaller -p:Version=${{ steps.get_version.outputs.VERSION }}.0 -p:Configuration=Debug -p:Platform="Any CPU"
+      run: msbuild Desktop\Build.msbuild -p:SolutionDir=FirmwareInstaller -p:Version=${{env.VERSION}}.0 -p:Configuration=Debug -p:Platform="Any CPU"
 
     - name: Setup Advanced Installer
       run: choco install advanced-installer --version=17.1.2 -y
@@ -60,7 +72,7 @@ jobs:
       run: AdvancedInstaller.com /register ${{secrets.ADVANCEDINSTALLER_LICENSE}}
     
     - name: Set Installer version
-      run: AdvancedInstaller.com /edit Desktop\Installer\Maxmix.aip /SetVersion ${{ steps.get_version.outputs.VERSION }}
+      run: AdvancedInstaller.com /edit Desktop\Installer\Maxmix.aip /SetVersion ${{env.VERSION}}
     
     - name: Build Installer
       run: AdvancedInstaller.com /build Desktop\Installer\Maxmix.aip
@@ -71,8 +83,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.get_version.outputs.VERSION }}
-        release_name: ${{ steps.get_version.outputs.VERSION }}
+        tag_name: ${{env.VERSION}}
+        release_name: ${{env.VERSION}}
         body: ''
         draft: false
         prerelease: true
@@ -85,7 +97,7 @@ jobs:
       with:
         upload_url: ${{ steps.create-release.outputs.upload_url }}
         asset_path: Desktop\Installer\Builds\Maxmix.msi
-        asset_name: Maxmix.${{ steps.get_version.outputs.VERSION }}.msi
+        asset_name: Maxmix.${{env.VERSION}}.msi
         asset_content_type: application/zip
 
     - name: Upload Release Assets - Firmware (FullStep)
@@ -95,8 +107,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create-release.outputs.upload_url }}
-        asset_path: Embedded\Builds\FullStep\MaxMix.ino.hex
-        asset_name: Maxmix.${{ steps.get_version.outputs.VERSION }}.hex
+        asset_path: Embedded\Maxmix\.pio\build\nano-cli\firmware.hex
+        asset_name: Maxmix.${{env.VERSION}}.hex
         asset_content_type: application/zip
 
     - name: Upload Release Assets - Firmware (HalfStep)
@@ -106,6 +118,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create-release.outputs.upload_url }}
-        asset_path: Embedded\Builds\HalfStep\MaxMix.ino.hex
-        asset_name: Maxmix.${{ steps.get_version.outputs.VERSION }}_Half-step.hex
+        asset_path: Embedded\Maxmix\.pio\build\nano-cli-halfstep\firmware.hex
+        asset_name: Maxmix.${{env.VERSION}}_Half-step.hex
         asset_content_type: application/zip
