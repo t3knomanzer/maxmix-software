@@ -20,13 +20,18 @@ jobs:
     - name: Checkout Repo
       uses: actions/checkout@v2
 
-    - name: Setup Arduino CLI
-      run: choco install arduino-cli --version=0.12.1 -y    
-    - name: Install Arduino core
-      run: arduino-cli core install arduino:avr
+    - name: Setup Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Setup PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install -U platformio
 
     - name: Build Firmware
-      run: arduino-cli.exe compile -b arduino:avr:nano:cpu=atmega328 -v --build-path ${{ github.workspace }}\Build\Firmware\ ${{ github.workspace }}\Embedded\MaxMix\MaxMix.ino
+      run: platformio run --project-dir .\Embedded\Maxmix -e nano-cli
 
     - name: Setup NuGet.exe
       uses: NuGet/setup-nuget@v1.0.2

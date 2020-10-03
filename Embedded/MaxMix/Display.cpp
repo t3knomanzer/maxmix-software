@@ -214,8 +214,8 @@ namespace Display
         display.setTextSize(1);
 
         display.setCursor(0, (DISPLAY_HEIGHT / 2) - DISPLAY_CHAR_HEIGHT_X1);
-        display.print(F("FW: " FIRMWARE_VERSION));
-
+        display.print(F("FW: " VERSION));
+        
         display.setCursor(0, (DISPLAY_HEIGHT / 2) + DISPLAY_CHAR_SPACING_X2);
         display.print(F("Built " __DATE__));
 
