@@ -1,6 +1,4 @@
-﻿using Sentry.Protocol;
-
-namespace MaxMix.Services.Audio
+﻿namespace MaxMix.Services.Audio
 {
     #region Enums
     public enum DeviceFlow

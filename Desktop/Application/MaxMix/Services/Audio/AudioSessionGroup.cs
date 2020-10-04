@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MaxMix.Framework;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
@@ -14,6 +15,7 @@ namespace MaxMix.Services.Audio
         {
             Id = id;
             DisplayName = displayName;
+            SessionIdentifier = $"{Id}: {DisplayName}";
         }
         #endregion
 
@@ -26,7 +28,7 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Fields
-        private readonly IDictionary<int, IAudioSession> _sessions = new ConcurrentDictionary<int, IAudioSession>();
+        private readonly IDictionary<string, IAudioSession> _sessions = new ConcurrentDictionary<string, IAudioSession>();
         private int _volume = 100;
         private bool _isMuted = false;
         #endregion
@@ -34,6 +36,9 @@ namespace MaxMix.Services.Audio
         #region Properties
         /// <inheritdoc/>
         public int Id { get; protected set; }
+
+        /// <inheritdoc/>
+        public string SessionIdentifier { get; protected set; }
 
         /// <inheritdoc/>
         public string DisplayName { get; protected set; }
@@ -60,7 +65,7 @@ namespace MaxMix.Services.Audio
         /// <param name="session"></param>
         public void AddSession(IAudioSession session)
         {
-            _sessions.Add(session.Id, session);
+            _sessions.Add(session.SessionIdentifier, session);
             session.VolumeChanged += OnVolumeChanged;
             session.SessionEnded += OnSessionEnded;
 
@@ -73,7 +78,7 @@ namespace MaxMix.Services.Audio
 
         public bool ContainsSession(IAudioSession session)
         {
-            return _sessions.ContainsKey(session.Id);
+            return _sessions.ContainsKey(session.SessionIdentifier);
         }
         #endregion
 
@@ -118,7 +123,8 @@ namespace MaxMix.Services.Audio
 
         private void OnSessionEnded(IAudioSession session)
         {
-            _sessions.Remove(session.Id);
+            AppLogging.DebugLog(nameof(OnSessionEnded), session.SessionIdentifier, session.DisplayName, session.Id.ToString());
+            _sessions.Remove(session.SessionIdentifier);
             session.Dispose();
 
             if (_sessions.Count > 0)

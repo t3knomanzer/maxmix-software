@@ -106,10 +106,12 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Framework\AppExtensions.cs" />
     <Compile Include="Framework\AttachedProperties\BalloonMessageProperty.cs" />
     <Compile Include="Framework\Converters\ColorToUint32Converter.cs" />
     <Compile Include="Framework\Converters\BoolToStringConverter.cs" />
     <Compile Include="Framework\Converters\BoolToVisibilityConverter.cs" />
+    <Compile Include="Framework\AppLogging.cs" />
     <Compile Include="Framework\Mvvm\DelegateCommand.cs" />
     <Compile Include="Framework\Mvvm\ObservableObject.cs" />
     <Compile Include="MainWindow.xaml.cs">
@@ -137,23 +139,10 @@
     <Compile Include="Services\Audio\IAudioDevice.cs" />
     <Compile Include="Services\Audio\IAudioSession.cs" />
     <Compile Include="Services\Audio\IAudioSessionService.cs" />
-    <Compile Include="Services\Communication\Messages\MessageHeartbeat.cs" />
-    <Compile Include="Services\Communication\Messages\MessageSetDefaultEndpoint.cs" />
-    <Compile Include="Services\Communication\Serialization\CobsSerializationService .cs" />
-    <Compile Include="Services\Communication\CommunicationService.cs" />
-    <Compile Include="Services\Communication\ICommunicationService.cs" />
-    <Compile Include="Services\Communication\Messages\IMessage.cs" />
-    <Compile Include="Services\Communication\Serialization\ISerializationService.cs" />
-    <Compile Include="Services\Communication\Messages\MessageAddItem.cs" />
-    <Compile Include="Services\Communication\Messages\MessageHandShakeRequest.cs" />
-    <Compile Include="Services\Communication\Messages\MessageAcknowledgment.cs" />
-    <Compile Include="Services\Communication\Messages\MessageRemoveItem.cs" />
-    <Compile Include="Services\Communication\Messages\MessageSettings.cs" />
-    <Compile Include="Services\Communication\Messages\MessageUpdateVolume.cs" />
     <Compile Include="Services\Audio\PolicyConfig.cs" />
-    <Compile Include="Services\NewCommunication\CircularBuffer.cs" />
-    <Compile Include="Services\NewCommunication\Messages.cs" />
-    <Compile Include="Services\NewCommunication\NewCommunicationService.cs" />
+    <Compile Include="Services\Communication\CircularBuffer.cs" />
+    <Compile Include="Services\Communication\Messages.cs" />
+    <Compile Include="Services\Communication\CommunicationService.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />

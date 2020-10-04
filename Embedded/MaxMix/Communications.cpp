@@ -31,29 +31,26 @@ namespace Communications
                 Serial.readBytes((char *)&g_Settings, sizeof(DeviceSettings));
             else if (command == Command::SESSION_INFO)
                 Serial.readBytes((char *)&g_SessionInfo, sizeof(SessionInfo));
-            else if (command == Command::CURRENT_SESSION)
-                Serial.readBytes((char *)&g_Sessions[SessionIndex::INDEX_CURRENT], sizeof(SessionData));
-            else if (command == Command::ALTERNATE_SESSION)
-                Serial.readBytes((char *)&g_Sessions[SessionIndex::INDEX_ALTERNATE], sizeof(SessionData));
-            else if (command == Command::PREVIOUS_SESSION)
-                Serial.readBytes((char *)&g_Sessions[SessionIndex::INDEX_PREVIOUS], sizeof(SessionData));
-            else if (command == Command::NEXT_SESSION)
-                Serial.readBytes((char *)&g_Sessions[SessionIndex::INDEX_NEXT], sizeof(SessionData));
-            else if (command == Command::VOLUME_CHANGE)
-                Serial.readBytes((char *)&g_Sessions[SessionIndex::INDEX_CURRENT].data, sizeof(VolumeData));
-            else if (command == Command::VOLUME_ALT_CHANGE)
-                Serial.readBytes((char *)&g_Sessions[SessionIndex::INDEX_ALTERNATE].data, sizeof(VolumeData));
+            else if (command >= Command::CURRENT_SESSION && command <= Command::NEXT_SESSION)
+                // SessionIndex follows same ordering as Command.
+                Serial.readBytes((char *)&g_Sessions[command - Command::CURRENT_SESSION], sizeof(SessionData));
+            else if (command >= Command::VOLUME_CURR_CHANGE && command <= Command::VOLUME_NEXT_CHANGE)
+                // SessionIndex follows same ordering as Command.
+                Serial.readBytes((char *)&g_Sessions[command - Command::VOLUME_CURR_CHANGE].data, sizeof(VolumeData));
+            // Do nothing: DEBUG, NONE, ERROR?
 #ifdef TEST_HARNESS
             else if (command == Command::DEBUG:
             {
                 Write(Command::SETTINGS);
                 Write(Command::SESSION_INFO);
+                Write(Command::CURRENT_SESSION);
+                Write(Command::ALTERNATE_SESSION);
                 Write(Command::PREVIOUS_SESSION);
-                Write(Command::CURRENT);
-                Write(Command::ALTERNATE);
                 Write(Command::NEXT_SESSION);
-                Write(Command::VOLUME_CHANGE);
+                Write(Command::VOLUME_CURR_CHANGE);
                 Write(Command::VOLUME_ALT_CHANGE);
+                Write(Command::VOLUME_PREV_CHANGE);
+                Write(Command::VOLUME_NEXT_CHANGE);
             }
 #endif
             Write(Command::OK);
@@ -66,14 +63,14 @@ namespace Communications
         if (command == Command::TEST)
         {
             Serial.write(command);
-            Serial.println(F(FIRMWARE_VERSION));
+            Serial.println(F(VERSION));
         }
         else if (command == Command::SESSION_INFO)
         {
             Serial.write(command);
             Serial.write((char *)&g_SessionInfo, sizeof(SessionInfo));
         }
-        else if (command == Command::VOLUME_CHANGE)
+        else if (command == Command::VOLUME_CURR_CHANGE)
         {
             Serial.write(command);
             Serial.write((char *)&g_Sessions[SessionIndex::INDEX_CURRENT].data, sizeof(VolumeData));
@@ -87,17 +84,22 @@ namespace Communications
         {
             Serial.write(command);
         }
-        // Do nothing: CURRENT_SESSION, ALTERNATE_SESSION, PREVIOUS_SESSION, NEXT_SESSION, SETTINGS, DEBUG, NONE, ERROR?
+        // Do nothing: SETTINGS, CURRENT_SESSION, ALTERNATE_SESSION, PREVIOUS_SESSION, NEXT_SESSION, VOLUME_PREV_CHANGE, VOLUME_NEXT_CHANGE, DEBUG, NONE, ERROR?
 #ifdef TEST_HARNESS
+        else if (command == Command::SETTINGS)
+        {
+            Serial.write(command);
+            Serial.write((char *)&g_Settings, sizeof(DeviceSettings));
+        }
         else if (command == Command::CURRENT_SESSION)
         {
             Serial.write(command);
-            Serial.write((char *)&g_Session[SessionIndex::CURRENT_A], sizeof(session_t));
+            Serial.write((char *)&g_Session[SessionIndex::INDEX_CURRENT], sizeof(session_t));
         }
         else if (command == Command::ALTERNATE_SESSION)
         {
             Serial.write(command);
-            Serial.write((char *)&g_Session[SessionIndex::CURRENT_B], sizeof(session_t));
+            Serial.write((char *)&g_Session[SessionIndex::INDEX_ALTERNATE], sizeof(session_t));
         }
         else if (command == Command::PREVIOUS_SESSION)
         {
@@ -109,10 +111,15 @@ namespace Communications
             Serial.write(command);
             Serial.write((char *)&g_Session[SessionIndex::INDEX_NEXT], sizeof(session_t));
         }
-        else if (command == Command::SETTINGS)
+        else if (command == Command::VOLUME_PREV_CHANGE)
         {
             Serial.write(command);
-            Serial.write((char *)&g_Settings, sizeof(DeviceSettings));
+            Serial.write((char *)&g_Sessions[SessionIndex::INDEX_PREVIOUS].data, sizeof(VolumeData));
+        }
+        else if (command == Command::VOLUME_NEXT_CHANGE)
+        {
+            Serial.write(command);
+            Serial.write((char *)&g_Sessions[SessionIndex::INDEX_NEXT].data, sizeof(VolumeData));
         }
         // Do nothing: DEBUG, NONE, ERROR?
 #endif

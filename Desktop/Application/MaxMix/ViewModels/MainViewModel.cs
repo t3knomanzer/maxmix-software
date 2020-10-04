@@ -1,23 +1,11 @@
 ﻿using MaxMix.Framework;
+using MaxMix.Framework.Mvvm;
+using MaxMix.Services.Audio;
+using MaxMix.Services.Communication;
 using System;
-using System.Timers;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using CSCore.CoreAudioAPI;
-using System.Diagnostics;
-using MaxMix.Services;
 using System.ComponentModel;
 using System.Windows.Input;
-using System.Windows;
-using MaxMix.Framework.Mvvm;
-using MaxMix.Services.Communication;
-using MaxMix.Services.Audio;
-using MaxMix.Services.Communication.Messages;
-using MaxMix.Services.Communication.Serialization;
 
 namespace MaxMix.ViewModels
 {
@@ -26,61 +14,20 @@ namespace MaxMix.ViewModels
     /// </summary>
     internal class MainViewModel : BaseViewModel
     {
-        #region Constructor
-        public MainViewModel()
-        {
-            _serializationService = new CobsSerializationService();
-            _serializationService.RegisterType<MessageHandShakeRequest>(0);
-            _serializationService.RegisterType<MessageAcknowledgment>(1);
-            _serializationService.RegisterType<MessageAddItem>(2);
-            _serializationService.RegisterType<MessageRemoveItem>(3);
-            _serializationService.RegisterType<MessageUpdateVolume>(4);
-            _serializationService.RegisterType<MessageSetDefaultEndpoint>(5);
-            _serializationService.RegisterType<MessageSettings>(6);
-            _serializationService.RegisterType<MessageHeartbeat>(7);
-
-            _settingsViewModel = new SettingsViewModel();
-            _settingsViewModel.PropertyChanged += OnSettingsChanged;
-
-            _audioSessionService = new AudioSessionService();
-            _audioSessionService.DefaultDeviceChanged += OnDefaultDeviceChanged;
-            _audioSessionService.DeviceCreated += OnDeviceCreated;
-            _audioSessionService.DeviceRemoved += OnDeviceRemoved;
-            _audioSessionService.DeviceVolumeChanged += OnDeviceVolumeChanged;
-            _audioSessionService.SessionCreated += OnAudioSessionCreated;
-            _audioSessionService.SessionRemoved += OnAudioSessionRemoved;
-            _audioSessionService.SessionVolumeChanged += OnAudioSessionVolumeChanged;
-
-            _communicationService = new CommunicationService(_serializationService);
-            _communicationService.MessageReceived += OnMessageReceived;
-            _communicationService.Error += OnCommunicationError;
-            _communicationService.DeviceDiscovered += OnDeviceDiscovered;
-        }
-        #endregion
-
-        #region Events
+        #region UI Bindings
         /// <summary>
-        /// Raised to indicate the the shutdown of the application has been requested.
+        /// Holds a reference to an instance of a settings view model.
         /// </summary>
-        public event EventHandler ExitRequested;
-        #endregion
-        
-        #region Fields
-        private ISerializationService _serializationService;
-        private IAudioSessionService _audioSessionService;
-        private ICommunicationService _communicationService;
-        private bool _isActive;
-        private bool _isConnected;
-        private SettingsViewModel _settingsViewModel;
-        private ICommand _activateCommand;
-        private ICommand _deactivateCommand;
-        private ICommand _requestExitCommand;
-        #endregion
+        public SettingsViewModel SettingsViewModel
+        {
+            get => _settingsViewModel;
+            private set => SetProperty(ref _settingsViewModel, value);
+        }
 
-        #region Properties
         /// <summary>
         /// Holds the current state of the application.
         /// </summary>
+        private bool _isActive;
         public bool IsActive
         {
             get => _isActive;
@@ -90,6 +37,7 @@ namespace MaxMix.ViewModels
         /// <summary>
         /// Status of the connection to a maxmix device.
         /// </summary>
+        private bool _isConnected;
         public bool IsConnected
         {
             get => _isConnected;
@@ -97,19 +45,9 @@ namespace MaxMix.ViewModels
         }
 
         /// <summary>
-        /// Holds a reference to an instance of a settings view model.
-        /// </summary>
-        public SettingsViewModel SettingsViewModel
-        {
-            get => _settingsViewModel;
-            private set => SetProperty(ref _settingsViewModel, value);
-        }
-        #endregion
-
-        #region Commands
-        /// <summary>
         /// Sets the active state of the application to true.
         /// </summary>
+        private ICommand _activateCommand;
         public ICommand ActivateCommand
         {
             get
@@ -123,6 +61,7 @@ namespace MaxMix.ViewModels
         /// <summary>
         /// Sets the active state of the application to false.
         /// </summary>
+        private ICommand _deactivateCommand;
         public ICommand DeactivateCommand
         {
             get
@@ -136,129 +75,234 @@ namespace MaxMix.ViewModels
         /// <summary>
         /// Requests the shutdown process and notifies others by raising the ExitRequested event.
         /// </summary>
+        private ICommand _requestExitCommand;
         public ICommand RequestExitCommand
         {
             get
             {
                 if (_requestExitCommand == null)
-                    _requestExitCommand = new DelegateCommand(() => RaiseExitRequested());
+                    _requestExitCommand = new DelegateCommand(() => ExitRequested?.Invoke(this, EventArgs.Empty));
                 return _requestExitCommand;
             }
         }
         #endregion
 
-        #region Overrides
+        // Device State Tracking
+        SessionInfo m_SessionInfo = SessionInfo.Default();
+        SessionData[] m_Sessions = new SessionData[(int)SessionIndex.INDEX_MAX] { SessionData.Default(), SessionData.Default(), SessionData.Default(), SessionData.Default() };
+        Dictionary<int, int> m_IndexToId = new Dictionary<int, int>();
+
+        private IAudioSessionService _audioSessionService;
+        private CommunicationService _communicationService;
+        private SettingsViewModel _settingsViewModel;
+
+        public MainViewModel()
+        {
+            _settingsViewModel = new SettingsViewModel();
+            _settingsViewModel.PropertyChanged += OnSettingsChanged;
+
+            _audioSessionService = new AudioSessionService();
+            _audioSessionService.DefaultDeviceChanged += OnDefaultDeviceChanged;
+            _audioSessionService.DeviceCreated += OnDeviceCreated;
+            _audioSessionService.DeviceRemoved += OnDeviceRemoved;
+            _audioSessionService.DeviceVolumeChanged += OnDeviceVolumeChanged;
+            _audioSessionService.SessionCreated += OnAudioSessionCreated;
+            _audioSessionService.SessionRemoved += OnAudioSessionRemoved;
+            _audioSessionService.SessionVolumeChanged += OnAudioSessionVolumeChanged;
+
+            _communicationService = new CommunicationService();
+            _communicationService.OnMessageRecieved += OnMessageRecieved;
+            _communicationService.OnDeviceConnected += OnDeviceConnected;
+            _communicationService.OnDeviceDisconnected += OnDeviceDisconnected;
+            _communicationService.OnFirmwareIncompatible += OnFirmwareIncompatible;
+        }
+
+        /// <summary>
+        /// Raised to indicate the the shutdown of the application has been requested.
+        /// </summary>
+        public event EventHandler ExitRequested;
 
         public override void Start()
         {
             _communicationService.Start();
+            _audioSessionService.Start();
             _settingsViewModel.Start();
         }
 
         public override void Stop()
         {
             _communicationService.Stop();
+            _audioSessionService.Stop();
             _settingsViewModel.Stop();
         }
-        #endregion
 
-        #region Private Methods
-        private void SendSettings()
-        {
-            var message = new MessageSettings(_settingsViewModel.DisplayNewSession,
-                                              _settingsViewModel.SleepWhenInactive,
-                                              _settingsViewModel.SleepAfterSeconds,
-                                              _settingsViewModel.LoopAroundItems,
-                                              _settingsViewModel.AccelerationPercentage,
-                                              _settingsViewModel.DoubleTapTime,
-                                              _settingsViewModel.VolumeMinColor,
-                                              _settingsViewModel.VolumeMaxColor,
-                                              _settingsViewModel.MixChannelAColor,
-                                              _settingsViewModel.MixChannelBColor);
-
-            _communicationService.Send(message);
-        }
-
-        private void RaiseExitRequested()
-        {
-            ExitRequested?.Invoke(this, EventArgs.Empty);
-        }
-        #endregion
-
-        #region EventHandlers
         private void OnDefaultDeviceChanged(object sender, int id, DeviceFlow deviceFlow)
         {
-            var message = new MessageSetDefaultEndpoint(id, (int)deviceFlow);
-            _communicationService.Send(message);
+            if (!IsConnected)
+                return;
+
+            for (int i = (int)SessionIndex.INDEX_PREVIOUS; i < (int)SessionIndex.INDEX_MAX; i++)
+            {
+                if (m_Sessions[i].data.id == id)
+                {
+                    m_Sessions[i].data.isDefault = true;
+                    _communicationService.SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i]);
+                }
+                else if (m_Sessions[i].data.isDefault)
+                {
+                    m_Sessions[i].data.isDefault = false;
+                    _communicationService.SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i]);
+                }
+            }
         }
 
         private void OnDeviceCreated(object sender, int id, string displayName, int volume, bool isMuted, DeviceFlow deviceFlow)
         {
-            var message = new MessageAddItem(id, displayName, volume, isMuted, true, (int)deviceFlow);
-            _communicationService.Send(message);
+            if (!IsConnected)
+                return;
+
+            // TODO: impl
         }
 
         private void OnDeviceRemoved(object sender, int id, DeviceFlow deviceFlow)
         {
-            var message = new MessageRemoveItem(id, true, (int)deviceFlow);
-            _communicationService.Send(message);
+            if (!IsConnected)
+                return;
+
+            // TODO: impl
         }
 
         private void OnDeviceVolumeChanged(object sender, int id, int volume, bool isMuted, DeviceFlow deviceFlow)
         {
-            var message = new MessageUpdateVolume(id, volume, isMuted, true, (int)deviceFlow);
-            _communicationService.Send(message);
+            if (!IsConnected)
+                return;
+
+            UpdateSessionState(id, false, volume, isMuted);
         }
 
         private void OnAudioSessionCreated(object sender, int id, string displayName, int volume, bool isMuted)
         {
-            var message = new MessageAddItem(id, displayName, volume, isMuted, false);
-            _communicationService.Send(message);
+            if (!IsConnected)
+                return;
+
+            // TODO: impl
         }
-         
+
         private void OnAudioSessionRemoved(object sender, int id)
         {
-            var message = new MessageRemoveItem(id, false);
-            _communicationService.Send(message);
+            if (!IsConnected)
+                return;
+
+            // TODO: impl
         }
 
         private void OnAudioSessionVolumeChanged(object sender, int id, int volume, bool isMuted)
         {
-            var message = new MessageUpdateVolume(id, volume, isMuted, false);
-            _communicationService.Send(message);
+            if (!IsConnected)
+                return;
+
+            UpdateSessionState(id, false, volume, isMuted);
         }
 
-        private void OnDeviceDiscovered(object sender, string portName)
+        private void UpdateSessionState(int id, bool isDefault, int volume, bool isMuted, string name = null)
         {
-            IsConnected = true;
-            _audioSessionService.Start();            
-            SendSettings();
+            for (int i = (int)SessionIndex.INDEX_PREVIOUS; i < (int)SessionIndex.INDEX_MAX; i++)
+            {
+                if (m_Sessions[i].data.id == id)
+                {
+                    m_Sessions[i].data.isDefault = isDefault;
+                    m_Sessions[i].data.volume = (byte)volume;
+                    m_Sessions[i].data.isMuted = isMuted;
+                    if (string.IsNullOrEmpty(name))
+                        _communicationService.SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i]);
+                    else
+                    {
+                        string prevName = m_Sessions[i].name;
+                        m_Sessions[i].name = name;
+                        if (m_Sessions[i].name != prevName)
+                            _communicationService.SendMessage(Command.CURRENT_SESSION + i, m_Sessions[i]);
+                        else
+                            _communicationService.SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i]);
+                    }
+                    break;
+                }
+            }
         }
 
         private void OnSettingsChanged(object sender, PropertyChangedEventArgs e)
         {
-            SendSettings();
+            if (!IsConnected)
+                return;
+
+            DeviceSettings settings = _settingsViewModel.ToDeviceSettings();
+            _communicationService.SendMessage(Command.SETTINGS, settings);
         }
 
-        private void OnMessageReceived(object sender, IMessage message)
+        /****************************************
+         * Communication Events
+         ****************************************/
+        private void OnFirmwareIncompatible(string obj)
         {
-            if (message.GetType() == typeof(MessageUpdateVolume))
-            {
-                var message_ = message as MessageUpdateVolume;
-                _audioSessionService.SetItemVolume(message_.Id, message_.Volume, message_.IsMuted);
-            }
-            else if (message.GetType() == typeof(MessageSetDefaultEndpoint))
-            {
-                var message_ = message as MessageSetDefaultEndpoint;
-                _audioSessionService.SetDefaultEndpoint(message_.Id);
-            }
+            // TODO: Display msg to user that firmware needs to be updated
         }
 
-        private void OnCommunicationError(object sender, string e)
+        private void OnDeviceDisconnected()
         {
             IsConnected = false;
-            _audioSessionService.Stop();
+            // Reset our tracked device state
         }
-        #endregion
+
+        private void OnDeviceConnected()
+        {
+            IsConnected = true;
+            OnSettingsChanged(null, null);
+            // Send device initial screen data
+
+            // NOTE: we can have a setting to determin which initial screen we flip to
+            IAudioDevice[] outputs = _audioSessionService.GetAudioDevices(DeviceFlow.Output);
+            PopulateIndexToIdMap(outputs);
+            int index = Array.FindIndex(outputs, x => x.IsDefault);
+            int prevIndex = (index - 1 + outputs.Length) % outputs.Length;
+            int nextIndex = (index + 1) % outputs.Length;
+
+            m_SessionInfo.mode = DisplayMode.MODE_OUTPUT;
+            m_SessionInfo.current = (byte)index;
+            m_SessionInfo.output = (byte)outputs.Length;
+            m_SessionInfo.input = (byte)_audioSessionService.GetAudioDevices(DeviceFlow.Input).Length;
+            m_SessionInfo.output = (byte)_audioSessionService.GetAudioSessions().Length;
+
+            m_Sessions[(int)SessionIndex.INDEX_CURRENT] = outputs[index].ToSessionData(index);
+            m_Sessions[(int)SessionIndex.INDEX_NEXT] = outputs[nextIndex].ToSessionData(nextIndex);
+            m_Sessions[(int)SessionIndex.INDEX_PREVIOUS] = outputs[prevIndex].ToSessionData(prevIndex);
+
+            _communicationService.SendMessage(Command.CURRENT_SESSION, m_Sessions[(int)SessionIndex.INDEX_CURRENT]);
+            _communicationService.SendMessage(Command.NEXT_SESSION, m_Sessions[(int)SessionIndex.INDEX_NEXT]);
+            _communicationService.SendMessage(Command.PREVIOUS_SESSION, m_Sessions[(int)SessionIndex.INDEX_PREVIOUS]);
+            _communicationService.SendMessage(Command.SESSION_INFO, m_SessionInfo);
+        }
+
+        private void OnMessageRecieved(Command command, IMessage message)
+        {
+            if (command == Command.VOLUME_CURR_CHANGE)
+            {
+                VolumeData vol = (VolumeData)message;
+                _audioSessionService.SetItemVolume(m_IndexToId[vol.id], vol.volume, vol.isMuted);
+            }
+        }
+
+        void PopulateIndexToIdMap(IAudioDevice[] devices)
+        {
+            m_IndexToId.Clear();
+            for (int i = 0; i < devices.Length; i++)
+                m_IndexToId[i] = devices[i].Id;
+        }
+
+        void PopulateIndexToIdMap(IAudioSession[] sessions)
+        {
+            m_IndexToId.Clear();
+            for (int i = 0; i < sessions.Length; i++)
+                m_IndexToId[i] = sessions[i].Id;
+        }
     }
 }
+ 

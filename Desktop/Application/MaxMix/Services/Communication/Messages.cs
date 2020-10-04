@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace MaxMix.Services.NewCommunication
+namespace MaxMix.Services.Communication
 {
     public enum Command
     {
@@ -16,16 +16,18 @@ namespace MaxMix.Services.NewCommunication
         ALTERNATE_SESSION,
         PREVIOUS_SESSION,
         NEXT_SESSION,
-        VOLUME_CHANGE,
+        VOLUME_CURR_CHANGE,
         VOLUME_ALT_CHANGE,
+        VOLUME_PREV_CHANGE,
+        VOLUME_NEXT_CHANGE,
         DEBUG
     }
 
     public enum SessionIndex
     {
-        INDEX_PREVIOUS,
         INDEX_CURRENT,
         INDEX_ALTERNATE,
+        INDEX_PREVIOUS,
         INDEX_NEXT,
         INDEX_MAX
     };

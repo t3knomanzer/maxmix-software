@@ -2,18 +2,11 @@
 using Sentry;
 using Sentry.Protocol;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Data;
-using System.Linq;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Threading;
-using System.Diagnostics;
 
 namespace MaxMix
 {
@@ -54,7 +47,7 @@ namespace MaxMix
             {
                 // Application is already running
                 Debug.WriteLine("[App] Application is already running, exiting.");
-                Application.Current.Shutdown();
+                Current.Shutdown();
                 return;
             }
 
@@ -84,7 +77,7 @@ namespace MaxMix
             viewModel.Stop();
 
             // Calling dispose explicitly on closing so the icon dissapears from the windows task bar.
-            var window = (MainWindow)Application.Current.MainWindow;
+            var window = (MainWindow)Current.MainWindow;
             window.taskbarIcon.Dispose();
             if (_errorReporter != null)
             {
@@ -92,9 +85,7 @@ namespace MaxMix
             }
             _singleInstanceMutex.Dispose();
 
-            Application.Current.Shutdown();
+            Current.Shutdown();
         }
-
-
     }
 }

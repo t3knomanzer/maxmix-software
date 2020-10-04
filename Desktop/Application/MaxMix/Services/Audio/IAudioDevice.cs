@@ -13,6 +13,11 @@ namespace MaxMix.Services.Audio
         MMDevice Device { get; }
 
         /// <summary>
+        /// The Device Identifier string as provided by CoreAudio.
+        /// </summary>
+        string DeviceId { get; }
+
+        /// <summary>
         /// The computed Identifier for this session.
         /// </summary>
         int Id { get; }

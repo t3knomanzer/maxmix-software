@@ -1,6 +1,6 @@
 ﻿using CSCore.CoreAudioAPI;
 using System;
-using System.Diagnostics;
+using System.IO;
 
 namespace MaxMix.Services.Audio
 {
@@ -22,8 +22,12 @@ namespace MaxMix.Services.Audio
             _events.StateChanged += OnStateChanged;
             _events.SimpleVolumeChanged += OnVolumeChanged;
 
+            string appPath = _session2.SessionIdentifier.ExtractAppPath();
+            SessionIdentifier = _session2.SessionIdentifier;
+            Id = appPath.GetHashCode();
+            IsSystemSound = appPath == "#";
+
             UpdateDisplayName();
-            Id = _session2.SessionIdentifier.GetHashCode();
         }
         #endregion
 
@@ -53,20 +57,13 @@ namespace MaxMix.Services.Audio
         public int Id { get; protected set; }
 
         /// <inheritdoc/>
+        public string SessionIdentifier { get; protected set; }
+
+        /// <inheritdoc/>
         public string DisplayName { get; protected set; }
 
         /// <inheritdoc/>
-        public bool IsSystemSound => _session2.IsSystemSoundSession || _session2.ProcessID == 0;
-
-        /// <summary>
-        /// The ProcessID that created the audio session.
-        /// </summary>
-        public int ProcessID => IsSystemSound ? 0 : _session2.ProcessID;
-
-        /// <summary>
-        /// The process that created the audio session.
-        /// </summary>
-        public Process Process => _session2.Process;
+        public bool IsSystemSound { get; protected set; }
 
         /// <inheritdoc/>
         public int Volume
@@ -122,9 +119,13 @@ namespace MaxMix.Services.Audio
             }
             else
             {
-                if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.GetProductName(); }
-                if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.MainWindowTitle; }
-                if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
+                if (_session2.Process != null)
+                {
+                    if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.GetProductName(); }
+                    if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.MainWindowTitle; }
+                    if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
+                }
+                if (string.IsNullOrEmpty(displayName)) { displayName = Path.GetFileNameWithoutExtension(_session2.SessionIdentifier.ExtractAppPath()); }
                 if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
                 displayName = char.ToUpper(displayName[0]) + displayName.Substring(1);
             }

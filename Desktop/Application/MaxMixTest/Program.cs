@@ -1,4 +1,4 @@
-﻿using MaxMix.Services.NewCommunication;
+﻿using MaxMix.Services.Communication;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -146,7 +146,7 @@ namespace MaxMixTest
                     case Command.NEXT_SESSION:
                         ReadMessage(_session[2]);
                         break;
-                    case Command.VOLUME_CHANGE:
+                    case Command.VOLUME_CURR_CHANGE:
                         ReadMessage(_session[1].data);
                         break;
                     case Command.DEBUG:

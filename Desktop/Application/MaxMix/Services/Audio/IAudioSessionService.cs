@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MaxMix.Services.Audio
+﻿namespace MaxMix.Services.Audio
 {
     internal interface IAudioSessionService
     {
@@ -8,6 +6,8 @@ namespace MaxMix.Services.Audio
         void Stop();
         void SetItemVolume(int id, int volume, bool isMuted);
         void SetDefaultEndpoint(int id);
+        IAudioSession[] GetAudioSessions();
+        IAudioDevice[] GetAudioDevices(DeviceFlow flow);
 
         event DefaultAudioDeviceChangedDelegate DefaultDeviceChanged;
         event AudioDeviceCreatedDelegate DeviceCreated;

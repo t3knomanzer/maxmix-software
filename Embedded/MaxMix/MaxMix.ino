@@ -285,7 +285,7 @@ bool ProcessEncoderRotation()
         if (g_SessionInfo.mode != DisplayMode::MODE_GAME)
         {
             g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = ComputeAcceleratedVolume(encoderSteps, deltaTime, g_Sessions[SessionIndex::INDEX_CURRENT].data.volume);
-            Communications::Write(Command::VOLUME_CHANGE);
+            Communications::Write(Command::VOLUME_CURR_CHANGE);
         }
         else
         {
@@ -298,7 +298,7 @@ bool ProcessEncoderRotation()
             if (g_Sessions[SessionIndex::INDEX_ALTERNATE].data.id != g_Sessions[SessionIndex::INDEX_CURRENT].data.id)
             {
                 g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = 100 - g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume;
-                Communications::Write(Command::VOLUME_CHANGE);
+                Communications::Write(Command::VOLUME_CURR_CHANGE);
             }
         }
     }
@@ -336,7 +336,7 @@ bool ProcessEncoderButton()
             for (uint8_t i = 0; i < SessionIndex::INDEX_MAX; i++)
                 g_Sessions[i].data.isDefault = false;
             g_Sessions[SessionIndex::INDEX_CURRENT].data.isDefault = true;
-            Communications::Write(Command::VOLUME_CHANGE);
+            Communications::Write(Command::VOLUME_CURR_CHANGE);
         }
         else if (g_SessionInfo.mode == DisplayMode::MODE_GAME && g_ModeState[g_SessionInfo.mode] == STATE_SELECT_B)
         {
@@ -354,13 +354,13 @@ bool ProcessEncoderButton()
         if (g_SessionInfo.mode != DisplayMode::MODE_GAME)
         {
             g_Sessions[SessionIndex::INDEX_CURRENT].data.isMuted = true;
-            Communications::Write(Command::VOLUME_CHANGE);
+            Communications::Write(Command::VOLUME_CURR_CHANGE);
         }
         else
         {
             g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = 50;
             g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume = 50;
-            Communications::Write(Command::VOLUME_CHANGE);
+            Communications::Write(Command::VOLUME_CURR_CHANGE);
         }
         return true;
     }

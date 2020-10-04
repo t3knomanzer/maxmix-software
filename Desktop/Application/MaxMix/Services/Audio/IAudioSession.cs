@@ -12,6 +12,11 @@ namespace MaxMix.Services.Audio
         int Id { get; }
 
         /// <summary>
+        /// The Session Identifier string as provided by CoreAudio.
+        /// </summary>
+        string SessionIdentifier { get; }
+
+        /// <summary>
         /// The display name of the process that created this session.
         /// </summary>
         string DisplayName { get; }

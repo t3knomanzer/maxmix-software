@@ -1,20 +1,4 @@
-﻿using System;
-using System.Timers;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.Diagnostics;
-using MaxMix.Services;
-using System.ComponentModel;
-using System.Windows.Input;
-using System.Windows;
-using MaxMix.Framework.Mvvm;
-using MaxMix.Services.Communication;
-using System.Runtime.CompilerServices;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace MaxMix.ViewModels
 {
@@ -59,6 +43,8 @@ namespace MaxMix.ViewModels
             get => _settings.DisplayNewSession;
             set
             {
+                if (_settings.DisplayNewSession == value)
+                    return;
                 _settings.DisplayNewSession = value;
                 RaisePropertyChanged();
             }
@@ -73,6 +59,8 @@ namespace MaxMix.ViewModels
             get => _settings.SleepWhenInactive;
             set
             {
+                if (_settings.SleepWhenInactive == value)
+                    return;
                 _settings.SleepWhenInactive = value;
                 RaisePropertyChanged();
             }
@@ -86,6 +74,8 @@ namespace MaxMix.ViewModels
             get => _settings.SleepAfterSeconds;
             set
             {
+                if (_settings.SleepAfterSeconds == value)
+                    return;
                 _settings.SleepAfterSeconds = value;
                 RaisePropertyChanged();
             }
@@ -100,6 +90,8 @@ namespace MaxMix.ViewModels
             get => _settings.LoopAroundItems;
             set
             {
+                if (_settings.LoopAroundItems == value)
+                    return;
                 _settings.LoopAroundItems = value;
                 RaisePropertyChanged();
             }
@@ -114,6 +106,8 @@ namespace MaxMix.ViewModels
             get => _settings.AccelerationPercentage;
             set
             {
+                if (_settings.AccelerationPercentage == value)
+                    return;
                 _settings.AccelerationPercentage = value;
                 RaisePropertyChanged();
             }
@@ -127,6 +121,8 @@ namespace MaxMix.ViewModels
             get => _settings.DoubleTapTime;
             set
             {
+                if (_settings.DoubleTapTime == value)
+                    return;
                 _settings.DoubleTapTime = value;
                 RaisePropertyChanged();
             }
@@ -141,6 +137,8 @@ namespace MaxMix.ViewModels
             get => _settings.VolumeMinColor;
             set
             {
+                if (_settings.VolumeMinColor == value)
+                    return;
                 _settings.VolumeMinColor = value;
                 RaisePropertyChanged();
             }
@@ -154,6 +152,8 @@ namespace MaxMix.ViewModels
             get => _settings.VolumeMaxColor;
             set
             {
+                if (_settings.VolumeMaxColor == value)
+                    return;
                 _settings.VolumeMaxColor = value;
                 RaisePropertyChanged();
             }
@@ -168,6 +168,8 @@ namespace MaxMix.ViewModels
             get => _settings.MixChannelAColor;
             set
             {
+                if (_settings.MixChannelAColor == value)
+                    return;
                 _settings.MixChannelAColor = value;
                 RaisePropertyChanged();
             }
@@ -182,6 +184,8 @@ namespace MaxMix.ViewModels
             get => _settings.MixChanneBColor;
             set
             {
+                if (_settings.MixChanneBColor == value)
+                    return;
                 _settings.MixChanneBColor = value;
                 RaisePropertyChanged();
             }
@@ -208,7 +212,7 @@ namespace MaxMix.ViewModels
             {
                 Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
                 Assembly curAssembly = Assembly.GetExecutingAssembly();
-                return ((string)(key.GetValue(curAssembly.GetName().Name)) == curAssembly.Location);
+                return (string)key.GetValue(curAssembly.GetName().Name) == curAssembly.Location;
             }
             catch
             {

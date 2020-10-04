@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MaxMix.Services.NewCommunication
+namespace MaxMix.Services.Communication
 {
     public class CircularBuffer<T>
     {
