@@ -57,7 +57,6 @@ namespace MaxMix.Services.Communication
 
         public static unsafe void UnsafeCopyTo<T>(this T data, MemoryStream stream, uint offset = 0, uint count = uint.MaxValue) where T : unmanaged, IMessage
         {
-            count = Math.Min(count, (uint)stream.Length);
             count = Math.Min(count, (uint)(sizeof(T) - offset));
             byte* ptr = (byte*)&data;
             for (uint i = offset; i < count; i++)
