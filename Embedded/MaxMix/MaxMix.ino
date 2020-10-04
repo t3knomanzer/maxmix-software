@@ -228,7 +228,7 @@ void PreviousSession(void)
         return;
 
     if (g_SessionInfo.current == 0)
-        g_SessionInfo.current = g_SessionInfo.sessions[g_SessionInfo.mode - DisplayMode::MODE_OUTPUT];
+        g_SessionInfo.current = g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)];
 
     g_SessionInfo.current--;
     g_Sessions[SessionIndex::INDEX_NEXT] = g_Sessions[SessionIndex::INDEX_CURRENT];
@@ -241,7 +241,7 @@ void NextSession(void)
     if (!CanScrollRight())
         return;
 
-    g_SessionInfo.current = (g_SessionInfo.current + 1) % g_SessionInfo.sessions[g_SessionInfo.mode - DisplayMode::MODE_OUTPUT];
+    g_SessionInfo.current = (g_SessionInfo.current + 1) % g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)];
     g_Sessions[SessionIndex::INDEX_PREVIOUS] = g_Sessions[SessionIndex::INDEX_CURRENT];
     g_Sessions[SessionIndex::INDEX_CURRENT] = g_Sessions[SessionIndex::INDEX_NEXT];
     Communications::Write(Command::SESSION_INFO);
@@ -256,9 +256,18 @@ inline bool CanScrollLeft(void)
 
 inline bool CanScrollRight(void)
 {
-    if (!g_Settings.continuousScroll && g_SessionInfo.current < g_SessionInfo.sessions[g_SessionInfo.mode - DisplayMode::MODE_OUTPUT] - 1)
+    if (!g_Settings.continuousScroll && g_SessionInfo.current < g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] - 1)
         return false;
     return true;
+}
+
+inline uint8_t GetIndexForMode(DisplayMode mode)
+{
+    if (mode == DisplayMode::MODE_SPLASH)
+        return DisplayMode::MODE_OUTPUT;
+    if (mode == DisplayMode::MODE_GAME)
+        return DisplayMode::MODE_APPLICATION;
+    return mode - DisplayMode::MODE_OUTPUT;
 }
 
 //---------------------------------------------------------
