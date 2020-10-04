@@ -443,7 +443,8 @@ void UpdateDisplay()
         }
         else
         {
-            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode == DisplayMode::MODE_INPUT ? "IN" : "OUT", g_SessionInfo.mode);
+            //Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode == DisplayMode::MODE_INPUT ? "IN" : "OUT", g_SessionInfo.mode);
+            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode);
         }
     }
     else if (g_SessionInfo.mode == DisplayMode::MODE_APPLICATION)

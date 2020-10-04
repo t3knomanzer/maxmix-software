@@ -240,12 +240,13 @@ namespace Display
         display.display();
     }
 
-    void DeviceEditScreen(SessionData *item, const char *label, uint8_t modeIndex)
+    //void DeviceEditScreen(SessionData *item, const char *label, uint8_t modeIndex)
+    void DeviceEditScreen(SessionData *item, uint8_t modeIndex)
     {
         display.clearDisplay();
 
         DrawDotGroup(modeIndex);
-        DrawItemName(label, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_CHAR_MAX_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
+        DrawItemName(item->name, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_CHAR_MAX_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
         DrawVolumeNumber(item->data.volume, DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH, 0);
 

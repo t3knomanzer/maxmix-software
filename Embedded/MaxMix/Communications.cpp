@@ -7,6 +7,8 @@ extern SessionData g_Sessions[4];
 extern uint32_t g_LastMessage;
 extern uint32_t g_Now;
 
+//#define TEST_HARNESS
+
 namespace Communications
 {
     void Initialize(void)
@@ -39,7 +41,7 @@ namespace Communications
                 Serial.readBytes((char *)&g_Sessions[command - Command::VOLUME_CURR_CHANGE].data, sizeof(VolumeData));
             // Do nothing: DEBUG, NONE, ERROR?
 #ifdef TEST_HARNESS
-            else if (command == Command::DEBUG:
+            else if (command == Command::DEBUG)
             {
                 Write(Command::SETTINGS);
                 Write(Command::SESSION_INFO);

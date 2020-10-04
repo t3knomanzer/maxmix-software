@@ -24,7 +24,7 @@ namespace MaxMix.Framework
         public static SessionData ToSessionData(this IAudioDevice audioDevice, int index)
         {
             SessionData session = SessionData.Default();
-            session.name = audioDevice.DisplayName;
+            session.name = (audioDevice.Flow == DeviceFlow.Output ? "Out: " : "In: ") + audioDevice.DisplayName;
             session.data.id = (byte)index;
             session.data.isDefault = audioDevice.IsDefault;
             session.data.volume = (byte)audioDevice.Volume;

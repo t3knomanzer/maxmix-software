@@ -258,7 +258,7 @@ namespace MaxMix.ViewModels
             OnSettingsChanged(null, null);
             // Send device initial screen data
 
-            // NOTE: we can have a setting to determin which initial screen we flip to
+            // NOTE: we can now have a setting to determin which initial screen we flip to
             IAudioDevice[] outputs = _audioSessionService.GetAudioDevices(DeviceFlow.Output);
             PopulateIndexToIdMap(outputs);
             int index = Array.FindIndex(outputs, x => x.IsDefault);
