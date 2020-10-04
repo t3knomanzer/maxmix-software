@@ -1,4 +1,5 @@
 ﻿using CSCore.CoreAudioAPI;
+using MaxMix.Services.Communication;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -77,6 +78,11 @@ namespace MaxMix.Services.Audio
         public static DeviceFlow ToDeviceFlow(this DataFlow d)
         {
             return d == DataFlow.Capture ? DeviceFlow.Input : DeviceFlow.Output;
+        }
+
+        public static DisplayMode ToDisplayMode(this DeviceFlow d)
+        {
+            return d == DeviceFlow.Input ? DisplayMode.MODE_INPUT : DisplayMode.MODE_OUTPUT;
         }
     }
 }

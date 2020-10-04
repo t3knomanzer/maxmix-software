@@ -91,6 +91,7 @@ namespace MaxMix.ViewModels
         SessionInfo m_SessionInfo = SessionInfo.Default();
         SessionData[] m_Sessions = new SessionData[(int)SessionIndex.INDEX_MAX] { SessionData.Default(), SessionData.Default(), SessionData.Default(), SessionData.Default() };
         Dictionary<int, int> m_IndexToId = new Dictionary<int, int>();
+        Dictionary<int, int> m_IdToIndex = new Dictionary<int, int>();
 
         private IAudioSessionService _audioSessionService;
         private CommunicationService _communicationService;
@@ -161,7 +162,10 @@ namespace MaxMix.ViewModels
             if (!IsConnected)
                 return;
 
-            // TODO: impl
+            if (m_SessionInfo.mode == DisplayMode.MODE_APPLICATION || m_SessionInfo.mode == DisplayMode.MODE_GAME)
+                return;
+
+            UpdateSessionData(id, deviceFlow, true);
         }
 
         private void OnDeviceRemoved(object sender, int id, DeviceFlow deviceFlow)
@@ -169,7 +173,32 @@ namespace MaxMix.ViewModels
             if (!IsConnected)
                 return;
 
-            // TODO: impl
+            if (m_SessionInfo.mode == DisplayMode.MODE_APPLICATION || m_SessionInfo.mode == DisplayMode.MODE_GAME)
+                return;
+
+            UpdateSessionData(id, deviceFlow, false);
+        }
+
+        private void UpdateSessionData(int id, DeviceFlow deviceFlow, bool addition)
+        {
+            IAudioDevice[] outputs = _audioSessionService.GetAudioDevices(DeviceFlow.Output);
+            IAudioDevice[] inputs = _audioSessionService.GetAudioDevices(DeviceFlow.Input);
+            m_SessionInfo.output = (byte)outputs.Length;
+            m_SessionInfo.input = (byte)inputs.Length;
+            if (deviceFlow.ToDisplayMode() == m_SessionInfo.mode)
+            {
+                int index = m_IdToIndex[id];
+                if (index <= m_SessionInfo.current && m_SessionInfo.current > 0)
+                {
+                    if (addition)
+                        m_SessionInfo.current++;
+                    else
+                        m_SessionInfo.current--;
+                }
+            }
+
+            UpdateAndFlushSessionData(deviceFlow == DeviceFlow.Input ? inputs : outputs, true);
+            _communicationService.SendMessage(Command.SESSION_INFO, m_SessionInfo);
         }
 
         private void OnDeviceVolumeChanged(object sender, int id, int volume, bool isMuted, DeviceFlow deviceFlow)
@@ -185,7 +214,10 @@ namespace MaxMix.ViewModels
             if (!IsConnected)
                 return;
 
-            // TODO: impl
+            if (m_SessionInfo.mode != DisplayMode.MODE_APPLICATION && m_SessionInfo.mode != DisplayMode.MODE_GAME)
+                return;
+
+            UpdateSessionData(id, true);
         }
 
         private void OnAudioSessionRemoved(object sender, int id)
@@ -193,7 +225,27 @@ namespace MaxMix.ViewModels
             if (!IsConnected)
                 return;
 
-            // TODO: impl
+            if (m_SessionInfo.mode != DisplayMode.MODE_APPLICATION && m_SessionInfo.mode == DisplayMode.MODE_GAME)
+                return;
+
+            UpdateSessionData(id, false);
+        }
+
+        private void UpdateSessionData(int id, bool addition)
+        {
+            IAudioSession[] sessions = _audioSessionService.GetAudioSessions();
+            int index = m_IdToIndex[id];
+            if (index <= m_SessionInfo.current && m_SessionInfo.current > 0)
+            {
+                if (addition)
+                    m_SessionInfo.current++;
+                else
+                    m_SessionInfo.current--;
+            }
+            m_SessionInfo.application = (byte)sessions.Length;
+
+            UpdateAndFlushSessionData(sessions, true);
+            _communicationService.SendMessage(Command.SESSION_INFO, m_SessionInfo);
         }
 
         private void OnAudioSessionVolumeChanged(object sender, int id, int volume, bool isMuted)
@@ -249,7 +301,6 @@ namespace MaxMix.ViewModels
         private void OnDeviceDisconnected()
         {
             IsConnected = false;
-            // Reset our tracked device state?
         }
 
         private void OnDeviceConnected()
@@ -343,15 +394,23 @@ namespace MaxMix.ViewModels
         void PopulateIndexToIdMap(IAudioDevice[] devices)
         {
             m_IndexToId.Clear();
+            m_IdToIndex.Clear();
             for (int i = 0; i < devices.Length; i++)
+            {
                 m_IndexToId[i] = devices[i].Id;
+                m_IdToIndex[devices[i].Id] = i;
+            }
         }
 
         void PopulateIndexToIdMap(IAudioSession[] sessions)
         {
             m_IndexToId.Clear();
+            m_IdToIndex.Clear();
             for (int i = 0; i < sessions.Length; i++)
+            {
                 m_IndexToId[i] = sessions[i].Id;
+                m_IdToIndex[sessions[i].Id] = i;
+            }
         }
     }
 }
