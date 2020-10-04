@@ -9,6 +9,8 @@
         IAudioSession[] GetAudioSessions();
         IAudioDevice[] GetAudioDevices(DeviceFlow flow);
 
+        event ServiceStartedDelegate ServiceStarted;
+
         event DefaultAudioDeviceChangedDelegate DefaultDeviceChanged;
         event AudioDeviceCreatedDelegate DeviceCreated;
         event AudioDeviceRemovedDelegate DeviceRemoved;

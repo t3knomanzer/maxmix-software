@@ -91,7 +91,6 @@ namespace MaxMix.ViewModels
         SessionInfo m_SessionInfo = SessionInfo.Default();
         SessionData[] m_Sessions = new SessionData[(int)SessionIndex.INDEX_MAX] { SessionData.Default(), SessionData.Default(), SessionData.Default(), SessionData.Default() };
         Dictionary<int, int> m_IndexToId = new Dictionary<int, int>();
-        Dictionary<int, int> m_IdToIndex = new Dictionary<int, int>();
 
         private IAudioSessionService _audioSessionService;
         private CommunicationService _communicationService;
@@ -102,6 +101,12 @@ namespace MaxMix.ViewModels
             _settingsViewModel = new SettingsViewModel();
             _settingsViewModel.PropertyChanged += OnSettingsChanged;
 
+            _communicationService = new CommunicationService();
+            _communicationService.OnMessageRecieved += OnMessageRecieved;
+            _communicationService.OnDeviceConnected += OnDeviceConnected;
+            _communicationService.OnDeviceDisconnected += OnDeviceDisconnected;
+            _communicationService.OnFirmwareIncompatible += OnFirmwareIncompatible;
+
             _audioSessionService = new AudioSessionService();
             _audioSessionService.DefaultDeviceChanged += OnDefaultDeviceChanged;
             _audioSessionService.DeviceCreated += OnDeviceCreated;
@@ -110,12 +115,7 @@ namespace MaxMix.ViewModels
             _audioSessionService.SessionCreated += OnAudioSessionCreated;
             _audioSessionService.SessionRemoved += OnAudioSessionRemoved;
             _audioSessionService.SessionVolumeChanged += OnAudioSessionVolumeChanged;
-
-            _communicationService = new CommunicationService();
-            _communicationService.OnMessageRecieved += OnMessageRecieved;
-            _communicationService.OnDeviceConnected += OnDeviceConnected;
-            _communicationService.OnDeviceDisconnected += OnDeviceDisconnected;
-            _communicationService.OnFirmwareIncompatible += OnFirmwareIncompatible;
+            _audioSessionService.ServiceStarted += (_) => { _communicationService.Start(); };
         }
 
         /// <summary>
@@ -125,9 +125,8 @@ namespace MaxMix.ViewModels
 
         public override void Start()
         {
-            _communicationService.Start();
-            _audioSessionService.Start();
             _settingsViewModel.Start();
+            _audioSessionService.Start();
         }
 
         public override void Stop()
@@ -187,12 +186,12 @@ namespace MaxMix.ViewModels
             m_SessionInfo.input = (byte)inputs.Length;
             if (deviceFlow.ToDisplayMode() == m_SessionInfo.mode)
             {
-                int index = m_IdToIndex[id];
-                if (index <= m_SessionInfo.current && m_SessionInfo.current > 0)
+                int currId = m_IndexToId[m_SessionInfo.current];
+                if (id <= currId)
                 {
                     if (addition)
                         m_SessionInfo.current++;
-                    else
+                    else if (m_SessionInfo.current > 0)
                         m_SessionInfo.current--;
                 }
             }
@@ -234,12 +233,12 @@ namespace MaxMix.ViewModels
         private void UpdateSessionData(int id, bool addition)
         {
             IAudioSession[] sessions = _audioSessionService.GetAudioSessions();
-            int index = m_IdToIndex[id];
-            if (index <= m_SessionInfo.current && m_SessionInfo.current > 0)
+            int currId = m_IndexToId[m_SessionInfo.current];
+            if (id <= currId)
             {
                 if (addition)
                     m_SessionInfo.current++;
-                else
+                else if (m_SessionInfo.current > 0)
                     m_SessionInfo.current--;
             }
             m_SessionInfo.application = (byte)sessions.Length;
@@ -394,23 +393,15 @@ namespace MaxMix.ViewModels
         void PopulateIndexToIdMap(IAudioDevice[] devices)
         {
             m_IndexToId.Clear();
-            m_IdToIndex.Clear();
             for (int i = 0; i < devices.Length; i++)
-            {
                 m_IndexToId[i] = devices[i].Id;
-                m_IdToIndex[devices[i].Id] = i;
-            }
         }
 
         void PopulateIndexToIdMap(IAudioSession[] sessions)
         {
             m_IndexToId.Clear();
-            m_IdToIndex.Clear();
             for (int i = 0; i < sessions.Length; i++)
-            {
                 m_IndexToId[i] = sessions[i].Id;
-                m_IdToIndex[sessions[i].Id] = i;
-            }
         }
     }
 }

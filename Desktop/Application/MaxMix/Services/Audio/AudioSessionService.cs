@@ -27,6 +27,9 @@ namespace MaxMix.Services.Audio
 
         #region Events
         /// <inheritdoc/>
+        public event ServiceStartedDelegate ServiceStarted;
+
+        /// <inheritdoc/>
         public event DefaultAudioDeviceChangedDelegate DefaultDeviceChanged;
 
         /// <inheritdoc/>
@@ -147,6 +150,8 @@ namespace MaxMix.Services.Audio
                     OnDefaultDeviceChanged(device);
                 }
             }
+
+            _synchronizationContext.Post(o => ServiceStarted?.Invoke(this), null);
         }
 
         /// <summary>

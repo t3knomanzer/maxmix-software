@@ -9,6 +9,7 @@
     #endregion
 
     #region Delegates
+    public delegate void ServiceStartedDelegate(object sender);
     public delegate void DefaultAudioDeviceChangedDelegate(object sender, int id, DeviceFlow deviceFlow);
     public delegate void AudioDeviceCreatedDelegate(object sender, int id, string displayName, int volume, bool isMuted, DeviceFlow deviceFlow);
     public delegate void AudioDeviceRemovedDelegate(object sender, int id, DeviceFlow deviceFlow);

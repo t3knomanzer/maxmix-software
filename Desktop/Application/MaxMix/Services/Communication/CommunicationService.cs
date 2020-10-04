@@ -51,7 +51,11 @@ namespace MaxMix.Services.Communication
         public void Stop()
         {
             m_Stopping = true;
-            m_Thread.Join();
+            if (m_Thread != null)
+            {
+                m_Thread.Join();
+                m_Thread = null;
+            }
         }
 
         public void GetStats(ref long readCount, ref long readBytes, ref long writeCount, ref long writeBytes, ref long errorCount)
