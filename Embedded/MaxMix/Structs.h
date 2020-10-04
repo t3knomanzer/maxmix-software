@@ -6,7 +6,7 @@ struct __attribute__((__packed__)) SessionInfo
 {
     DisplayMode mode;    // 8 bits
     uint8_t current;     // 8 bits
-    uint8_t sessions[3]; // 24 bits - input, output, application
+    uint8_t sessions[3]; // 24 bits - output, input, application
     // 40 bits - 5 bytes
 
     SessionInfo() : mode(DisplayMode::MODE_SPLASH), current(0), sessions{0} {}

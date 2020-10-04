@@ -238,7 +238,7 @@ void PreviousSession(void)
 
 void NextSession(void)
 {
-    if (CanScrollRight())
+    if (!CanScrollRight())
         return;
 
     g_SessionInfo.current = (g_SessionInfo.current + 1) % g_SessionInfo.sessions[g_SessionInfo.mode - DisplayMode::MODE_OUTPUT];
@@ -256,7 +256,7 @@ inline bool CanScrollLeft(void)
 
 inline bool CanScrollRight(void)
 {
-    if (!g_Settings.continuousScroll && g_SessionInfo.current == g_SessionInfo.sessions[g_SessionInfo.mode - DisplayMode::MODE_OUTPUT] - 1)
+    if (!g_Settings.continuousScroll && g_SessionInfo.current < g_SessionInfo.sessions[g_SessionInfo.mode - DisplayMode::MODE_OUTPUT] - 1)
         return false;
     return true;
 }
@@ -376,6 +376,7 @@ bool ProcessEncoderButton()
         g_SessionInfo.mode = (DisplayMode)((g_SessionInfo.mode + 1) % DisplayMode::MODE_MAX);
         if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
             g_SessionInfo.mode = (DisplayMode)(g_SessionInfo.mode + 1);
+        g_SessionInfo.current = 0;
         // TODO: Also need to handle 0 data from PC for this mode
 
         Communications::Write(Command::SESSION_INFO);
@@ -443,8 +444,7 @@ void UpdateDisplay()
         }
         else
         {
-            //Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode == DisplayMode::MODE_INPUT ? "IN" : "OUT", g_SessionInfo.mode);
-            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode);
+            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode == DisplayMode::MODE_INPUT ? "IN" : "OUT", g_SessionInfo.mode);
         }
     }
     else if (g_SessionInfo.mode == DisplayMode::MODE_APPLICATION)

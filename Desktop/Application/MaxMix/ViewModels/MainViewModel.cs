@@ -249,7 +249,7 @@ namespace MaxMix.ViewModels
         private void OnDeviceDisconnected()
         {
             IsConnected = false;
-            // Reset our tracked device state
+            // Reset our tracked device state?
         }
 
         private void OnDeviceConnected()
@@ -258,26 +258,16 @@ namespace MaxMix.ViewModels
             OnSettingsChanged(null, null);
             // Send device initial screen data
 
-            // NOTE: we can now have a setting to determin which initial screen we flip to
+            // NOTE: we can now have a setting to determin the initial screen
             IAudioDevice[] outputs = _audioSessionService.GetAudioDevices(DeviceFlow.Output);
-            PopulateIndexToIdMap(outputs);
-            int index = Array.FindIndex(outputs, x => x.IsDefault);
-            int prevIndex = (index - 1 + outputs.Length) % outputs.Length;
-            int nextIndex = (index + 1) % outputs.Length;
-
             m_SessionInfo.mode = DisplayMode.MODE_OUTPUT;
-            m_SessionInfo.current = (byte)index;
+            m_SessionInfo.current = (byte)Array.FindIndex(outputs, x => x.IsDefault);
             m_SessionInfo.output = (byte)outputs.Length;
             m_SessionInfo.input = (byte)_audioSessionService.GetAudioDevices(DeviceFlow.Input).Length;
             m_SessionInfo.application = (byte)_audioSessionService.GetAudioSessions().Length;
 
-            m_Sessions[(int)SessionIndex.INDEX_CURRENT] = outputs[index].ToSessionData(index);
-            m_Sessions[(int)SessionIndex.INDEX_PREVIOUS] = outputs[prevIndex].ToSessionData(prevIndex);
-            m_Sessions[(int)SessionIndex.INDEX_NEXT] = outputs[nextIndex].ToSessionData(nextIndex);
+            UpdateAndFlushSessionData(outputs, true);
 
-            _communicationService.SendMessage(Command.CURRENT_SESSION, m_Sessions[(int)SessionIndex.INDEX_CURRENT]);
-            _communicationService.SendMessage(Command.PREVIOUS_SESSION, m_Sessions[(int)SessionIndex.INDEX_PREVIOUS]);
-            _communicationService.SendMessage(Command.NEXT_SESSION, m_Sessions[(int)SessionIndex.INDEX_NEXT]);
             _communicationService.SendMessage(Command.SESSION_INFO, m_SessionInfo);
         }
 
@@ -285,9 +275,69 @@ namespace MaxMix.ViewModels
         {
             if (command == Command.VOLUME_CURR_CHANGE)
             {
+                // isDefault, Volume, or isMuted changed for id (index)
                 VolumeData vol = (VolumeData)message;
                 _audioSessionService.SetItemVolume(m_IndexToId[vol.id], vol.volume, vol.isMuted);
+            } 
+            else if (command == Command.SESSION_INFO)
+            {
+                // current, or mode
+                SessionInfo info = (SessionInfo)message;
+                m_SessionInfo.current = info.current;
+                bool updateIndexMap = info.mode != m_SessionInfo.mode;
+                m_SessionInfo.mode = info.mode;
+
+                if (m_SessionInfo.mode == DisplayMode.MODE_APPLICATION || m_SessionInfo.mode == DisplayMode.MODE_GAME)
+                {
+                    IAudioSession[] sessions = _audioSessionService.GetAudioSessions();
+                    UpdateAndFlushSessionData(sessions, updateIndexMap);
+                }
+                else
+                {
+                    IAudioDevice[] devices = _audioSessionService.GetAudioDevices(m_SessionInfo.mode == DisplayMode.MODE_INPUT ? DeviceFlow.Input : DeviceFlow.Output);
+                    UpdateAndFlushSessionData(devices, updateIndexMap);
+                }
             }
+        }
+
+        void UpdateAndFlushSessionData(IAudioDevice[] data, bool updateIndexMap = false)
+        {
+            int index = m_SessionInfo.current;
+            if (updateIndexMap)
+                PopulateIndexToIdMap(data);
+            ComputeIndexes(index, out int prevIndex, out int nextIndex);
+
+            // The device can easily spin the encoder faster than we can respond via Serial.
+            // So just flush all 3 sessions to the device to ensure it will have fresh data when it stops, whatever it stops on.
+            m_Sessions[(int)SessionIndex.INDEX_CURRENT] = data[index].ToSessionData(index);
+            m_Sessions[(int)SessionIndex.INDEX_PREVIOUS] = data[prevIndex].ToSessionData(prevIndex);
+            m_Sessions[(int)SessionIndex.INDEX_NEXT] = data[nextIndex].ToSessionData(nextIndex);
+            _communicationService.SendMessage(Command.CURRENT_SESSION, m_Sessions[(int)SessionIndex.INDEX_CURRENT]);
+            _communicationService.SendMessage(Command.PREVIOUS_SESSION, m_Sessions[(int)SessionIndex.INDEX_PREVIOUS]);
+            _communicationService.SendMessage(Command.NEXT_SESSION, m_Sessions[(int)SessionIndex.INDEX_NEXT]);
+        }
+
+        void UpdateAndFlushSessionData(IAudioSession[] data, bool updateIndexMap = false)
+        {
+            int index = m_SessionInfo.current;
+            if (updateIndexMap)
+                PopulateIndexToIdMap(data);
+            ComputeIndexes(index, out int prevIndex, out int nextIndex);
+
+            // The device can easily spin the encoder faster than we can respond via Serial.
+            // So just flush all 3 sessions to the device to ensure it will have fresh data when it stops, whatever it stops on.
+            m_Sessions[(int)SessionIndex.INDEX_CURRENT] = data[index].ToSessionData(index);
+            m_Sessions[(int)SessionIndex.INDEX_PREVIOUS] = data[prevIndex].ToSessionData(prevIndex);
+            m_Sessions[(int)SessionIndex.INDEX_NEXT] = data[nextIndex].ToSessionData(nextIndex);
+            _communicationService.SendMessage(Command.CURRENT_SESSION, m_Sessions[(int)SessionIndex.INDEX_CURRENT]);
+            _communicationService.SendMessage(Command.PREVIOUS_SESSION, m_Sessions[(int)SessionIndex.INDEX_PREVIOUS]);
+            _communicationService.SendMessage(Command.NEXT_SESSION, m_Sessions[(int)SessionIndex.INDEX_NEXT]);
+        }
+
+        void ComputeIndexes(int index, out int previous, out int next)
+        {
+            previous = (index - 1 + m_IndexToId.Count) % m_IndexToId.Count;
+            next = (index + 1) % m_IndexToId.Count;
         }
 
         void PopulateIndexToIdMap(IAudioDevice[] devices)

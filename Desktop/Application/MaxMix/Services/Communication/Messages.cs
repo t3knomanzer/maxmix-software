@@ -130,13 +130,13 @@ namespace MaxMix.Services.Communication
             set => m_Data[1] = value;
         }
 
-        public byte input
+        public byte output
         {
             get => m_Data[2];
             set => m_Data[2] = value;
         }
 
-        public byte output
+        public byte input
         {
             get => m_Data[3];
             set => m_Data[3] = value;
@@ -331,8 +331,8 @@ namespace MaxMix.Services.Communication
 
         public bool continuousScroll
         {
-            get => m_Data[2].Upper();
-            set => m_Data[2] = m_Data[2].Upper(value);
+            get => m_Data[1].Upper();
+            set => m_Data[1] = m_Data[2].Upper(value);
         }
 
         public Color volumeMinColor;

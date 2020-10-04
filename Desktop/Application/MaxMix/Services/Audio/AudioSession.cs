@@ -22,10 +22,11 @@ namespace MaxMix.Services.Audio
             _events.StateChanged += OnStateChanged;
             _events.SimpleVolumeChanged += OnVolumeChanged;
 
-            string appPath = _session2.SessionIdentifier.ExtractAppPath();
             SessionIdentifier = _session2.SessionIdentifier;
-            Id = appPath.GetHashCode();
+
+            string appPath = SessionIdentifier.ExtractAppPath();
             IsSystemSound = appPath == "#";
+            Id = IsSystemSound ? int.MinValue : appPath.GetHashCode();
 
             UpdateDisplayName();
         }

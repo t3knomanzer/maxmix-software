@@ -19,8 +19,7 @@ namespace Display
     void InfoScreen(void);
 
     void DeviceSelectScreen(SessionData *item, bool leftArrow, bool rightArrow, uint8_t modeIndex);
-    //void DeviceEditScreen(SessionData *item, const char *label, uint8_t modeIndex);
-    void DeviceEditScreen(SessionData *item, uint8_t modeIndex);
+    void DeviceEditScreen(SessionData *item, const char *label, uint8_t modeIndex);
 
     void ApplicationSelectScreen(SessionData *item, bool leftArrow, bool rightArrow, uint8_t modeIndex);
     void ApplicationEditScreen(SessionData *item, uint8_t modeIndex);
