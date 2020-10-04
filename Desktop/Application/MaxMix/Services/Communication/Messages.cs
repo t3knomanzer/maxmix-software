@@ -64,21 +64,27 @@ namespace MaxMix.Services.Communication
                 stream.WriteByte(ptr[i]);
         }
 
-        public static unsafe void UnsafeCopyFrom<T>(this T data, byte[] bytes, uint offset = 0, uint count = uint.MaxValue) where T : unmanaged, IMessage
+        public static unsafe void UnsafeCopyFrom<T>(this ref T data, byte[] bytes, uint offset = 0, uint count = uint.MaxValue) where T : unmanaged, IMessage
         {
             count = Math.Min(count, (uint)bytes.Length);
             count = Math.Min(count, (uint)(sizeof(T) - offset));
-            byte* ptr = (byte*)&data;
-            for (uint i = 0; i < count; i++)
-                ptr[i] = bytes[i];
+            fixed(T* dataAddr = &data)
+            {
+                byte* ptr = (byte*)dataAddr;
+                for (uint i = 0; i < count; i++)
+                    ptr[i] = bytes[i];
+            }
         }
 
-        public static unsafe void UnsafeClear<T>(this T data, uint offset = 0, uint count = uint.MaxValue) where T : unmanaged, IMessage
+        public static unsafe void UnsafeClear<T>(this ref T data, uint offset = 0, uint count = uint.MaxValue) where T : unmanaged, IMessage
         {
             count = Math.Min(count, (uint)(sizeof(T) - offset));
-            byte* ptr = (byte*)&data;
-            for (int i = 0; i < count; i++)
-                ptr[i] = 0;
+            fixed (T* dataAddr = &data)
+            {
+                byte* ptr = (byte*)dataAddr;
+                for (int i = 0; i < count; i++)
+                    ptr[i] = 0;
+            }
         }
 
         public static byte Lower(this byte data)

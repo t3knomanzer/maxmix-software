@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MaxMix.Framework;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Ports;
@@ -26,8 +27,10 @@ namespace MaxMix.Services.Communication
         private long m_WriteCount;
         private long m_WriteBytes;
         private long m_ErrorCount;
-        private DateTime m_LastMessage;
-        private TimeSpan m_DeviceTimeout = new TimeSpan(0, 0, 30);
+        private DateTime m_LastMessageRead;
+        private DateTime m_LastMessageWrite;
+        private TimeSpan m_DeviceTimeout = new TimeSpan(0, 0, 5);
+        private TimeSpan m_DeviceReconnect = new TimeSpan(0, 0, 1);
 
         private const int k_ReadTimeout = 20;
         private const int k_WriteTimeout = 20;
@@ -41,6 +44,7 @@ namespace MaxMix.Services.Communication
         {
             m_Stopping = false;
             m_Thread = new Thread(Update);
+            m_Thread.Name = "Communication Service";
             m_Thread.Start();
         }
 
@@ -101,6 +105,10 @@ namespace MaxMix.Services.Communication
             if (m_SerialPort != null)
                 return;
 
+            if (DateTime.Now - m_LastMessageRead < m_DeviceReconnect)
+                return;
+            m_LastMessageRead = DateTime.Now;
+
             string[] portNames = null;
             try { portNames = SerialPort.GetPortNames(); }
             catch { }
@@ -113,32 +121,35 @@ namespace MaxMix.Services.Communication
                 string firmware = "";
                 try
                 {
+                    AppLogging.DebugLog(nameof(Connect), portName);
                     m_SerialPort = new SerialPort(portName, 115200);
                     m_SerialPort.ReadTimeout = k_ReadTimeout;
                     m_SerialPort.WriteTimeout = k_WriteTimeout;
                     m_SerialPort.Open();
+                    m_SerialPort.DiscardInBuffer();
+                    m_SerialPort.DiscardOutBuffer();
 
                     WriteMessage(Command.TEST);
+                    Thread.Sleep(20);
                     Command command = (Command)m_SerialPort.ReadByte();
                     if (command != Command.TEST)
-                        throw new InvalidOperationException($"Firmware Test reply failed.");
+                        throw new InvalidOperationException($"Firmware Test reply failed. Reply: '{command}' Bytes: '{m_SerialPort.BytesToRead}'");
                     firmware = m_SerialPort.ReadLine().Replace("\r", "");
                     // TODO: Actual firmware check
                     if (firmware != "0.0.0")
                         throw new ArgumentException($"Incompatible Firmware: '{firmware}'. Expected: '0.0.0'.");
-                    m_LastMessage = DateTime.Now;
                     m_MessageContext.Post(x => OnDeviceConnected?.Invoke(), null);
                     return;
                 }
                 catch (Exception e)
                 {
+                    AppLogging.DebugLogException(nameof(Connect), e);
                     m_SerialPort.Close();
                     m_SerialPort.Dispose();
                     m_SerialPort = null;
 
-                    if (e is ArgumentException)
+                    if (e is ArgumentException) // Incompatible Firmware
                     {
-                        Console.WriteLine(e);
                         m_MessageContext.Post(x => OnFirmwareIncompatible?.Invoke(firmware), null);
                     }
                 }
@@ -150,12 +161,13 @@ namespace MaxMix.Services.Communication
             if (m_SerialPort == null)
                 return;
 
-            if (DateTime.Now - m_LastMessage < m_DeviceTimeout)
+            if (DateTime.Now - m_LastMessageRead < m_DeviceTimeout)
                 return;
 
             m_SerialPort.Close();
             m_SerialPort.Dispose();
             m_SerialPort = null;
+            m_LastMessageRead = DateTime.Now;
 
             m_MessageContext.Post(x => OnDeviceDisconnected?.Invoke(), null);
         }
@@ -163,6 +175,7 @@ namespace MaxMix.Services.Communication
         // Using a template, with a constraint of IMessage allows us to pass the message without boxing reducing garbage generation
         private unsafe void ReadMessage<T>(Command command) where T : unmanaged, IMessage
         {
+            AppLogging.DebugLog(nameof(ReadMessage), command.ToString());
             int length = 0;
             try
             {
@@ -174,8 +187,7 @@ namespace MaxMix.Services.Communication
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[Exception]: ReadMessage({command}, {typeof(T).Name}");
-                Console.WriteLine(e);
+                AppLogging.DebugLogException(nameof(ReadMessage), e);
                 m_ErrorCount++;
                 return;
             }
@@ -184,28 +196,37 @@ namespace MaxMix.Services.Communication
             message.SetBytes(m_ReadBuffer);
 
             Interlocked.Add(ref m_ReadBytes, length);
-            m_LastMessage = DateTime.Now;
+            m_LastMessageRead = DateTime.Now;
 
             m_MessageContext.Post(x => OnMessageRecieved?.Invoke(command, message), null);
         }
 
         private void Read()
         {
-            if (m_SerialPort == null || !m_SerialPort.IsOpen)
-                return;
-
-            if (m_SerialPort.BytesToRead <= 0)
-                return;
+            try
+            {
+                if (m_SerialPort == null || !m_SerialPort.IsOpen || m_SerialPort.BytesToRead <= 0)
+                    return;
+            }
+            catch { return; }
 
             Command command = (Command)m_SerialPort.ReadByte();
+            AppLogging.DebugLog(nameof(Read), command.ToString());
             Interlocked.Increment(ref m_ReadCount);
             Interlocked.Increment(ref m_ReadBytes);
             switch (command)
             {
+                case Command.TEST:
+                    {
+                        var firmware = m_SerialPort.ReadLine().Replace("\r", "");
+                        AppLogging.DebugLog("FW:", firmware);
+                        m_LastMessageRead = DateTime.Now;
+                    }
+                    break;
                 case Command.OK:
                     {
                         m_DeviceReady = true;
-                        m_LastMessage = DateTime.Now;
+                        m_LastMessageRead = DateTime.Now;
                     }
                     break;
                 case Command.SETTINGS:
@@ -222,13 +243,12 @@ namespace MaxMix.Services.Communication
                     break;
                 case Command.VOLUME_CURR_CHANGE:
                 case Command.VOLUME_ALT_CHANGE:
-                    ReadMessage<VolumeData>(command);
-                    break;
                 case Command.VOLUME_PREV_CHANGE:
                 case Command.VOLUME_NEXT_CHANGE:
+                    ReadMessage<VolumeData>(command);
+                    break;
                 case Command.ERROR:
                 case Command.NONE:
-                case Command.TEST:
                 case Command.DEBUG:
                     Interlocked.Increment(ref m_ErrorCount);
                     break;
@@ -237,35 +257,54 @@ namespace MaxMix.Services.Communication
 
         private void WriteMessage(Command command, IMessage message = null)
         {
-            m_WriteBuffer.Position = 0;
+            m_WriteBuffer.SetLength(0);
             m_WriteBuffer.WriteByte((byte)command);
             message?.GetBytes(m_WriteBuffer);
             Interlocked.Add(ref m_WriteBytes, m_WriteBuffer.Length);
 
-            // GetBuffer returns a reference to the underlying array
+            // GetBuffer returns a reference to the underlying array, we can still use that after we reset the position if we store the length
             byte[] buffer = m_WriteBuffer.GetBuffer();
-            try { m_SerialPort.Write(buffer, 0, buffer.Length); }
+            int length = (int)m_WriteBuffer.Length;
+            AppLogging.DebugLog(nameof(WriteMessage), command.ToString(), $"{{{ToByteString(buffer, 0, length)}}}");
+
+            try { m_SerialPort.Write(buffer, 0, length); }
             catch (Exception e)
             {
-                Console.WriteLine($"[Exception]: WriteMessage({command}, {BitConverter.ToString(buffer)}");
-                Console.WriteLine(e);
+                AppLogging.DebugLogException(nameof(WriteMessage), e);
+                return;
             }
+            m_LastMessageWrite = DateTime.Now;
+        }
+
+        private string ToByteString(byte[] bytes, int offset, int length)
+        {
+            string msg = "";
+            for (int i = offset; i < offset + length; i++)
+                msg += bytes[i].ToString("x1");
+            return msg;
         }
 
         private void Write()
         {
-            if (!m_DeviceReady)
+            if (!m_DeviceReady || m_SerialPort == null || !m_SerialPort.IsOpen)
                 return;
 
-            KeyValuePair<Command, IMessage> pair;
+            KeyValuePair<Command, IMessage> pair = default;
             lock (m_MessageLock)
             {
-                if (m_MessageQueue.Count == 0)
-                    return;
-
-                pair = m_MessageQueue.Dequeue();
+                if (m_MessageQueue.Count != 0)
+                    pair = m_MessageQueue.Dequeue();
             }
 
+            if (pair.Key == Command.NONE)
+            {
+                if (DateTime.Now - m_LastMessageWrite > m_DeviceReconnect)
+                    pair = new KeyValuePair<Command, IMessage>(Command.OK, null);
+                else
+                    return;
+            }
+
+            AppLogging.DebugLog(nameof(Write), pair.Key.ToString());
             m_DeviceReady = false;
             Interlocked.Increment(ref m_WriteCount);
             switch (pair.Key)

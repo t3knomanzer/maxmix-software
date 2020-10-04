@@ -269,15 +269,15 @@ namespace MaxMix.ViewModels
             m_SessionInfo.current = (byte)index;
             m_SessionInfo.output = (byte)outputs.Length;
             m_SessionInfo.input = (byte)_audioSessionService.GetAudioDevices(DeviceFlow.Input).Length;
-            m_SessionInfo.output = (byte)_audioSessionService.GetAudioSessions().Length;
+            m_SessionInfo.application = (byte)_audioSessionService.GetAudioSessions().Length;
 
             m_Sessions[(int)SessionIndex.INDEX_CURRENT] = outputs[index].ToSessionData(index);
-            m_Sessions[(int)SessionIndex.INDEX_NEXT] = outputs[nextIndex].ToSessionData(nextIndex);
             m_Sessions[(int)SessionIndex.INDEX_PREVIOUS] = outputs[prevIndex].ToSessionData(prevIndex);
+            m_Sessions[(int)SessionIndex.INDEX_NEXT] = outputs[nextIndex].ToSessionData(nextIndex);
 
             _communicationService.SendMessage(Command.CURRENT_SESSION, m_Sessions[(int)SessionIndex.INDEX_CURRENT]);
-            _communicationService.SendMessage(Command.NEXT_SESSION, m_Sessions[(int)SessionIndex.INDEX_NEXT]);
             _communicationService.SendMessage(Command.PREVIOUS_SESSION, m_Sessions[(int)SessionIndex.INDEX_PREVIOUS]);
+            _communicationService.SendMessage(Command.NEXT_SESSION, m_Sessions[(int)SessionIndex.INDEX_NEXT]);
             _communicationService.SendMessage(Command.SESSION_INFO, m_SessionInfo);
         }
 
