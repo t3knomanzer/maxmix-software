@@ -181,10 +181,10 @@ void ResetState()
 
     // Time & Sleep
     g_Now = millis();
-    g_LastSteps = 0;
     g_LastMessage = 0;
     g_LastActivity = g_Now;
     g_LastPixelUpdate = 0;
+    g_LastSteps = 0;
 }
 
 //---------------------------------------------------------
@@ -400,6 +400,7 @@ bool ProcessEncoderButton()
 //---------------------------------------------------------
 bool ProcessSleep()
 {
+    g_DisplayAsleep = false;
     if (g_Settings.sleepAfterSeconds == 0)
         return false;
 

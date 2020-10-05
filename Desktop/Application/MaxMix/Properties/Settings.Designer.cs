@@ -12,7 +12,7 @@ namespace MaxMix.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.7.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.6.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -97,7 +97,7 @@ namespace MaxMix.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("4278190335")]
+        [global::System.Configuration.DefaultSettingValueAttribute("4294901760")]
         public uint VolumeMinColor {
             get {
                 return ((uint)(this["VolumeMinColor"]));
@@ -109,7 +109,7 @@ namespace MaxMix.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("4278255360")]
+        [global::System.Configuration.DefaultSettingValueAttribute("4278190335")]
         public uint VolumeMaxColor {
             get {
                 return ((uint)(this["VolumeMaxColor"]));
@@ -133,7 +133,7 @@ namespace MaxMix.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("4278190335")]
+        [global::System.Configuration.DefaultSettingValueAttribute("4294902015")]
         public uint MixChanneBColor {
             get {
                 return ((uint)(this["MixChanneBColor"]));

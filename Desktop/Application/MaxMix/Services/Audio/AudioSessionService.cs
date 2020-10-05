@@ -23,6 +23,7 @@ namespace MaxMix.Services.Audio
         private readonly IDictionary<int, IAudioSession> _sessionGoups = new ConcurrentDictionary<int, IAudioSession>();
         private readonly IDictionary<int, AudioSessionManager2> _sessionManagers = new ConcurrentDictionary<int, AudioSessionManager2>();
         private readonly MMDeviceEnumerator _deviceEnumerator = new MMDeviceEnumerator();
+        private bool _stopping = false;
         #endregion
 
         #region Events
@@ -63,6 +64,7 @@ namespace MaxMix.Services.Audio
         /// <inheritdoc/>
         public void Stop()
         {
+            _stopping = true;
             _deviceEnumerator.DeviceAdded -= OnDeviceAdded;
 
             foreach (var device in _devices.Values)
@@ -135,6 +137,7 @@ namespace MaxMix.Services.Audio
         /// <param name="stateInfo"></param>
         private void Initialize(object stateInfo)
         {
+            _stopping = false;
             _deviceEnumerator.DeviceAdded += OnDeviceAdded;
             _deviceEnumerator.DeviceStateChanged += OnDeviceStateChanged;
 
@@ -362,6 +365,7 @@ namespace MaxMix.Services.Audio
         #region Event Dispatchers
         private void RaiseDefaultDeviceChanged(int id, DeviceFlow deviceFlow)
         {
+            if (_stopping) return;
             if (SynchronizationContext.Current != _synchronizationContext)
             {
                 _synchronizationContext.Post(o => DefaultDeviceChanged?.Invoke(this, id, deviceFlow), null);
@@ -374,6 +378,7 @@ namespace MaxMix.Services.Audio
 
         private void RaiseDeviceCreated(int id, string displayName, int volume, bool isMuted, DeviceFlow deviceFlow)
         {
+            if (_stopping) return;
             if (SynchronizationContext.Current != _synchronizationContext)
             {
                 _synchronizationContext.Post(o => DeviceCreated?.Invoke(this, id, displayName, volume, isMuted, deviceFlow), null);
@@ -386,6 +391,7 @@ namespace MaxMix.Services.Audio
 
         private void RaiseDeviceRemoved(int id, DeviceFlow deviceFlow)
         {
+            if (_stopping) return;
             if (SynchronizationContext.Current != _synchronizationContext)
             {
                 _synchronizationContext.Post(o => DeviceRemoved?.Invoke(this, id, deviceFlow), null);
@@ -398,6 +404,7 @@ namespace MaxMix.Services.Audio
 
         private void RaiseDeviceVolumeChanged(int id, int volume, bool isMuted, DeviceFlow deviceFlow)
         {
+            if (_stopping) return;
             if (SynchronizationContext.Current != _synchronizationContext)
             {
                 _synchronizationContext.Post(o => DeviceVolumeChanged?.Invoke(this, id, volume, isMuted, deviceFlow), null);
@@ -410,6 +417,7 @@ namespace MaxMix.Services.Audio
 
         private void RaiseSessionCreated(int id, string displayName, int volume, bool isMuted)
         {
+            if (_stopping) return;
             if (SynchronizationContext.Current != _synchronizationContext)
             {
                 _synchronizationContext.Post(o => SessionCreated?.Invoke(this, id, displayName, volume, isMuted), null);
@@ -422,6 +430,7 @@ namespace MaxMix.Services.Audio
 
         private void RaiseSessionRemoved(int id)
         {
+            if (_stopping) return;
             if (SynchronizationContext.Current != _synchronizationContext)
             {
                 _synchronizationContext.Post(o => SessionRemoved?.Invoke(this, id), null);
@@ -434,6 +443,7 @@ namespace MaxMix.Services.Audio
 
         private void RaiseSessionVolumeChanged(int id, int volume, bool isMuted)
         {
+            if (_stopping) return;
             if (SynchronizationContext.Current != _synchronizationContext)
             {
                 _synchronizationContext.Post(o => SessionVolumeChanged?.Invoke(this, id, volume, isMuted), null);
