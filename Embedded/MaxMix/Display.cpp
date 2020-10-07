@@ -154,7 +154,8 @@ namespace Display
         x0 = px;
         y0 = py;
 
-        for (uint8_t i = 0; i < DisplayMode::MODE_MAX; i++)
+        // Splash screen is a mode, start loop at MODE_OUTPUT
+        for (uint8_t i = DisplayMode::MODE_OUTPUT; i < DisplayMode::MODE_MAX; i++)
         {
             dotSize = i == index ? DISPLAY_WIDGET_DOT_SIZE_X2 : DISPLAY_WIDGET_DOT_SIZE_X1;
             y0 = py - dotSize / 2;
