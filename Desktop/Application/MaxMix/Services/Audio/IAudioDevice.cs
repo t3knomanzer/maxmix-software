@@ -1,5 +1,4 @@
-﻿using CSCore.Codecs.FLAC;
-using CSCore.CoreAudioAPI;
+﻿using CSCore.CoreAudioAPI;
 using System;
 
 namespace MaxMix.Services.Audio

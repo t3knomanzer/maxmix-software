@@ -115,6 +115,12 @@ void loop()
     // This should really depend on a few things, like setings of continious scroll, vs new item index vs count, etc.
     // for now lets be safe and check for any command that impacts a stored value, we can fine tune this later
     g_DisplayDirty = (command >= Command::SETTINGS || command <= Command::VOLUME_ALT_CHANGE);
+    if (command == Command::CURRENT_SESSION || command == Command::ALTERNATE_SESSION ||
+        command == Command::VOLUME_CURR_CHANGE || command == Command::VOLUME_ALT_CHANGE)
+    {
+        g_LastActivity = g_Now;
+        g_DisplayDirty = true;
+    }
 
     if (ProcessEncoderRotation())
     {

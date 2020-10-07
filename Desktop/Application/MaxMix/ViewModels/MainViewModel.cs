@@ -257,15 +257,16 @@ namespace MaxMix.ViewModels
 
         private void UpdateSessionState(int id, bool isDefault, int volume, bool isMuted, string name = null)
         {
-            for (int i = (int)SessionIndex.INDEX_PREVIOUS; i < (int)SessionIndex.INDEX_MAX; i++)
+            for (int i = (int)SessionIndex.INDEX_CURRENT; i < (int)SessionIndex.INDEX_MAX; i++)
             {
-                if (m_Sessions[i].data.id == id)
+                var sessionId = m_IndexToId[m_Sessions[i].data.id];
+                if (sessionId == id)
                 {
                     m_Sessions[i].data.isDefault = isDefault;
                     m_Sessions[i].data.volume = (byte)volume;
                     m_Sessions[i].data.isMuted = isMuted;
                     if (string.IsNullOrEmpty(name))
-                        _communicationService.SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i]);
+                        _communicationService.SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i].data);
                     else
                     {
                         string prevName = m_Sessions[i].name;
@@ -273,7 +274,7 @@ namespace MaxMix.ViewModels
                         if (m_Sessions[i].name != prevName)
                             _communicationService.SendMessage(Command.CURRENT_SESSION + i, m_Sessions[i]);
                         else
-                            _communicationService.SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i]);
+                            _communicationService.SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i].data);
                     }
                     break;
                 }
