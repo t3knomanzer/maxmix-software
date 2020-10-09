@@ -257,14 +257,14 @@ inline bool CanScrollLeft(void)
 {
     if (!g_Settings.continuousScroll && g_SessionInfo.current == 0)
         return false;
-    return true;
+    return g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] > 0;
 }
 
 inline bool CanScrollRight(void)
 {
     if (!g_Settings.continuousScroll && g_SessionInfo.current < g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] - 1)
         return false;
-    return true;
+    return g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] > 0;
 }
 
 inline uint8_t GetIndexForMode(DisplayMode mode)
@@ -368,7 +368,7 @@ bool ProcessEncoderButton()
 
         if (g_SessionInfo.mode != DisplayMode::MODE_GAME)
         {
-            g_Sessions[SessionIndex::INDEX_CURRENT].data.isMuted = true;
+            g_Sessions[SessionIndex::INDEX_CURRENT].data.isMuted = !g_Sessions[SessionIndex::INDEX_CURRENT].data.isMuted;
             Communications::Write(Command::VOLUME_CURR_CHANGE);
         }
         else
@@ -387,9 +387,8 @@ bool ProcessEncoderButton()
         if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
             return false;
 
-        // TODO: So this is tricky as we need to wait for data from the pc at this point. Need a temp waiting for data screen or something
         g_SessionInfo.mode = (DisplayMode)((g_SessionInfo.mode + 1) % DisplayMode::MODE_MAX);
-        if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
+        if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH || g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] == 0)
             g_SessionInfo.mode = (DisplayMode)(g_SessionInfo.mode + 1);
         g_SessionInfo.current = 0;
         // TODO: Also need to handle 0 data from PC for this mode
@@ -460,7 +459,7 @@ void UpdateDisplay()
         }
         else
         {
-            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode == DisplayMode::MODE_INPUT ? "IN" : "OUT", g_SessionInfo.mode);
+            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode == DisplayMode::MODE_INPUT ? "Recording" : "Playback", g_SessionInfo.mode);
         }
     }
     else if (g_SessionInfo.mode == DisplayMode::MODE_APPLICATION)
