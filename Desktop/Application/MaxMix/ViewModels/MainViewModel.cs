@@ -387,6 +387,11 @@ namespace MaxMix.ViewModels
 
         void ComputeIndexes(int index, out int previous, out int next)
         {
+            previous = index;
+            next = index;
+            if (m_IndexToId.Count == 0)
+                return;
+
             previous = (index - 1 + m_IndexToId.Count) % m_IndexToId.Count;
             next = (index + 1) % m_IndexToId.Count;
         }
