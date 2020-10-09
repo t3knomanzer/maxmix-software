@@ -1,5 +1,6 @@
 ﻿using CSCore.CoreAudioAPI;
 using MaxMix.Framework;
+using MaxMix.Services.Communication;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -116,17 +117,16 @@ namespace MaxMix.Services.Audio
 
         }
 
-        public IAudioSession[] GetAudioSessions()
+        public ISession[] GetSessions(DisplayMode mode)
         {
-            // TODO: Not sure if it is safe to return IEnumerable<IAudioSession> from ConcurrentDictionary
-            return _sessionGoups.Values.OrderBy(x => x.Id).ToArray();
-        }
-
-        public IAudioDevice[] GetAudioDevices(DeviceFlow flow)
-        {
-            // TODO: Not sure if it is safe to return IEnumerable<IAudioSession> from ConcurrentDictionary
-            return _devices.Values.Where(x => x.Flow == flow).OrderBy(x => x.Id).ToArray();
-
+            // TODO: Not sure if it is safe to return IEnumerable<ISession> from ConcurrentDictionary
+            if (mode == DisplayMode.MODE_APPLICATION || mode == DisplayMode.MODE_GAME)
+                return _sessionGoups.Values.OrderBy(x => x.Id).ToArray();
+            if (mode == DisplayMode.MODE_INPUT)
+                return _devices.Values.Where(x => x.Flow == DeviceFlow.Input).OrderBy(x => x.Id).ToArray();
+            if (mode == DisplayMode.MODE_OUTPUT)
+                return _devices.Values.Where(x => x.Flow == DeviceFlow.Output).OrderBy(x => x.Id).ToArray();
+            return null;
         }
         #endregion
 

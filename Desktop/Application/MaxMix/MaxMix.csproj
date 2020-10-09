@@ -140,6 +140,7 @@
     <Compile Include="Services\Audio\IAudioDevice.cs" />
     <Compile Include="Services\Audio\IAudioSession.cs" />
     <Compile Include="Services\Audio\IAudioSessionService.cs" />
+    <Compile Include="Services\Audio\ISession.cs" />
     <Compile Include="Services\Audio\PolicyConfig.cs" />
     <Compile Include="Services\Communication\CircularBuffer.cs" />
     <Compile Include="Services\Communication\Messages.cs" />

@@ -3,7 +3,7 @@ using System;
 
 namespace MaxMix.Services.Audio
 {
-    public interface IAudioDevice : IDisposable
+    public interface IAudioDevice : IDisposable, ISession
     {
         #region Properties
         /// <summary>
@@ -19,17 +19,17 @@ namespace MaxMix.Services.Audio
         /// <summary>
         /// The computed Identifier for this session.
         /// </summary>
-        int Id { get; }
+        new int Id { get; }
 
         /// <summary>
-        /// 
+        /// Is this the default windows device for this Flow
         /// </summary>
-        bool IsDefault { get; }
+        new bool IsDefault { get; }
 
         /// <summary>
         /// The display name of the process that created this session.
         /// </summary>
-        string DisplayName { get; }
+        new string DisplayName { get; }
 
         /// <summary>
         /// The direction of the audio flow for this device, input for capture devices and output for render devices.
@@ -39,12 +39,12 @@ namespace MaxMix.Services.Audio
         /// <summary>
         /// Current volume of this session (0-100).
         /// </summary>
-        int Volume { get; set; }
+        new int Volume { get; set; }
 
         /// <summary>
         /// Current mute state of this session.
         /// </summary>
-        bool IsMuted { get; set; }
+        new bool IsMuted { get; set; }
         #endregion
 
         #region Events

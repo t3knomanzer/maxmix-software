@@ -21,7 +21,7 @@ namespace MaxMix.Framework
             return settings;
         }
 
-        public static SessionData ToSessionData(this IAudioDevice audioDevice, int index)
+        public static SessionData ToSessionData(this ISession audioDevice, int index)
         {
             SessionData session = SessionData.Default();
             session.name = audioDevice.DisplayName;
@@ -29,17 +29,6 @@ namespace MaxMix.Framework
             session.data.isDefault = audioDevice.IsDefault;
             session.data.volume = (byte)audioDevice.Volume;
             session.data.isMuted = audioDevice.IsMuted;
-            return session;
-        }
-
-        public static SessionData ToSessionData(this IAudioSession audioSession, int index)
-        {
-            SessionData session = SessionData.Default();
-            session.name = audioSession.DisplayName;
-            session.data.id = (byte)index;
-            session.data.isDefault = false;
-            session.data.volume = (byte)audioSession.Volume;
-            session.data.isMuted = audioSession.IsMuted;
             return session;
         }
     }

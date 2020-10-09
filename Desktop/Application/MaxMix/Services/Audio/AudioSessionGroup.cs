@@ -44,6 +44,9 @@ namespace MaxMix.Services.Audio
         public string DisplayName { get; protected set; }
 
         /// <inheritdoc/>
+        public bool IsDefault => false;
+
+        /// <inheritdoc/>
         public int Volume
         {
             get => _volume;
