@@ -6,8 +6,7 @@
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/t3knomanzer/maxmix-software)
 ![GitHub commits since latest release (by date)](https://img.shields.io/github/commits-since/t3knomanzer/maxmix-software/latest)
 
-
-<!-- [![Gitter](https://img.shields.io/gitter/room/t3knomanzer/maxmix-software)](https://gitter.im/maxmixproject/developers) -->
+[![Amazon buy](https://img.shields.io/badge/amazon-buy-blue?logo=amazon)](https://www.amazon.com/dp/B08KSP6G1P)
 [![Paypal donate](https://img.shields.io/badge/paypal-donate-blue?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=SQS6XJZBCBZA8&currency_code=USD&source=url)
 [![Github sponsor](https://img.shields.io/badge/github-sponsor-blue?logo=github)](https://github.com/sponsors/t3knomanzer)
 
@@ -43,4 +42,5 @@ You can join these groups and chats to discuss your-project related questions:
 [Github](https://www.github.com/t3knomanzer/maxmix-software)  
 [Thingiverse](https://www.thingiverse.com/thing:4343186)  
 [Prusaprinters](https://www.prusaprinters.org/prints/31336-maxmix)  
+[Buy](https://www.amazon.com/dp/B08KSP6G1P)
 [Donate](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=SQS6XJZBCBZA8&currency_code=USD&source=url)
