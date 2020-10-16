@@ -182,6 +182,8 @@ namespace MaxMix.Services.Communication
                         {
                             Debug.WriteLine($"[CommunicationService] Probing port {portName}");
                             _serialPort = new SerialPort(portName, _baudRate);
+                            _serialPort.DtrEnable = true;
+                            _serialPort.RtsEnable = true;
                             _serialPort.ReadTimeout = _portTimeout;
                             _serialPort.WriteTimeout = _portTimeout;
                             _serialPort.DataReceived += OnDataReceived;
