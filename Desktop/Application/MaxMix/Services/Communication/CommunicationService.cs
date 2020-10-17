@@ -29,8 +29,8 @@ namespace MaxMix.Services.Communication
         private long m_ErrorCount;
         private DateTime m_LastMessageRead;
         private DateTime m_LastMessageWrite;
-        private TimeSpan m_DeviceTimeout = new TimeSpan(0, 0, 5);
-        private TimeSpan m_DeviceReconnect = new TimeSpan(0, 0, 1);
+        private readonly TimeSpan k_DeviceTimeout = new TimeSpan(0, 0, 5);
+        private readonly TimeSpan k_DeviceReconnect = new TimeSpan(0, 0, 1);
 
         private const int k_ReadTimeout = 20;
         private const int k_WriteTimeout = 20;
@@ -80,16 +80,25 @@ namespace MaxMix.Services.Communication
                     m_MessageQueue.RemoveAt(index);
                 m_MessageQueue.Enqueue(new KeyValuePair<Command, IMessage>(command, message));
             }
+            Write(DateTime.Now);
         }
 
         private void Update()
         {
             while (true)
             {
-                Connect();
-                Read();
-                Write();
-                Disconnect();
+                var now = DateTime.Now;
+                if (m_SerialPort == null)
+                {
+                    Connect(now);
+                    Thread.Sleep(k_DeviceReconnect);
+                }
+                else
+                {
+                    if (Write(now))
+                        Thread.Sleep(k_DeviceReconnect);
+                    Disconnect(now);
+                }
 
                 if (m_Stopping)
                 {
@@ -104,15 +113,8 @@ namespace MaxMix.Services.Communication
             }
         }
 
-        private void Connect()
+        private void Connect(DateTime now)
         {
-            if (m_SerialPort != null)
-                return;
-
-            if (DateTime.Now - m_LastMessageRead < m_DeviceReconnect)
-                return;
-            m_LastMessageRead = DateTime.Now;
-
             string[] portNames = null;
             try { portNames = SerialPort.GetPortNames(); }
             catch { }
@@ -133,7 +135,7 @@ namespace MaxMix.Services.Communication
                     m_SerialPort.DiscardInBuffer();
                     m_SerialPort.DiscardOutBuffer();
 
-                    WriteMessage(Command.TEST);
+                    WriteMessage(now, Command.TEST);
                     Thread.Sleep(20);
                     Command command = (Command)m_SerialPort.ReadByte();
                     if (command != Command.TEST)
@@ -142,6 +144,8 @@ namespace MaxMix.Services.Communication
                     // TODO: Actual firmware check
                     if (firmware != "0.0.0")
                         throw new ArgumentException($"Incompatible Firmware: '{firmware}'. Expected: '0.0.0'.");
+                    m_SerialPort.DataReceived += Read;
+                    m_DeviceReady = true;
                     m_MessageContext.Post(x => OnDeviceConnected?.Invoke(), null);
                     return;
                 }
@@ -160,18 +164,18 @@ namespace MaxMix.Services.Communication
             }
         }
 
-        private void Disconnect()
+        private void Disconnect(DateTime now)
         {
             if (m_SerialPort == null)
                 return;
 
-            if (DateTime.Now - m_LastMessageRead < m_DeviceTimeout)
+            if (now - m_LastMessageRead < k_DeviceTimeout)
                 return;
 
+            m_SerialPort.DataReceived -= Read;
             m_SerialPort.Close();
             m_SerialPort.Dispose();
             m_SerialPort = null;
-            m_LastMessageRead = DateTime.Now;
 
             m_MessageContext.Post(x => OnDeviceDisconnected?.Invoke(), null);
         }
@@ -205,14 +209,10 @@ namespace MaxMix.Services.Communication
             m_MessageContext.Post(x => OnMessageRecieved?.Invoke(command, message), null);
         }
 
-        private void Read()
+        private void Read(object sender, SerialDataReceivedEventArgs e)
         {
-            try
-            {
-                if (m_SerialPort == null || !m_SerialPort.IsOpen || m_SerialPort.BytesToRead <= 0)
-                    return;
-            }
-            catch { return; }
+            if (e.EventType == SerialData.Eof)
+                return;
 
             Command command = (Command)m_SerialPort.ReadByte();
             AppLogging.DebugLog(nameof(Read), command.ToString());
@@ -259,7 +259,7 @@ namespace MaxMix.Services.Communication
             }
         }
 
-        private void WriteMessage(Command command, IMessage message = null)
+        private void WriteMessage(DateTime now, Command command, IMessage message = null)
         {
             m_WriteBuffer.SetLength(0);
             m_WriteBuffer.WriteByte((byte)command);
@@ -277,7 +277,7 @@ namespace MaxMix.Services.Communication
                 AppLogging.DebugLogException(nameof(WriteMessage), e);
                 return;
             }
-            m_LastMessageWrite = DateTime.Now;
+            m_LastMessageWrite = now;
         }
 
         private string ToByteString(byte[] bytes, int offset, int length)
@@ -288,24 +288,24 @@ namespace MaxMix.Services.Communication
             return msg;
         }
 
-        private void Write()
+        private bool Write(DateTime now)
         {
-            if (!m_DeviceReady || m_SerialPort == null || !m_SerialPort.IsOpen)
-                return;
+            if (!m_DeviceReady)
+                return false;
 
             KeyValuePair<Command, IMessage> pair = default;
-            lock (m_MessageLock)
-            {
-                if (m_MessageQueue.Count != 0)
+            if (m_MessageQueue.Count != 0)
+            { 
+                lock (m_MessageLock)
                     pair = m_MessageQueue.Dequeue();
             }
-
-            if (pair.Key == Command.NONE)
+            else if (now - m_LastMessageWrite > k_DeviceReconnect)
             {
-                if (DateTime.Now - m_LastMessageWrite > m_DeviceReconnect)
-                    pair = new KeyValuePair<Command, IMessage>(Command.OK, null);
-                else
-                    return;
+                pair = new KeyValuePair<Command, IMessage>(Command.OK, null);
+            }
+            else
+            {
+                return true;
             }
 
             AppLogging.DebugLog(nameof(Write), pair.Key.ToString());
@@ -326,7 +326,7 @@ namespace MaxMix.Services.Communication
                 case Command.VOLUME_PREV_CHANGE:
                 case Command.VOLUME_NEXT_CHANGE:
                 case Command.DEBUG:
-                    WriteMessage(pair.Key, pair.Value);
+                    WriteMessage(now, pair.Key, pair.Value);
                     break;
                 case Command.ERROR:
                 case Command.NONE:
@@ -336,6 +336,7 @@ namespace MaxMix.Services.Communication
                     }
                     break;
             }
+            return false;
         }
     }
 }
