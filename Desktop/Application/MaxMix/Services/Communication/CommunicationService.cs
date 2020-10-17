@@ -9,6 +9,8 @@ namespace MaxMix.Services.Communication
 {
     public class CommunicationService
     {
+        const string VERSION = "1.4.1";
+
         private readonly SynchronizationContext m_MessageContext = SynchronizationContext.Current;
         // We replace messages of the same type, the queue only needs to hold the number of enums in Command, 11 currently, using 16 for space
         private readonly CircularBuffer<KeyValuePair<Command, IMessage>> m_MessageQueue = new CircularBuffer<KeyValuePair<Command, IMessage>>(16);
@@ -143,8 +145,8 @@ namespace MaxMix.Services.Communication
                         throw new InvalidOperationException($"Firmware Test reply failed. Reply: '{command}' Bytes: '{m_SerialPort.BytesToRead}'");
                     firmware = m_SerialPort.ReadLine().Replace("\r", "");
                     // TODO: Actual firmware check
-                    if (firmware != "0.0.0")
-                        throw new ArgumentException($"Incompatible Firmware: '{firmware}'. Expected: '0.0.0'.");
+                    if (firmware != VERSION)
+                        throw new ArgumentException($"Incompatible Firmware: '{firmware}'. Expected: '{VERSION}'.");
                     m_SerialPort.DataReceived += Read;
                     m_DeviceReady = true;
                     m_MessageContext.Post(x => OnDeviceConnected?.Invoke(), null);
