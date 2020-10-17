@@ -258,8 +258,15 @@ namespace MaxMix.ViewModels
                 {
                     if (addition)
                         m_SessionInfo.current++;
+                    else if (id == currId)
+                        m_SessionInfo.current = 0;
                     else if (m_SessionInfo.current > 0)
                         m_SessionInfo.current--;
+                }
+                if (addition && _settingsViewModel.DisplayNewSession)
+                {
+                    PopulateIndexToIdMap(sessions);
+                    m_SessionInfo.current = (byte)Array.FindIndex(sessions, x => x.Id == id);
                 }
                 UpdateAndFlushSessionData(sessions, true);
             }
@@ -364,4 +371,3 @@ namespace MaxMix.ViewModels
         }
     }
 }
- 
