@@ -257,14 +257,14 @@ inline bool CanScrollLeft(void)
 {
     if (!g_Settings.continuousScroll && g_SessionInfo.current == 0)
         return false;
-    return g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] > 0;
+    return g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] > 1;
 }
 
 inline bool CanScrollRight(void)
 {
     if (!g_Settings.continuousScroll && g_SessionInfo.current < g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] - 1)
         return false;
-    return g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] > 0;
+    return g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] > 1;
 }
 
 inline uint8_t GetIndexForMode(DisplayMode mode)
