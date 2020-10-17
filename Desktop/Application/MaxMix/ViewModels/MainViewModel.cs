@@ -320,7 +320,14 @@ namespace MaxMix.ViewModels
             {
                 // isDefault, Volume, or isMuted changed for id (index)
                 VolumeData vol = (VolumeData)message;
-                _audioSessionService.SetItemVolume(m_IndexToId[vol.id], vol.volume, vol.isMuted);
+                if (!m_IndexToId.TryGetValue(vol.id, out var sessionId))
+                    return;
+
+                var isDefault = m_Sessions[command - Command.VOLUME_CURR_CHANGE].data.isDefault;
+                m_Sessions[command - Command.VOLUME_CURR_CHANGE].data = vol;
+                _audioSessionService.SetItemVolume(sessionId, vol.volume, vol.isMuted);
+                if (vol.isDefault && !isDefault)
+                    _audioSessionService.SetDefaultEndpoint(sessionId);
             }
             else if (command == Command.SESSION_INFO)
             {
