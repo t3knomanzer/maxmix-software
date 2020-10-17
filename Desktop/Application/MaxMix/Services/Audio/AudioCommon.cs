@@ -1,6 +1,4 @@
-﻿using Sentry.Protocol;
-
-namespace MaxMix.Services.Audio
+﻿namespace MaxMix.Services.Audio
 {
     #region Enums
     public enum DeviceFlow
@@ -11,6 +9,7 @@ namespace MaxMix.Services.Audio
     #endregion
 
     #region Delegates
+    public delegate void ServiceStartedDelegate(object sender);
     public delegate void DefaultAudioDeviceChangedDelegate(object sender, int id, DeviceFlow deviceFlow);
     public delegate void AudioDeviceCreatedDelegate(object sender, int id, string displayName, int volume, bool isMuted, DeviceFlow deviceFlow);
     public delegate void AudioDeviceRemovedDelegate(object sender, int id, DeviceFlow deviceFlow);

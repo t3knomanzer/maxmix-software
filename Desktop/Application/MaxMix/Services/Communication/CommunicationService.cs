@@ -1,307 +1,344 @@
-﻿using System;
+﻿using MaxMix.Framework;
+using System;
 using System.Collections.Generic;
-using System.IO.Ports;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Diagnostics;
 using System.IO;
-using MaxMix.Services.Communication.Messages;
-using MaxMix.Services.Communication.Serialization;
+using System.IO.Ports;
+using System.Threading;
 
 namespace MaxMix.Services.Communication
 {
-    /// <summary>
-    /// Manages communication between pc and device including discovery
-    /// through handshake as well as messaging.
-    /// It is protocol agnostic, it uses the provided message ISerializationService.
-    /// </summary>
-    internal class CommunicationService : ICommunicationService
+    public class CommunicationService
     {
-        #region Constructor
-        public CommunicationService(ISerializationService serializationService)
-        {
-            _serializationService = serializationService;
-        }
-        #endregion
+        private readonly SynchronizationContext m_MessageContext = SynchronizationContext.Current;
+        // We replace messages of the same type, the queue only needs to hold the number of enums in Command, 11 currently, using 16 for space
+        private readonly CircularBuffer<KeyValuePair<Command, IMessage>> m_MessageQueue = new CircularBuffer<KeyValuePair<Command, IMessage>>(16);
+        private readonly object m_MessageLock = new object();
+        private readonly byte[] m_ReadBuffer = new byte[128];
+        private readonly MemoryStream m_WriteBuffer = new MemoryStream(128);
 
-        #region Consts
-        private const int _baudRate = 115200;
-        private const int _portTimeout = 100;
-        private const int _ackTimeout = 100;
-        private const int _checkPortInterval = 500;
-        private const int _sendRetryMax = 3;
-        private const int _heartbeatInterval = 2000;
-        #endregion
+        private SerialPort m_SerialPort;
+        private Thread m_Thread;
+        private bool m_Stopping;
 
-        #region Fields
-        private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
-        private readonly ISerializationService _serializationService;
-        private readonly IList<byte> _buffer = new List<byte>();
-        private readonly object _sendLock = new object();
+        // Statistics
+        private bool m_DeviceReady;
+        private long m_ReadCount;
+        private long m_ReadBytes;
+        private long m_WriteCount;
+        private long m_WriteBytes;
+        private long m_ErrorCount;
+        private DateTime m_LastMessageRead;
+        private DateTime m_LastMessageWrite;
+        private readonly TimeSpan k_DeviceTimeout = new TimeSpan(0, 0, 5);
+        private readonly TimeSpan k_DeviceReconnect = new TimeSpan(0, 0, 1);
 
-        private SerialPort _serialPort;
+        private const int k_ReadTimeout = 20;
+        private const int k_WriteTimeout = 20;
 
-        private Thread _reconnectionThread;
-        private bool _reconnectionAlive;
+        public Action OnDeviceDisconnected;
+        public Action OnDeviceConnected;
+        public Action<string> OnFirmwareIncompatible;
+        public Action<Command, IMessage> OnMessageRecieved;
 
-        private byte _messageRevision;
-        private bool _waitingAck;
-        private int _sendRetryCount;
-
-        private Stopwatch _watch = new Stopwatch();
-        private Stopwatch _heartbeatWatch = new Stopwatch();
-        #endregion
-
-        #region Properties
-        #endregion
-
-        #region Events
-        /// <inheritdoc/>
-        public event EventHandler<IMessage> MessageReceived;
-
-        /// <inheritdoc/>
-        public event EventHandler<string> Error;
-
-        /// <inheritdoc/>
-        public event EventHandler<string> DeviceDiscovered;
-        #endregion
-
-        #region Public Methods
-        /// <inheritdoc/>
         public void Start()
         {
-            Debug.WriteLine("[CommunicationService] Start");
-
-            _messageRevision = 0;
-
-            _reconnectionAlive = true;
-            _reconnectionThread = new Thread(() => HandleReconnection());
-            _reconnectionThread.Start();
-
-            _heartbeatWatch.Start();
+            m_Stopping = false;
+            m_Thread = new Thread(Update);
+            m_Thread.Name = "Communication Service";
+            m_Thread.Start();
         }
 
-        /// <inheritdoc/>
         public void Stop()
         {
-            Debug.WriteLine("[CommunicationService] Stop");
-
-            _reconnectionAlive = false;
-            _reconnectionThread.Join(100);
-
-            try
+            m_Stopping = true;
+            if (m_Thread != null)
             {
-                _serialPort.DataReceived -= OnDataReceived;
-                _serialPort.Close();
-                _serialPort.Dispose();
-                _serialPort = null;
-            }
-            catch { }
-        }
-
-        /// <inheritdoc/>
-        public bool Send(IMessage message)
-        {
-            lock (_sendLock)
-            {
-                Debug.WriteLine("[CommunicationService] Send");
-                _sendRetryCount = 0;
-
-                while (_sendRetryCount < _sendRetryMax)
-                {
-                    try
-                    {
-                        _waitingAck = true;
-
-                        var messageBytes = _serializationService.Serialize(message, _messageRevision);
-                        _serialPort.Write(messageBytes, 0, messageBytes.Length);
-
-                        Debug.WriteLine($"[CommunicationService] Message sent: {message.GetType()} Revision: {_messageRevision}");
-                        _watch.Restart();
-                        _heartbeatWatch.Restart();
-                    }
-                    catch (Exception e)
-                    {
-                        RaiseError(e.Message);
-                        return false;
-                    }
-
-                    while (_waitingAck)
-                    {
-                        if (_watch.Elapsed.TotalMilliseconds > _ackTimeout)
-                        {
-                            Debug.WriteLine($"[CommunicationService] ACK timeout Revision: {_messageRevision}");
-                            break;
-                        }
-
-                        Thread.Sleep(5);
-                    }
-
-                    _messageRevision++;
-
-                    if (!_waitingAck)
-                        return true;
-
-                    _sendRetryCount++;
-                    Debug.WriteLine($"[CommunicationService] Send retry... {_sendRetryCount}");
-                }
-
-                RaiseError($"ACK not received for revision: {_messageRevision}");
-                return false;
+                m_Thread.Join();
+                m_Thread = null;
             }
         }
-        #endregion
 
-        #region Private Methods
-        /// <summary>
-        /// 
-        /// </summary>
-        private void HandleReconnection()
+        public void GetStats(ref long readCount, ref long readBytes, ref long writeCount, ref long writeBytes, ref long errorCount)
         {
-            while (_reconnectionAlive)
+            // We update these values via atomics, so we don't need to worry about partial value updates.
+            // However, m_ReadCount could be updated, but this call executes before m_ReadBytes is updated
+            // So it won't be 100% accurate, however given this is for informational purposes only, this is fine.
+            readCount = m_ReadCount;
+            readBytes = m_ReadBytes;
+            writeCount = m_WriteCount;
+            writeBytes = m_WriteBytes;
+            errorCount = m_ErrorCount;
+        }
+
+        // TODO: Usage of Interface on struct causes boxing which then causes garbage, fix this eventually along with m_MessageQueue
+        public void SendMessage(Command command, IMessage message)
+        {
+            lock (m_MessageLock)
             {
-                if (_serialPort != null && !_serialPort.IsOpen)
+                int index = m_MessageQueue.FindIndex(x => x.Key == command);
+                if (index >= 0)
+                    m_MessageQueue.RemoveAt(index);
+                m_MessageQueue.Enqueue(new KeyValuePair<Command, IMessage>(command, message));
+            }
+            Write(DateTime.Now);
+        }
+
+        private void Update()
+        {
+            while (true)
+            {
+                var now = DateTime.Now;
+                if (m_SerialPort == null)
                 {
-                    _serialPort = null;
-                    RaiseError("COM port is no longer open.");
-                }
-
-                if (_serialPort == null)
-                {
-                    string[] portNames = { };
-                    try { portNames = SerialPort.GetPortNames(); }
-                    catch { }
-
-                    Debug.WriteLine("[CommunicationService] Discovering devices");
-
-                    foreach (var portName in portNames)
-                    {
-                        try
-                        {
-                            Debug.WriteLine($"[CommunicationService] Probing port {portName}");
-                            _serialPort = new SerialPort(portName, _baudRate);
-                            _serialPort.ReadTimeout = _portTimeout;
-                            _serialPort.WriteTimeout = _portTimeout;
-                            _serialPort.DataReceived += OnDataReceived;
-                            _serialPort.Open();
-
-                            if (Send(new MessageHandShakeRequest()))
-                            {
-                                Debug.WriteLine($"[CommunicationService] Device found in port {portName}");
-                                RaiseDeviceDiscovered(portName);
-                                break;
-                            }
-                            else
-                                throw new IOException($"Port not responding to handshake {portName}");
-                        }
-                        catch (Exception e)
-                        {
-                            Debug.WriteLine($"[CommunicationService] {e.Message}");
-                            _serialPort.Close();
-                            _serialPort.Dispose();
-                            _serialPort = null;
-                        }
-                    }
+                    Connect(now);
+                    Thread.Sleep(k_DeviceReconnect);
                 }
                 else
                 {
-                    // Send a regular heartbeat
-                    if (_heartbeatWatch.Elapsed.TotalMilliseconds >= _heartbeatInterval)
-                    {
-                        Send(new MessageHeartbeat());
-                    }
+                    if (now - m_LastMessageWrite > k_DeviceReconnect)
+                        Write(now);
+                    Disconnect(now);
+                    Thread.Sleep(k_DeviceReconnect);
                 }
 
-                Thread.Sleep(_checkPortInterval);
-            }
-        }
-        #endregion
-
-        #region EventHandlers
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        private void OnDataReceived(object sender, SerialDataReceivedEventArgs args)
-        {
-            while (_serialPort != null &&  _serialPort.IsOpen && _serialPort.BytesToRead > 0)
-            {
-                byte received = (byte)_serialPort.ReadByte();
-                _buffer.Add(received);
-
-                if (received == _serializationService.Delimiter)
+                if (m_Stopping)
                 {
-                    try
+                    if (m_SerialPort != null)
                     {
-                        var message = _serializationService.Deserialize(_buffer.ToArray());
-                        if (message != null)
-                        {
-                            // If it's an ACK message, process it immediately.
-                            if (message.GetType() == typeof(MessageAcknowledgment))
-                            {
-                                MessageAcknowledgment ack = (MessageAcknowledgment)message;
-                                if (ack.Revision == _messageRevision)
-                                {
-                                    Debug.WriteLine($"[CommunicationService] ACK received successfuly: {ack.Revision}");
-                                    _waitingAck = false;
-                                }
-                                else
-                                    RaiseError($"ACK revision error, received: {ack.Revision} expected: {_messageRevision}");
-                            }
-                            else
-                                RaiseMessageReceived(message);
-                        }
+                        m_SerialPort.Close();
+                        m_SerialPort.Dispose();
+                        m_SerialPort = null;
                     }
-                    catch (Exception e)
-                    {
-                        RaiseError("Deserialization error: " + e.Message);
-                    }
-
-                    _buffer.Clear();
+                    break;
                 }
             }
         }
-        #endregion
 
-        #region Event Dispatchers
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="message"></param>
-        private void RaiseMessageReceived(IMessage message)
+        private void Connect(DateTime now)
         {
-            MessageReceived?.Invoke(this, message);
+            string[] portNames = null;
+            try { portNames = SerialPort.GetPortNames(); }
+            catch { }
+
+            if (portNames == null || portNames.Length == 0)
+                return;
+
+            foreach (string portName in portNames)
+            {
+                string firmware = "";
+                try
+                {
+                    AppLogging.DebugLog(nameof(Connect), portName);
+                    m_SerialPort = new SerialPort(portName, 115200);
+                    m_SerialPort.ReadTimeout = k_ReadTimeout;
+                    m_SerialPort.WriteTimeout = k_WriteTimeout;
+                    m_SerialPort.Open();
+                    m_SerialPort.DiscardInBuffer();
+                    m_SerialPort.DiscardOutBuffer();
+
+                    WriteMessage(now, Command.TEST);
+                    Thread.Sleep(20);
+                    Command command = (Command)m_SerialPort.ReadByte();
+                    if (command != Command.TEST)
+                        throw new InvalidOperationException($"Firmware Test reply failed. Reply: '{command}' Bytes: '{m_SerialPort.BytesToRead}'");
+                    firmware = m_SerialPort.ReadLine().Replace("\r", "");
+                    // TODO: Actual firmware check
+                    if (firmware != "0.0.0")
+                        throw new ArgumentException($"Incompatible Firmware: '{firmware}'. Expected: '0.0.0'.");
+                    m_SerialPort.DataReceived += Read;
+                    m_DeviceReady = true;
+                    m_MessageContext.Post(x => OnDeviceConnected?.Invoke(), null);
+                    m_LastMessageRead = now;
+                    return;
+                }
+                catch (Exception e)
+                {
+                    AppLogging.DebugLogException(nameof(Connect), e);
+                    m_SerialPort.Close();
+                    m_SerialPort.Dispose();
+                    m_SerialPort = null;
+
+                    if (e is ArgumentException) // Incompatible Firmware
+                    {
+                        m_MessageContext.Post(x => OnFirmwareIncompatible?.Invoke(firmware), null);
+                    }
+                }
+            }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="error"></param>
-        private void RaiseError(string error)
+        private void Disconnect(DateTime now)
         {
-            Debug.WriteLine($"[CommunicationService] Error Raised: {error}");
+            if (m_SerialPort == null)
+                return;
 
-            if (_synchronizationContext != SynchronizationContext.Current)
-                _synchronizationContext.Post(o => Error?.Invoke(this, error), null);
+            if (now - m_LastMessageRead < k_DeviceTimeout)
+                return;
+
+            m_SerialPort.DataReceived -= Read;
+            m_SerialPort.Close();
+            m_SerialPort.Dispose();
+            m_SerialPort = null;
+
+            m_MessageContext.Post(x => OnDeviceDisconnected?.Invoke(), null);
+        }
+
+        // Using a template, with a constraint of IMessage allows us to pass the message without boxing reducing garbage generation
+        private unsafe void ReadMessage<T>(Command command) where T : unmanaged, IMessage
+        {
+            AppLogging.DebugLog(nameof(ReadMessage), command.ToString());
+            int length = 0;
+            try
+            {
+                while (length < sizeof(T))
+                    length += m_SerialPort.Read(m_ReadBuffer, length, sizeof(T) - length);
+
+                if (length != sizeof(T))
+                    throw new ArgumentException($"Message Length: {length}. Expected Length: {sizeof(T)}.");
+            }
+            catch (Exception e)
+            {
+                AppLogging.DebugLogException(nameof(ReadMessage), e);
+                m_ErrorCount++;
+                return;
+            }
+
+            T message = new T();
+            message.SetBytes(m_ReadBuffer);
+
+            Interlocked.Add(ref m_ReadBytes, length);
+            DateTime now = DateTime.Now;
+            m_LastMessageRead = now;
+            m_MessageContext.Post(x => OnMessageRecieved?.Invoke(command, message), null);
+        }
+
+        private void Read(object sender, SerialDataReceivedEventArgs e)
+        {
+            if (e.EventType == SerialData.Eof)
+                return;
+
+            Command command = (Command)m_SerialPort.ReadByte();
+            AppLogging.DebugLog(nameof(Read), command.ToString());
+            Interlocked.Increment(ref m_ReadCount);
+            Interlocked.Increment(ref m_ReadBytes);
+            switch (command)
+            {
+                case Command.TEST:
+                    {
+                        var firmware = m_SerialPort.ReadLine().Replace("\r", "");
+                        AppLogging.DebugLog("FW:", firmware);
+                        m_LastMessageRead = DateTime.Now;
+                    }
+                    break;
+                case Command.OK:
+                    {
+                        m_DeviceReady = true;
+                        m_LastMessageRead = DateTime.Now;
+                        Write(m_LastMessageRead);
+                    }
+                    break;
+                case Command.SETTINGS:
+                    ReadMessage<DeviceSettings>(command);
+                    break;
+                case Command.SESSION_INFO:
+                    ReadMessage<SessionInfo>(command);
+                    break;
+                case Command.CURRENT_SESSION:
+                case Command.ALTERNATE_SESSION:
+                case Command.PREVIOUS_SESSION:
+                case Command.NEXT_SESSION:
+                    ReadMessage<SessionData>(command);
+                    break;
+                case Command.VOLUME_CURR_CHANGE:
+                case Command.VOLUME_ALT_CHANGE:
+                case Command.VOLUME_PREV_CHANGE:
+                case Command.VOLUME_NEXT_CHANGE:
+                    ReadMessage<VolumeData>(command);
+                    break;
+                case Command.ERROR:
+                case Command.NONE:
+                case Command.DEBUG:
+                    Interlocked.Increment(ref m_ErrorCount);
+                    break;
+            }
+        }
+
+        private void WriteMessage(DateTime now, Command command, IMessage message = null)
+        {
+            m_WriteBuffer.SetLength(0);
+            m_WriteBuffer.WriteByte((byte)command);
+            message?.GetBytes(m_WriteBuffer);
+            Interlocked.Add(ref m_WriteBytes, m_WriteBuffer.Length);
+
+            // GetBuffer returns a reference to the underlying array, we can still use that after we reset the position if we store the length
+            byte[] buffer = m_WriteBuffer.GetBuffer();
+            int length = (int)m_WriteBuffer.Length;
+            AppLogging.DebugLog(nameof(WriteMessage), command.ToString(), $"{{{ToByteString(buffer, 0, length)}}}");
+
+            try { m_SerialPort.Write(buffer, 0, length); }
+            catch (Exception e)
+            {
+                AppLogging.DebugLogException(nameof(WriteMessage), e);
+                return;
+            }
+            m_LastMessageWrite = now;
+        }
+
+        private string ToByteString(byte[] bytes, int offset, int length)
+        {
+            string msg = "";
+            for (int i = offset; i < offset + length; i++)
+                msg += bytes[i].ToString("x1");
+            return msg;
+        }
+
+        private void Write(DateTime now)
+        {
+            if (!m_DeviceReady)
+                return;
+
+            KeyValuePair<Command, IMessage> pair = default;
+            if (m_MessageQueue.Count != 0)
+            { 
+                lock (m_MessageLock)
+                    pair = m_MessageQueue.Dequeue();
+            }
+            else if (now - m_LastMessageWrite > k_DeviceReconnect)
+            {
+                pair = new KeyValuePair<Command, IMessage>(Command.OK, null);
+            }
             else
-                Error?.Invoke(this, error);
-        }
+            {
+                return;
+            }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="portName"></param>
-        private void RaiseDeviceDiscovered(string portName)
-        {
-            if (_synchronizationContext != SynchronizationContext.Current)
-                _synchronizationContext.Post(o => DeviceDiscovered?.Invoke(this, portName), null);
-            else
-                DeviceDiscovered?.Invoke(this, portName);
+            AppLogging.DebugLog(nameof(Write), pair.Key.ToString());
+            m_DeviceReady = false;
+            Interlocked.Increment(ref m_WriteCount);
+            switch (pair.Key)
+            {
+                case Command.TEST:
+                case Command.OK:
+                case Command.SETTINGS:
+                case Command.SESSION_INFO:
+                case Command.CURRENT_SESSION:
+                case Command.ALTERNATE_SESSION:
+                case Command.PREVIOUS_SESSION:
+                case Command.NEXT_SESSION:
+                case Command.VOLUME_CURR_CHANGE:
+                case Command.VOLUME_ALT_CHANGE:
+                case Command.VOLUME_PREV_CHANGE:
+                case Command.VOLUME_NEXT_CHANGE:
+                case Command.DEBUG:
+                    WriteMessage(now, pair.Key, pair.Value);
+                    break;
+                case Command.ERROR:
+                case Command.NONE:
+                    {
+                        m_DeviceReady = true;
+                        Interlocked.Increment(ref m_ErrorCount);
+                    }
+                    break;
+            }
         }
-
-        #endregion
     }
 }

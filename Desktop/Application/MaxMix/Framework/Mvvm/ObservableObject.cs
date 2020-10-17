@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MaxMix.Framework.Mvvm
 {
     internal class ObservableObject : INotifyPropertyChanged
     {
-
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
         #endregion
@@ -18,14 +12,19 @@ namespace MaxMix.Framework.Mvvm
         #region Methods
         protected virtual void SetProperty<T>(ref T field, T value, [CallerMemberName] string name = null)
         {
+            if (field.Equals(value))
+                return;
+
             field = value;
             RaisePropertyChanged(name);
         }
 
         protected virtual void RaisePropertyChanged([CallerMemberName] string name = null)
         {
-            if (PropertyChanged != null && name != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(name));
+            if (string.IsNullOrEmpty(name))
+                return;
+
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
         #endregion
     }

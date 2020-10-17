@@ -1,4 +1,4 @@
-﻿using System;
+﻿using MaxMix.Services.Communication;
 
 namespace MaxMix.Services.Audio
 {
@@ -8,6 +8,9 @@ namespace MaxMix.Services.Audio
         void Stop();
         void SetItemVolume(int id, int volume, bool isMuted);
         void SetDefaultEndpoint(int id);
+        ISession[] GetSessions(DisplayMode mode);
+
+        event ServiceStartedDelegate ServiceStarted;
 
         event DefaultAudioDeviceChangedDelegate DefaultDeviceChanged;
         event AudioDeviceCreatedDelegate DeviceCreated;

@@ -1,4 +1,5 @@
 ﻿using CSCore.CoreAudioAPI;
+using MaxMix.Services.Communication;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -39,6 +40,49 @@ namespace MaxMix.Services.Audio
         {
             var policyConfig = new PolicyConfig();
             policyConfig.SetDefaultEndpoint(deviceID, role);
+        }
+
+        public static string ExtractDeviceId(this string id)
+        {
+            var i1 = id.IndexOf('|');
+            if (i1 < 0)
+                return id;
+            return id.Substring(0, i1);
+        }
+
+        public static string ExtractAppPath(this string id)
+        {
+            var i1 = id.IndexOf('|');
+            if (i1 < 0)
+                return id;
+
+            var i2 = id.IndexOf("%b", i1);
+            if (i2 < 0)
+                return id;
+            return id.Substring(i1 + 1, i2 - i1 - 1);
+        }
+
+        public static string ExtractSessionId(this string id)
+        {
+            var i1 = id.IndexOf("%b");
+            if (i1 < 0)
+                return id;
+            return id.Substring(i1 + 1, id.Length - i1 - 1);
+        }
+
+        public static DataFlow ToDataFlow(this DeviceFlow d)
+        {
+            return d == DeviceFlow.Input ? DataFlow.Capture : DataFlow.Render;
+        }
+
+        public static DeviceFlow ToDeviceFlow(this DataFlow d)
+        {
+            return d == DataFlow.Capture ? DeviceFlow.Input : DeviceFlow.Output;
+        }
+
+        public static DisplayMode ToDisplayMode(this DeviceFlow d)
+        {
+            return d == DeviceFlow.Input ? DisplayMode.MODE_INPUT : DisplayMode.MODE_OUTPUT;
         }
     }
 }

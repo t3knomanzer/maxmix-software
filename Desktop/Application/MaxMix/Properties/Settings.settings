@@ -21,16 +21,16 @@
       <Value Profile="(Default)">150</Value>
     </Setting>
     <Setting Name="VolumeMinColor" Type="System.UInt32" Scope="User">
-      <Value Profile="(Default)">4278190335</Value>
+      <Value Profile="(Default)">4294901760</Value>
     </Setting>
     <Setting Name="VolumeMaxColor" Type="System.UInt32" Scope="User">
-      <Value Profile="(Default)">4278255360</Value>
+      <Value Profile="(Default)">4278190335</Value>
     </Setting>
     <Setting Name="MixChannelAColor" Type="System.UInt32" Scope="User">
       <Value Profile="(Default)">4294901760</Value>
     </Setting>
     <Setting Name="MixChanneBColor" Type="System.UInt32" Scope="User">
-      <Value Profile="(Default)">4278190335</Value>
+      <Value Profile="(Default)">4294902015</Value>
     </Setting>
   </Settings>
 </SettingsFile>

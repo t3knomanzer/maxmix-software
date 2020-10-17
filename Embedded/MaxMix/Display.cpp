@@ -1,6 +1,4 @@
 #include "Display.h"
-
-#include "Config.h"
 #include "Logo.h"
 
 namespace Display
@@ -10,9 +8,9 @@ namespace Display
     //---------------------------------------------------------
     static SQ15x16 displayTimer[] = {0, 0};
 
-    void UpdateTimers(uint32_t delta)
+    void UpdateTimers(uint32_t deltaTime)
     {
-        SQ15x16 dt = SQ15x16(delta) / 1000;
+        SQ15x16 dt = SQ15x16(deltaTime) / 1000;
         displayTimer[0] += dt;
         displayTimer[1] += dt;
     }
@@ -46,7 +44,7 @@ namespace Display
     //---------------------------------------------------------
     // Volume Bar Functions
     //---------------------------------------------------------
-    static void DrawVolumeBar(Item *item, uint8_t x0, uint8_t y0, uint8_t maxWidth, uint8_t height)
+    static void DrawVolumeBar(SessionData *item, uint8_t x0, uint8_t y0, uint8_t maxWidth, uint8_t height)
     {
         // Min limit
         uint8_t y1 = y0 + height - 1;
@@ -55,11 +53,11 @@ namespace Display
 
         // Bar
         x0 += 1 + DISPLAY_MARGIN_X1;
-        SQ7x8 width = item->volume / (SQ7x8)100 * maxWidth;
+        SQ7x8 width = item->data.volume / (SQ7x8)100 * maxWidth;
 
         if (width > 0)
         {
-            if (item->isMuted)
+            if (item->data.isMuted)
                 display.drawRect(x0, y0, width.getInteger(), height, WHITE);
             else
                 display.fillRect(x0, y0, width.getInteger(), height, WHITE);
@@ -101,7 +99,7 @@ namespace Display
         display.fillRect(DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_AREA_CENTER_MARGIN_SIDE, charHeight, BLACK);
     }
 
-    static void DrawGameEditItem(Item *item, uint8_t y0, uint8_t timerIndex)
+    static void DrawGameEditItem(SessionData *item, uint8_t y0, uint8_t timerIndex)
     {
         // Name
         display.setTextSize(1);
@@ -156,7 +154,8 @@ namespace Display
         x0 = px;
         y0 = py;
 
-        for (uint8_t i = 0; i < MODE_COUNT; i++)
+        // Splash screen is a mode, start loop at MODE_OUTPUT
+        for (uint8_t i = DisplayMode::MODE_OUTPUT; i < DisplayMode::MODE_MAX; i++)
         {
             dotSize = i == index ? DISPLAY_WIDGET_DOT_SIZE_X2 : DISPLAY_WIDGET_DOT_SIZE_X1;
             y0 = py - dotSize / 2;
@@ -166,7 +165,7 @@ namespace Display
         }
     }
 
-    static void DrawSelectionArrows(uint8_t leftArrow, uint8_t rightArrow)
+    static void DrawSelectionArrows(bool leftArrow, bool rightArrow)
     {
         uint8_t x0, y0, x1, y1, x2, y2;
 
@@ -214,7 +213,7 @@ namespace Display
 
         display.setTextColor(WHITE);
         display.setTextSize(1);
-        
+
         display.setCursor(0, (DISPLAY_HEIGHT / 2) - DISPLAY_CHAR_HEIGHT_X1);
         display.print(F("FW: " VERSION));
         
@@ -227,7 +226,7 @@ namespace Display
     //---------------------------------------------------------
     // Output Mode screens
     //---------------------------------------------------------
-    void DeviceSelectScreen(Item *item, bool isDefaultEndpoint, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex)
+    void DeviceSelectScreen(SessionData *item, bool leftArrow, bool rightArrow, uint8_t modeIndex)
     {
         display.clearDisplay();
 
@@ -236,20 +235,20 @@ namespace Display
         DrawSelectionArrows(leftArrow, rightArrow);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
 
-        if (isDefaultEndpoint)
+        if (item->data.isDefault)
             DrawSelectionChannelName('*');
 
         display.display();
     }
 
-    void DeviceEditScreen(Item *item, char* label, uint8_t modeIndex)
+    void DeviceEditScreen(SessionData *item, const char *label, uint8_t modeIndex)
     {
         display.clearDisplay();
 
         DrawDotGroup(modeIndex);
         DrawItemName(label, 2, DISPLAY_CHAR_WIDTH_X2, DISPLAY_CHAR_HEIGHT_X2, DISPLAY_CHAR_SPACING_X2, DISPLAY_CHAR_MAX_X2, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X2);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X2 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X1, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X1);
-        DrawVolumeNumber(item->volume, DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH, 0);
+        DrawVolumeNumber(item->data.volume, DISPLAY_AREA_CENTER_MARGIN_SIDE + DISPLAY_AREA_CENTER_WIDTH, 0);
 
         display.display();
     }
@@ -257,7 +256,7 @@ namespace Display
     //---------------------------------------------------------
     // Application Mode screens
     //---------------------------------------------------------
-    void ApplicationSelectScreen(Item *item, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex)
+    void ApplicationSelectScreen(SessionData *item, bool leftArrow, bool rightArrow, uint8_t modeIndex)
     {
         display.clearDisplay();
 
@@ -269,14 +268,14 @@ namespace Display
         display.display();
     }
 
-    void ApplicationEditScreen(Item *item, uint8_t modeIndex)
+    void ApplicationEditScreen(SessionData *item, uint8_t modeIndex)
     {
         display.clearDisplay();
 
         DrawDotGroup(modeIndex);
         DrawItemName(item->name, 1, DISPLAY_CHAR_WIDTH_X1, DISPLAY_CHAR_HEIGHT_X1, DISPLAY_CHAR_SPACING_X1, DISPLAY_CHAR_MAX_X1, DISPLAY_AREA_CENTER_MARGIN_SIDE, 0, DISPLAY_TIMER_A, DISPLAY_SCROLL_SPEED_X1);
         DrawVolumeBar(item, DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2, DISPLAY_WIDGET_VOLUMEBAR_WIDTH_X2, DISPLAY_WIDGET_VOLUMEBAR_HEIGHT_X2);
-        DrawVolumeNumber(item->volume, DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2);
+        DrawVolumeNumber(item->data.volume, DISPLAY_WIDTH - DISPLAY_AREA_CENTER_MARGIN_SIDE, DISPLAY_CHAR_HEIGHT_X1 + DISPLAY_MARGIN_X2);
 
         display.display();
     }
@@ -284,7 +283,7 @@ namespace Display
     //---------------------------------------------------------
     // Game Mode screens
     //---------------------------------------------------------
-    void GameSelectScreen(Item *item, char channel, uint8_t leftArrow, uint8_t rightArrow, uint8_t modeIndex)
+    void GameSelectScreen(SessionData *item, char channel, bool leftArrow, bool rightArrow, uint8_t modeIndex)
     {
         display.clearDisplay();
 
@@ -297,7 +296,7 @@ namespace Display
         display.display();
     }
 
-    void GameEditScreen(Item *itemA, Item *itemB, uint8_t modeIndex)
+    void GameEditScreen(SessionData *itemA, SessionData *itemB, uint8_t modeIndex)
     {
         display.clearDisplay();
 

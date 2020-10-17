@@ -2,33 +2,63 @@
 
 #include "Config.h"
 
-typedef struct  __attribute__((__packed__)) {
-  uint8_t r;  // 1 Byte 
-  uint8_t g;  // 1 Byte
-  uint8_t b;  // 1 Byte
-} Color;
-
-typedef struct __attribute__((__packed__))
+struct __attribute__((__packed__)) SessionInfo
 {
-  char name[ITEM_BUFFER_NAME_SIZE]; // 24 Bytes (Chars)
-  uint32_t id;                      // 4 Bytes (32 bit)
-  int8_t volume;                    // 1 Byte
-  uint8_t isMuted;                  // 1 Byte
-} Item;
+    DisplayMode mode;    // 8 bits
+    uint8_t current;     // 8 bits
+    uint8_t sessions[3]; // 24 bits - output, input, application
+    // 40 bits - 5 bytes
 
-typedef struct __attribute__((__packed__))
+    SessionInfo() : mode(DisplayMode::MODE_SPLASH), current(0), sessions{0} {}
+};
+static_assert(sizeof(SessionInfo) == 5, "Invalid Expected Message Size");
+
+struct __attribute__((__packed__)) VolumeData
 {
-  uint8_t displayNewItem = 1;                   // 1 Byte
-  uint8_t sleepWhenInactive = 1;                // 1 Byte
-  uint8_t sleepAfterSeconds = 5;                // 1 Byte
-  uint8_t continuousScroll = 1;                 // 1 Byte
-  uint8_t accelerationPercentage = 60;          // 1 Byte
-  Color volumeMinColor = {0x00, 0x00, 0xFF};    // 3 Bytes
-  Color volumeMaxColor = {0xFF, 0x00, 0x00};    // 3 Bytes
-  Color mixChannelAColor = {0x00, 0x00, 0xFF};  // 3 Bytes
-  Color mixChannelBColor = {0xFF, 0x00, 0xFF};  // 3 Bytes 
-} Settings;
+    uint8_t id : 7;     // 7 bits
+    bool isDefault : 1; // 1 bit
+    uint8_t volume : 7; // 7 bits
+    bool isMuted : 1;   // 1 bit
+    // 16 bits - 2 bytes
 
-static_assert(sizeof(Item) == 30, "'Item' struct not the expected size");
-static_assert(sizeof(Settings) == 17, "'Settings' struct not the expected size");
-static_assert(sizeof(Color) == 3, "'Settings' struct not the expected size");
+    VolumeData() : id(0), isDefault(false), volume(0), isMuted(false) {}
+};
+static_assert(sizeof(VolumeData) == 2, "Invalid Expected Message Size");
+
+struct __attribute__((__packed__)) SessionData
+{
+    char name[30]; // 240 bits
+    VolumeData data; // 24 bits
+    // 256 bits - 32 bytes
+
+    // name & data use { } initializers
+    SessionData() : name{0}, data{} {}
+};
+static_assert(sizeof(SessionData) == 32, "Invalid Expected Message Size");
+
+struct __attribute__((__packed__)) Color
+{
+    uint8_t r; // 8 bits
+    uint8_t g; // 8 bits
+    uint8_t b; // 8 bits
+
+    Color() : r(0), g(0), b(0) {}
+    Color(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
+}; // 24 bits - 3 bytes
+static_assert(sizeof(Color) == 3, "Invalid Expected Message Size");
+
+struct __attribute__((__packed__)) DeviceSettings
+{
+    uint8_t sleepAfterSeconds;          // 8 Bits
+    uint8_t accelerationPercentage : 7; // 7 Bits
+    bool continuousScroll : 1;          // 1 Bit
+    Color volumeMinColor;               // 24 Bits
+    Color volumeMaxColor;               // 24 Bits
+    Color mixChannelAColor;             // 24 Bits
+    Color mixChannelBColor;             // 24 Bits
+    // 112 bits - 14 bytes
+
+    DeviceSettings() : sleepAfterSeconds(5), accelerationPercentage(60), continuousScroll(true),
+                 volumeMinColor(0, 0, 255), volumeMaxColor(255, 0, 0), mixChannelAColor(0, 0, 255), mixChannelBColor(255, 0, 255) {}
+};
+static_assert(sizeof(DeviceSettings) == 14, "Invalid Expected Message Size");
