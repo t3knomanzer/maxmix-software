@@ -309,12 +309,12 @@ namespace MaxMix.ViewModels
 
         private void OnMessageRecieved(Command command, IMessage message)
         {
-            if (command == Command.VOLUME_CURR_CHANGE)
+            if (command == Command.VOLUME_CURR_CHANGE || command == Command.VOLUME_ALT_CHANGE)
             {
                 // isDefault, Volume, or isMuted changed for id (index)
                 VolumeData vol = (VolumeData)message;
                 _audioSessionService.SetItemVolume(m_IndexToId[vol.id], vol.volume, vol.isMuted);
-            } 
+            }
             else if (command == Command.SESSION_INFO)
             {
                 // current, or mode

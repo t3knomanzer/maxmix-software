@@ -41,11 +41,14 @@ static const uint8_t PIN_ENCODER_SWITCH = 17; //A3
 
 // --- States
 static const uint8_t STATE_NAVIGATE = 0;
-static const uint8_t STATE_SELECT_A = 0;
-static const uint8_t STATE_SELECT_B = 2;
-static const uint8_t STATE_EDIT = 1;
 static const uint8_t STATE_LOGO = 0;
+static const uint8_t STATE_EDIT = 1;
 static const uint8_t STATE_INFO = 1;
+static const uint8_t STATE_MAX = 2;
+static const uint8_t STATE_SELECT_A = 0;
+static const uint8_t STATE_SELECT_B = 1;
+static const uint8_t STATE_GAME_EDIT = 2;
+static const uint8_t STATE_GAME_MAX = 3;
 
 // --- Display
 static const uint8_t DISPLAY_RESET = 4; // Reset pin # (or -1 if sharing Arduino reset pin)

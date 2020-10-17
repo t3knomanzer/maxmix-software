@@ -295,9 +295,10 @@ bool ProcessEncoderRotation()
     if (g_DisplayAsleep || g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
         return true;
 
-    if (g_ModeState[g_SessionInfo.mode] == STATE_EDIT)
+    bool inGameMode = g_SessionInfo.mode == DisplayMode::MODE_GAME;
+    if ((inGameMode && g_ModeState[g_SessionInfo.mode] == STATE_GAME_EDIT) || (!inGameMode && g_ModeState[g_SessionInfo.mode] == STATE_EDIT))
     {
-        if (g_SessionInfo.mode != DisplayMode::MODE_GAME)
+        if (!inGameMode)
         {
             g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = ComputeAcceleratedVolume(encoderSteps, deltaTime, g_Sessions[SessionIndex::INDEX_CURRENT].data.volume);
             Communications::Write(Command::VOLUME_CURR_CHANGE);
@@ -315,6 +316,8 @@ bool ProcessEncoderRotation()
                 g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = 100 - g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume;
                 Communications::Write(Command::VOLUME_CURR_CHANGE);
             }
+            else
+                g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume;
         }
     }
     else
@@ -344,7 +347,7 @@ bool ProcessEncoderButton()
         if (g_DisplayAsleep)
             return true;
 
-        g_ModeState[g_SessionInfo.mode] = (g_ModeState[g_SessionInfo.mode] + 1) % (g_SessionInfo.mode != DisplayMode::MODE_GAME ? 2 : 3);
+        g_ModeState[g_SessionInfo.mode] = (g_ModeState[g_SessionInfo.mode] + 1) % (g_SessionInfo.mode != DisplayMode::MODE_GAME ? STATE_MAX : STATE_GAME_MAX);
 
         if (g_SessionInfo.mode == DisplayMode::MODE_INPUT || g_SessionInfo.mode == DisplayMode::MODE_OUTPUT)
         {
@@ -427,7 +430,7 @@ bool ProcessDisplayScroll()
     }
     else
     {
-        if (g_ModeState[g_SessionInfo.mode] == STATE_EDIT)
+        if (g_ModeState[g_SessionInfo.mode] == STATE_GAME_EDIT)
             return strlen(g_Sessions[SessionIndex::INDEX_CURRENT].name) > DISPLAY_GAME_EDIT_CHAR_MAX;
         return strlen(g_Sessions[SessionIndex::INDEX_CURRENT].name) > DISPLAY_CHAR_MAX_X2;
     }
@@ -459,7 +462,7 @@ void UpdateDisplay()
         }
         else
         {
-            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode == DisplayMode::MODE_INPUT ? "Recording" : "Playback", g_SessionInfo.mode);
+            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode == DisplayMode::MODE_INPUT ? "Input" : "Output", g_SessionInfo.mode);
         }
     }
     else if (g_SessionInfo.mode == DisplayMode::MODE_APPLICATION)
@@ -475,13 +478,13 @@ void UpdateDisplay()
     }
     else if (g_SessionInfo.mode == DisplayMode::MODE_GAME)
     {
-        if (g_ModeState[g_SessionInfo.mode] != STATE_EDIT)
+        if (g_ModeState[g_SessionInfo.mode] != STATE_GAME_EDIT)
         {
             Display::GameSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_ModeState[g_SessionInfo.mode] == STATE_SELECT_A ? 'A' : 'B', CanScrollLeft(), CanScrollRight(), g_SessionInfo.mode);
         }
         else
         {
-            Display::ApplicationEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode);
+            Display::GameEditScreen(&g_Sessions[SessionIndex::INDEX_ALTERNATE], &g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode);
         }
     }
 }
