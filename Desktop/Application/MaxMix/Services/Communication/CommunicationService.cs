@@ -80,6 +80,7 @@ namespace MaxMix.Services.Communication
                     m_MessageQueue.RemoveAt(index);
                 m_MessageQueue.Enqueue(new KeyValuePair<Command, IMessage>(command, message));
             }
+            Write(DateTime.Now);
         }
 
         private void Update()
@@ -94,8 +95,10 @@ namespace MaxMix.Services.Communication
                 }
                 else
                 {
-                    Write(now);
+                    if (now - m_LastMessageWrite > k_DeviceReconnect)
+                        Write(now);
                     Disconnect(now);
+                    Thread.Sleep(k_DeviceReconnect);
                 }
 
                 if (m_Stopping)
@@ -230,6 +233,7 @@ namespace MaxMix.Services.Communication
                     {
                         m_DeviceReady = true;
                         m_LastMessageRead = DateTime.Now;
+                        Write(m_LastMessageRead);
                     }
                     break;
                 case Command.SETTINGS:
