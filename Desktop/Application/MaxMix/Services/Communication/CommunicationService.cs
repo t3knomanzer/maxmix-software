@@ -80,7 +80,6 @@ namespace MaxMix.Services.Communication
                     m_MessageQueue.RemoveAt(index);
                 m_MessageQueue.Enqueue(new KeyValuePair<Command, IMessage>(command, message));
             }
-            Write(DateTime.Now);
         }
 
         private void Update()
@@ -95,8 +94,7 @@ namespace MaxMix.Services.Communication
                 }
                 else
                 {
-                    if (Write(now))
-                        Thread.Sleep(k_DeviceReconnect);
+                    Write(now);
                     Disconnect(now);
                 }
 
@@ -147,6 +145,7 @@ namespace MaxMix.Services.Communication
                     m_SerialPort.DataReceived += Read;
                     m_DeviceReady = true;
                     m_MessageContext.Post(x => OnDeviceConnected?.Invoke(), null);
+                    m_LastMessageRead = now;
                     return;
                 }
                 catch (Exception e)
@@ -204,8 +203,8 @@ namespace MaxMix.Services.Communication
             message.SetBytes(m_ReadBuffer);
 
             Interlocked.Add(ref m_ReadBytes, length);
-            m_LastMessageRead = DateTime.Now;
-
+            DateTime now = DateTime.Now;
+            m_LastMessageRead = now;
             m_MessageContext.Post(x => OnMessageRecieved?.Invoke(command, message), null);
         }
 
@@ -288,10 +287,10 @@ namespace MaxMix.Services.Communication
             return msg;
         }
 
-        private bool Write(DateTime now)
+        private void Write(DateTime now)
         {
             if (!m_DeviceReady)
-                return false;
+                return;
 
             KeyValuePair<Command, IMessage> pair = default;
             if (m_MessageQueue.Count != 0)
@@ -305,7 +304,7 @@ namespace MaxMix.Services.Communication
             }
             else
             {
-                return true;
+                return;
             }
 
             AppLogging.DebugLog(nameof(Write), pair.Key.ToString());
@@ -336,7 +335,6 @@ namespace MaxMix.Services.Communication
                     }
                     break;
             }
-            return false;
         }
     }
 }

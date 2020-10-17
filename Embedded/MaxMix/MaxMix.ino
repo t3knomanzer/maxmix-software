@@ -253,27 +253,29 @@ void NextSession(void)
     Communications::Write(Command::SESSION_INFO);
 }
 
-inline bool CanScrollLeft(void)
+bool CanScrollLeft(void)
 {
     if (!g_Settings.continuousScroll && g_SessionInfo.current == 0)
         return false;
     return g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] > 1;
 }
 
-inline bool CanScrollRight(void)
+bool CanScrollRight(void)
 {
     if (!g_Settings.continuousScroll && g_SessionInfo.current < g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] - 1)
         return false;
     return g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] > 1;
 }
 
-inline uint8_t GetIndexForMode(DisplayMode mode)
+uint8_t GetIndexForMode(DisplayMode mode)
 {
-    if (mode == DisplayMode::MODE_SPLASH)
-        return DisplayMode::MODE_OUTPUT;
-    if (mode == DisplayMode::MODE_GAME)
-        return DisplayMode::MODE_APPLICATION;
-    return mode - DisplayMode::MODE_OUTPUT;
+    if (mode == DisplayMode::MODE_OUTPUT || mode == DisplayMode::MODE_SPLASH)
+        return 0;
+    if (mode == DisplayMode::MODE_INPUT)
+        return 1;
+    if (mode == DisplayMode::MODE_GAME || mode == DisplayMode::MODE_APPLICATION)
+        return 2;
+    return 0;
 }
 
 //---------------------------------------------------------
@@ -391,10 +393,11 @@ bool ProcessEncoderButton()
             return false;
 
         g_SessionInfo.mode = (DisplayMode)((g_SessionInfo.mode + 1) % DisplayMode::MODE_MAX);
-        if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH || g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] == 0)
-            g_SessionInfo.mode = (DisplayMode)(g_SessionInfo.mode + 1);
+        if (g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] == 0)
+            g_SessionInfo.mode = (DisplayMode)((g_SessionInfo.mode + 1) % DisplayMode::MODE_MAX);
+        if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
+            g_SessionInfo.mode = DisplayMode::MODE_OUTPUT;
         g_SessionInfo.current = 0;
-        // TODO: Also need to handle 0 data from PC for this mode
 
         Communications::Write(Command::SESSION_INFO);
         Display::ResetTimers();
