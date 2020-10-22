@@ -42,5 +42,5 @@ You can join these groups and chats to discuss your-project related questions:
 [Github](https://www.github.com/t3knomanzer/maxmix-software)  
 [Thingiverse](https://www.thingiverse.com/thing:4343186)  
 [Prusaprinters](https://www.prusaprinters.org/prints/31336-maxmix)  
-[Buy](https://www.amazon.com/dp/B08KSP6G1P)
+[Buy](https://www.amazon.com/dp/B08LMQXTZ3)  
 [Donate](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=SQS6XJZBCBZA8&currency_code=USD&source=url)
