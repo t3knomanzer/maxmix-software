@@ -276,7 +276,7 @@ namespace MaxMix.ViewModels
                     else if (m_SessionInfo.current > 0)
                         m_SessionInfo.current--;
                 }
-                if (addition && _settingsViewModel.DisplayNewSession)
+                if (addition && _settingsViewModel.DisplayNewSession && m_SessionInfo.mode != DisplayMode.MODE_GAME)
                 {
                     PopulateIndexToIdMap(sessions);
                     m_SessionInfo.current = (byte)Array.FindIndex(sessions, x => x.Id == id);
