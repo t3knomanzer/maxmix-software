@@ -144,9 +144,8 @@ namespace MaxMix.Services.Communication
                     if (command != Command.TEST)
                         throw new InvalidOperationException($"Firmware Test reply failed. Reply: '{command}' Bytes: '{m_SerialPort.BytesToRead}'");
                     firmware = m_SerialPort.ReadLine().Replace("\r", "");
-                    // TODO: Actual firmware check
-                    if (firmware != VERSION)
-                        throw new ArgumentException($"Incompatible Firmware: '{firmware}'. Expected: '{VERSION}'.");
+                    if (!FirmwareVersions.IsCompatible(firmware))
+                        throw new ArgumentException($"Incompatible Firmware: '{firmware}'.");
                     m_SerialPort.DataReceived += Read;
                     m_DeviceReady = true;
                     m_MessageContext.Post(x => OnDeviceConnected?.Invoke(), null);

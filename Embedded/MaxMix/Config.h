@@ -68,9 +68,11 @@ static const uint8_t DISPLAY_ADDRESS = 0x3C;
 
 static const uint8_t DISPLAY_CHAR_WIDTH_X1 = 5;
 static const uint8_t DISPLAY_CHAR_HEIGHT_X1 = 7;
+static const uint8_t DISPLAY_CHAR_HEIGHT_CLEAR_X1 = 8;
 static const uint8_t DISPLAY_CHAR_SPACING_X1 = 1;
 static const uint8_t DISPLAY_CHAR_WIDTH_X2 = 10;
 static const uint8_t DISPLAY_CHAR_HEIGHT_X2 = 14;
+static const uint8_t DISPLAY_CHAR_HEIGHT_CLEAR_X2 = 16;
 static const uint8_t DISPLAY_CHAR_SPACING_X2 = 2;
 
 static const uint8_t DISPLAY_CHAR_MAX_X1 = 18;
