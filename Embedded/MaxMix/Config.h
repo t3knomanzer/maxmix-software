@@ -31,7 +31,7 @@
 static const uint32_t BAUD_RATE = 115200;
 // Default serial timeout is 1000 ms, at 115200 baud (bit/s)
 // our longest message at 296 bits (33 bytes) takes 2.29ms to send.
-static const uint64_t SERIAL_TIMEOUT = 5;
+static const uint64_t SERIAL_TIMEOUT = 10;
 
 // --- Pins
 static const uint8_t PIN_PIXELS = 12;         //D12
@@ -55,7 +55,7 @@ static const uint8_t DISPLAY_RESET = 4; // Reset pin # (or -1 if sharing Arduino
 static const uint32_t DISPLAY_SPEED = 400000;
 
 // --- Lighting
-static const uint8_t PIXELS_COUNT = 12;      // Number of pixels in ring
+static const uint8_t PIXELS_COUNT = 8;      // Number of pixels in ring
 static const uint8_t PIXELS_BRIGHTNESS = 96; // Master brightness of all the pixels. [0..255] Be carefull of the current draw on the USB port.
 
 // --- Rotary Encoder
@@ -68,9 +68,11 @@ static const uint8_t DISPLAY_ADDRESS = 0x3C;
 
 static const uint8_t DISPLAY_CHAR_WIDTH_X1 = 5;
 static const uint8_t DISPLAY_CHAR_HEIGHT_X1 = 7;
+static const uint8_t DISPLAY_CHAR_HEIGHT_CLEAR_X1 = 8;
 static const uint8_t DISPLAY_CHAR_SPACING_X1 = 1;
 static const uint8_t DISPLAY_CHAR_WIDTH_X2 = 10;
 static const uint8_t DISPLAY_CHAR_HEIGHT_X2 = 14;
+static const uint8_t DISPLAY_CHAR_HEIGHT_CLEAR_X2 = 16;
 static const uint8_t DISPLAY_CHAR_SPACING_X2 = 2;
 
 static const uint8_t DISPLAY_CHAR_MAX_X1 = 18;

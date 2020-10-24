@@ -361,6 +361,7 @@ bool ProcessEncoderButton()
         else if (g_SessionInfo.mode == DisplayMode::MODE_GAME && g_ModeState[g_SessionInfo.mode] == STATE_SELECT_B)
         {
             g_Sessions[SessionIndex::INDEX_ALTERNATE] = g_Sessions[SessionIndex::INDEX_CURRENT];
+            NextSession();
         }
 
         Display::ResetTimers();
@@ -397,6 +398,8 @@ bool ProcessEncoderButton()
             g_SessionInfo.mode = (DisplayMode)((g_SessionInfo.mode + 1) % DisplayMode::MODE_MAX);
         if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
             g_SessionInfo.mode = DisplayMode::MODE_OUTPUT;
+        if (g_SessionInfo.mode == DisplayMode::MODE_GAME)
+            g_ModeState[DisplayMode::MODE_GAME] = STATE_SELECT_A;
         g_SessionInfo.current = 0;
 
         Communications::Write(Command::SESSION_INFO);

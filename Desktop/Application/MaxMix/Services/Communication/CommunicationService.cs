@@ -24,6 +24,7 @@ namespace MaxMix.Services.Communication
 
         // Statistics
         private bool m_DeviceReady;
+        private bool m_DeviceConnected;
         private long m_ReadCount;
         private long m_ReadBytes;
         private long m_WriteCount;
@@ -144,10 +145,10 @@ namespace MaxMix.Services.Communication
                     if (command != Command.TEST)
                         throw new InvalidOperationException($"Firmware Test reply failed. Reply: '{command}' Bytes: '{m_SerialPort.BytesToRead}'");
                     firmware = m_SerialPort.ReadLine().Replace("\r", "");
-                    // TODO: Actual firmware check
-                    if (firmware != VERSION)
-                        throw new ArgumentException($"Incompatible Firmware: '{firmware}'. Expected: '{VERSION}'.");
+                    if (!FirmwareVersions.IsCompatible(firmware))
+                        throw new ArgumentException($"Incompatible Firmware: '{firmware}'.");
                     m_SerialPort.DataReceived += Read;
+                    m_DeviceConnected = true;
                     m_DeviceReady = true;
                     m_MessageContext.Post(x => OnDeviceConnected?.Invoke(), null);
                     m_LastMessageRead = now;
@@ -175,6 +176,9 @@ namespace MaxMix.Services.Communication
 
             if (now - m_LastMessageRead < k_DeviceTimeout)
                 return;
+
+            m_DeviceReady = false;
+            m_DeviceConnected = false;
 
             m_SerialPort.DataReceived -= Read;
             m_SerialPort.Close();
@@ -234,7 +238,9 @@ namespace MaxMix.Services.Communication
                 case Command.OK:
                     {
                         m_DeviceReady = true;
-                        m_LastMessageRead = DateTime.Now;
+                        DateTime now = DateTime.Now;
+                        m_LastMessageRead = now;
+                        m_LastMessageWrite = now;
                         Write(m_LastMessageRead);
                     }
                     break;
@@ -295,18 +301,23 @@ namespace MaxMix.Services.Communication
 
         private void Write(DateTime now)
         {
-            if (!m_DeviceReady)
+            if (!m_DeviceConnected)
                 return;
 
             KeyValuePair<Command, IMessage> pair = default;
-            if (m_MessageQueue.Count != 0)
+            if (now - m_LastMessageWrite > k_DeviceReconnect)
+            {
+                // Send OK test even if we think the device is not ready
+                pair = new KeyValuePair<Command, IMessage>(Command.OK, null);
+            }
+            else if (!m_DeviceReady)
+            {
+                return;
+            }
+            else if (m_MessageQueue.Count != 0)
             { 
                 lock (m_MessageLock)
                     pair = m_MessageQueue.Dequeue();
-            }
-            else if (now - m_LastMessageWrite > k_DeviceReconnect)
-            {
-                pair = new KeyValuePair<Command, IMessage>(Command.OK, null);
             }
             else
             {

@@ -143,6 +143,7 @@
     <Compile Include="Services\Audio\ISession.cs" />
     <Compile Include="Services\Audio\PolicyConfig.cs" />
     <Compile Include="Services\Communication\CircularBuffer.cs" />
+    <Compile Include="Services\Communication\FirmwareVersions.cs" />
     <Compile Include="Services\Communication\Messages.cs" />
     <Compile Include="Services\Communication\CommunicationService.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />

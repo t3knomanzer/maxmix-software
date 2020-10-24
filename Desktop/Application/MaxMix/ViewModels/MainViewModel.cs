@@ -200,7 +200,6 @@ namespace MaxMix.ViewModels
                         else
                             _communicationService.SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i].data);
                     }
-                    break;
                 }
             }
         }
@@ -211,7 +210,7 @@ namespace MaxMix.ViewModels
                 return;
 
             bool isCurrentMode = deviceFlow.ToDisplayMode() == m_SessionInfo.mode;
-            UpdateSessionData(id, isCurrentMode, true);
+            UpdateSessionData(id, isCurrentMode, true, deviceFlow.ToDisplayMode());
         }
 
         private void OnDeviceRemoved(object sender, int id, DeviceFlow deviceFlow)
@@ -220,7 +219,7 @@ namespace MaxMix.ViewModels
                 return;
 
             bool isCurrentMode = deviceFlow.ToDisplayMode() == m_SessionInfo.mode;
-            UpdateSessionData(id, isCurrentMode, false);
+            UpdateSessionData(id, isCurrentMode, false, deviceFlow.ToDisplayMode());
         }
 
         private void OnAudioSessionCreated(object sender, int id, string displayName, int volume, bool isMuted)
@@ -229,7 +228,7 @@ namespace MaxMix.ViewModels
                 return;
 
             bool isCurrentMode = m_SessionInfo.mode == DisplayMode.MODE_APPLICATION || m_SessionInfo.mode == DisplayMode.MODE_GAME;
-            UpdateSessionData(id, isCurrentMode, true);
+            UpdateSessionData(id, isCurrentMode, true, DisplayMode.MODE_APPLICATION);
         }
 
         private void OnAudioSessionRemoved(object sender, int id)
@@ -238,21 +237,35 @@ namespace MaxMix.ViewModels
                 return;
 
             bool isCurrentMode = m_SessionInfo.mode == DisplayMode.MODE_APPLICATION || m_SessionInfo.mode == DisplayMode.MODE_GAME;
-            UpdateSessionData(id, isCurrentMode, false);
+            UpdateSessionData(id, isCurrentMode, false, DisplayMode.MODE_APPLICATION);
         }
 
-        private void UpdateSessionData(int id, bool updateCurrent, bool addition)
+        private void UpdateSessionData(int id, bool updateCurrent, bool addition, DisplayMode updateMode)
         {
-            ISession[] sessions = _audioSessionService.GetSessions(m_SessionInfo.mode);
-            if (m_SessionInfo.mode == DisplayMode.MODE_INPUT)
+            ISession[] sessions = _audioSessionService.GetSessions(updateMode);
+            if (updateMode == DisplayMode.MODE_INPUT)
                 m_SessionInfo.input = (byte)sessions.Length;
-            else if (m_SessionInfo.mode == DisplayMode.MODE_OUTPUT)
+            else if (updateMode == DisplayMode.MODE_OUTPUT)
                 m_SessionInfo.output = (byte)sessions.Length;
             else
                 m_SessionInfo.application = (byte)sessions.Length;
 
             if (updateCurrent)
             {
+                // Do we still have sessions left?
+                if (sessions.Length == 0)
+                {
+                    m_SessionInfo.mode = (DisplayMode)((int)m_SessionInfo.mode + 1 % (int)DisplayMode.MODE_MAX);
+                    if (m_SessionInfo.mode == DisplayMode.MODE_SPLASH)
+                        m_SessionInfo.mode = DisplayMode.MODE_OUTPUT;
+                    m_SessionInfo.current = 0;
+
+                    UpdateSessionData(int.MaxValue, updateCurrent, addition, m_SessionInfo.mode);
+
+                    _communicationService.SendMessage(Command.SESSION_INFO, m_SessionInfo);
+                    return;
+                }
+
                 int currId = m_IndexToId[m_SessionInfo.current];
                 if (id <= currId)
                 {
@@ -335,10 +348,15 @@ namespace MaxMix.ViewModels
                 SessionInfo info = (SessionInfo)message;
                 m_SessionInfo.current = info.current;
                 bool updateIndexMap = info.mode != m_SessionInfo.mode;
+                bool updateCurrent = updateIndexMap && (info.mode == DisplayMode.MODE_INPUT || info.mode == DisplayMode.MODE_OUTPUT);
                 m_SessionInfo.mode = info.mode;
 
                 ISession[] sessions = _audioSessionService.GetSessions(m_SessionInfo.mode);
+                if (updateCurrent)
+                    m_SessionInfo.current = (byte)Array.FindIndex(sessions, x => x.IsDefault);
                 UpdateAndFlushSessionData(sessions, updateIndexMap);
+                if (updateCurrent)
+                    _communicationService.SendMessage(Command.SESSION_INFO, m_SessionInfo);
             }
         }
 

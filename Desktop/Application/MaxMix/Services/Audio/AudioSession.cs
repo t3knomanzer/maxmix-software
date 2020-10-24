@@ -1,4 +1,5 @@
 ﻿using CSCore.CoreAudioAPI;
+using MaxMix.Framework;
 using System;
 using System.IO;
 
@@ -22,7 +23,7 @@ namespace MaxMix.Services.Audio
             _events.StateChanged += OnStateChanged;
             _events.SimpleVolumeChanged += OnVolumeChanged;
 
-            SessionIdentifier = _session2.SessionIdentifier;
+            SessionIdentifier = _session2.SessionInstanceIdentifier;
 
             string appPath = SessionIdentifier.ExtractAppPath();
             IsSystemSound = appPath == "#";
@@ -74,7 +75,7 @@ namespace MaxMix.Services.Audio
             get
             {
                 try { _volume = (int)Math.Round(_simpleAudio.MasterVolume * 100); }
-                catch { }
+                catch (Exception e) { AppLogging.DebugLogException(nameof(Volume), e); }
 
                 return _volume;
             }
@@ -86,7 +87,7 @@ namespace MaxMix.Services.Audio
                 _isNotifyEnabled = false;
                 _volume = value;
                 try { _simpleAudio.MasterVolume = value / 100f; }
-                catch { }
+                catch (Exception e) { AppLogging.DebugLogException(nameof(Volume), e); }
             }
         }
 
