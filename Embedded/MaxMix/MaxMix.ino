@@ -361,6 +361,7 @@ bool ProcessEncoderButton()
         else if (g_SessionInfo.mode == DisplayMode::MODE_GAME && g_ModeState[g_SessionInfo.mode] == STATE_SELECT_B)
         {
             g_Sessions[SessionIndex::INDEX_ALTERNATE] = g_Sessions[SessionIndex::INDEX_CURRENT];
+            Communications::Write(Command::ALTERNATE_SESSION);
             NextSession();
         }
 

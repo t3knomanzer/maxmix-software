@@ -9,8 +9,6 @@ namespace MaxMix.Services.Communication
 {
     public class CommunicationService
     {
-        const string VERSION = "1.4.1";
-
         private readonly SynchronizationContext m_MessageContext = SynchronizationContext.Current;
         // We replace messages of the same type, the queue only needs to hold the number of enums in Command, 11 currently, using 16 for space
         private readonly CircularBuffer<KeyValuePair<Command, IMessage>> m_MessageQueue = new CircularBuffer<KeyValuePair<Command, IMessage>>(16);

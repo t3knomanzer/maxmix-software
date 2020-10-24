@@ -358,6 +358,12 @@ namespace MaxMix.ViewModels
                 if (updateCurrent)
                     _communicationService.SendMessage(Command.SESSION_INFO, m_SessionInfo);
             }
+            else if (command == Command.ALTERNATE_SESSION)
+            {
+                // This comes from game mode and tells us what it selected.
+                SessionData data = (SessionData)message;
+                m_Sessions[(int)SessionIndex.INDEX_ALTERNATE] = data;
+            }
         }
 
         void UpdateAndFlushSessionData(ISession[] data, bool updateIndexMap = false)
