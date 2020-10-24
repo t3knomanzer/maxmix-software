@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace MaxMix.ViewModels
 {
@@ -242,6 +243,12 @@ namespace MaxMix.ViewModels
         #endregion
 
         #region EventHandlers
+        protected override void SetProperty<T>(ref T field, T value, [CallerMemberName] string name = null)
+        {
+            base.SetProperty(ref field, value, name);
+            _settings.Save();
+
+        }
         #endregion
     }
 }
