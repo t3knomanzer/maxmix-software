@@ -10,7 +10,9 @@ namespace MaxMix.Services.Communication
         // the firmware / app incompatible.
         static HashSet<string> s_Valid = new HashSet<string>
         {
+#if DEBUG
             "0.0.0",
+#endif
             "1.4.0",
             "1.4.1",
             "1.4.2"
