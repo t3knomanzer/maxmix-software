@@ -70,6 +70,14 @@ namespace MaxMix.Services.Audio
             return id.Substring(i1 + 1, id.Length - i1 - 1);
         }
 
+        public static string ExtractInstanceId(this string id)
+        {
+            var i1 = id.IndexOf("|1%b");
+            if (i1 < 0)
+                return id;
+            return id.Substring(i1 + 1, id.Length - i1 - 1);
+        }
+
         public static DataFlow ToDataFlow(this DeviceFlow d)
         {
             return d == DeviceFlow.Input ? DataFlow.Capture : DataFlow.Render;
