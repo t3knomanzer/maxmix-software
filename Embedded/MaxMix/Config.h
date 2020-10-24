@@ -31,7 +31,7 @@
 static const uint32_t BAUD_RATE = 115200;
 // Default serial timeout is 1000 ms, at 115200 baud (bit/s)
 // our longest message at 296 bits (33 bytes) takes 2.29ms to send.
-static const uint64_t SERIAL_TIMEOUT = 5;
+static const uint64_t SERIAL_TIMEOUT = 10;
 
 // --- Pins
 static const uint8_t PIN_PIXELS = 12;         //D12

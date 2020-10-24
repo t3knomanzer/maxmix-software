@@ -62,69 +62,22 @@ namespace Communications
 
     void Write(Command command)
     {
+        // Do nothing: DEBUG, NONE, ERROR
+        if (command == Command::ERROR || command == Command::NONE || command == Command::DEBUG)
+            return;
+
+        Serial.write(command);
         if (command == Command::TEST)
-        {
-            Serial.write(command);
             Serial.println(F(VERSION));
-        }
-        else if (command == Command::SESSION_INFO)
-        {
-            Serial.write(command);
-            Serial.write((char *)&g_SessionInfo, sizeof(SessionInfo));
-        }
-        else if (command == Command::VOLUME_CURR_CHANGE)
-        {
-            Serial.write(command);
-            Serial.write((char *)&g_Sessions[SessionIndex::INDEX_CURRENT].data, sizeof(VolumeData));
-        }
-        else if (command == Command::VOLUME_ALT_CHANGE)
-        {
-            Serial.write(command);
-            Serial.write((char *)&g_Sessions[SessionIndex::INDEX_ALTERNATE].data, sizeof(VolumeData));
-        }
-        else if (command == Command::OK)
-        {
-            Serial.write(command);
-        }
-        // Do nothing: SETTINGS, CURRENT_SESSION, ALTERNATE_SESSION, PREVIOUS_SESSION, NEXT_SESSION, VOLUME_PREV_CHANGE, VOLUME_NEXT_CHANGE, DEBUG, NONE, ERROR?
-#ifdef TEST_HARNESS
         else if (command == Command::SETTINGS)
-        {
-            Serial.write(command);
             Serial.write((char *)&g_Settings, sizeof(DeviceSettings));
-        }
-        else if (command == Command::CURRENT_SESSION)
-        {
-            Serial.write(command);
-            Serial.write((char *)&g_Session[SessionIndex::INDEX_CURRENT], sizeof(session_t));
-        }
-        else if (command == Command::ALTERNATE_SESSION)
-        {
-            Serial.write(command);
-            Serial.write((char *)&g_Session[SessionIndex::INDEX_ALTERNATE], sizeof(session_t));
-        }
-        else if (command == Command::PREVIOUS_SESSION)
-        {
-            Serial.write(command);
-            Serial.write((char *)&g_Session[SessionIndex::INDEX_PREVIOUS], sizeof(session_t));
-        }
-        else if (command == Command::NEXT_SESSION)
-        {
-            Serial.write(command);
-            Serial.write((char *)&g_Session[SessionIndex::INDEX_NEXT], sizeof(session_t));
-        }
-        else if (command == Command::VOLUME_PREV_CHANGE)
-        {
-            Serial.write(command);
-            Serial.write((char *)&g_Sessions[SessionIndex::INDEX_PREVIOUS].data, sizeof(VolumeData));
-        }
-        else if (command == Command::VOLUME_NEXT_CHANGE)
-        {
-            Serial.write(command);
-            Serial.write((char *)&g_Sessions[SessionIndex::INDEX_NEXT].data, sizeof(VolumeData));
-        }
-        // Do nothing: DEBUG, NONE, ERROR?
-#endif
+        else if (command == Command::SESSION_INFO)
+            Serial.write((char *)&g_SessionInfo, sizeof(SessionInfo));
+        else if (command >= Command::CURRENT_SESSION && command <= Command::NEXT_SESSION)
+            Serial.write((char *)&g_Sessions[command - Command::CURRENT_SESSION], sizeof(SessionData));
+        else if (command >= Command::VOLUME_CURR_CHANGE && command <= Command::VOLUME_NEXT_CHANGE)
+            Serial.write((char *)&g_Sessions[command - Command::VOLUME_CURR_CHANGE].data, sizeof(VolumeData));
+        // command == Command::OK just replies with command
         // Send buffered data
         Serial.flush();
     }
