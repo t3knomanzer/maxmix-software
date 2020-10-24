@@ -469,7 +469,7 @@ void UpdateDisplay()
         }
         else
         {
-            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode == DisplayMode::MODE_INPUT ? "Input" : "Output", g_SessionInfo.mode);
+            Display::DeviceEditScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_SessionInfo.mode == DisplayMode::MODE_INPUT ? "In" : "Out", g_SessionInfo.mode);
         }
     }
     else if (g_SessionInfo.mode == DisplayMode::MODE_APPLICATION)
