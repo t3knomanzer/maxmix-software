@@ -348,10 +348,15 @@ namespace MaxMix.ViewModels
                 SessionInfo info = (SessionInfo)message;
                 m_SessionInfo.current = info.current;
                 bool updateIndexMap = info.mode != m_SessionInfo.mode;
+                bool updateCurrent = updateIndexMap && (info.mode == DisplayMode.MODE_INPUT || info.mode == DisplayMode.MODE_OUTPUT);
                 m_SessionInfo.mode = info.mode;
 
                 ISession[] sessions = _audioSessionService.GetSessions(m_SessionInfo.mode);
+                if (updateCurrent)
+                    m_SessionInfo.current = (byte)Array.FindIndex(sessions, x => x.IsDefault);
                 UpdateAndFlushSessionData(sessions, updateIndexMap);
+                if (updateCurrent)
+                    _communicationService.SendMessage(Command.SESSION_INFO, m_SessionInfo);
             }
         }
 
