@@ -200,7 +200,6 @@ namespace MaxMix.ViewModels
                         else
                             _communicationService.SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i].data);
                     }
-                    break;
                 }
             }
         }
