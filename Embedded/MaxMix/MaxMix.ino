@@ -262,7 +262,7 @@ bool CanScrollLeft(void)
 
 bool CanScrollRight(void)
 {
-    if (!g_Settings.continuousScroll && g_SessionInfo.current < g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] - 1)
+    if (!g_Settings.continuousScroll && g_SessionInfo.current >= g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] - 1)
         return false;
     return g_SessionInfo.sessions[GetIndexForMode(g_SessionInfo.mode)] > 1;
 }

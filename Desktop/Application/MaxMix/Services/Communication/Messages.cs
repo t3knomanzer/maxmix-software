@@ -67,10 +67,10 @@ namespace MaxMix.Services.Communication
         {
             count = Math.Min(count, (uint)bytes.Length);
             count = Math.Min(count, (uint)(sizeof(T) - offset));
-            fixed(T* dataAddr = &data)
+            fixed (T* dataAddr = &data)
             {
                 byte* ptr = (byte*)dataAddr;
-                for (uint i = 0; i < count; i++)
+                for (uint i = offset; i < count; i++)
                     ptr[i] = bytes[i];
             }
         }
@@ -81,9 +81,22 @@ namespace MaxMix.Services.Communication
             fixed (T* dataAddr = &data)
             {
                 byte* ptr = (byte*)dataAddr;
-                for (int i = 0; i < count; i++)
+                for (uint i = offset; i < count; i++)
                     ptr[i] = 0;
             }
+        }
+
+        public static unsafe string ToByteString<T>(this ref T data, uint offset = 0, uint count = uint.MaxValue) where T : unmanaged, IMessage
+        {
+            count = Math.Min(count, (uint)(sizeof(T) - offset));
+            string msg = "";
+            fixed (T* dataAddr = &data)
+            {
+                byte* ptr = (byte*)dataAddr;
+                for (uint i = offset; i < count; i++)
+                    msg += ptr[i].ToString("x1");
+            }
+            return msg;
         }
 
         public static byte Lower(this byte data)
@@ -167,6 +180,11 @@ namespace MaxMix.Services.Communication
         {
             this.UnsafeCopyFrom(bytes);
         }
+
+        public override string ToString()
+        {
+            return $"{mode}, {current}, {output}, {input}, {application} > {this.ToByteString()}";
+        }
     }
 
     public unsafe struct VolumeData : IMessage, IEquatable<VolumeData>
@@ -216,6 +234,11 @@ namespace MaxMix.Services.Communication
         {
             this.UnsafeCopyFrom(bytes);
         }
+
+        public override string ToString()
+        {
+            return $"{id}, {isDefault}, {volume}, {isMuted} > {this.ToByteString()}";
+        }
     }
 
     public unsafe struct SessionData : IMessage, IEquatable<SessionData>
@@ -260,6 +283,11 @@ namespace MaxMix.Services.Communication
         public void SetBytes(byte[] bytes)
         {
             this.UnsafeCopyFrom(bytes);
+        }
+
+        public override string ToString()
+        {
+            return $"{name}, {data} > {this.ToByteString()}";
         }
     }
 
@@ -311,6 +339,11 @@ namespace MaxMix.Services.Communication
         {
             this.UnsafeCopyFrom(bytes);
         }
+
+        public override string ToString()
+        {
+            return $"{r}, {g}, {b} > {this.ToByteString()}";
+        }
     }
 
     public unsafe struct DeviceSettings : IMessage, IEquatable<DeviceSettings>
@@ -332,7 +365,7 @@ namespace MaxMix.Services.Communication
         public bool continuousScroll
         {
             get => m_Data[1].Upper();
-            set => m_Data[1] = m_Data[2].Upper(value);
+            set => m_Data[1] = m_Data[1].Upper(value);
         }
 
         public Color volumeMinColor;
@@ -367,6 +400,11 @@ namespace MaxMix.Services.Communication
         public void SetBytes(byte[] bytes)
         {
             this.UnsafeCopyFrom(bytes);
+        }
+
+        public override string ToString()
+        {
+            return $"{sleepAfterSeconds}, {accelerationPercentage}, {continuousScroll}, {volumeMinColor}, {volumeMaxColor}, {mixChannelAColor}, {mixChannelBColor} > {this.ToByteString()}";
         }
     }
 }

@@ -189,7 +189,6 @@ namespace MaxMix.Services.Communication
         // Using a template, with a constraint of IMessage allows us to pass the message without boxing reducing garbage generation
         private unsafe void ReadMessage<T>(Command command) where T : unmanaged, IMessage
         {
-            AppLogging.DebugLog(nameof(ReadMessage), command.ToString());
             int length = 0;
             try
             {
@@ -208,6 +207,7 @@ namespace MaxMix.Services.Communication
 
             T message = new T();
             message.SetBytes(m_ReadBuffer);
+            AppLogging.DebugLog(nameof(ReadMessage), command.ToString(), message.ToString());
 
             Interlocked.Add(ref m_ReadBytes, length);
             DateTime now = DateTime.Now;
@@ -221,7 +221,6 @@ namespace MaxMix.Services.Communication
                 return;
 
             Command command = (Command)m_SerialPort.ReadByte();
-            AppLogging.DebugLog(nameof(Read), command.ToString());
             Interlocked.Increment(ref m_ReadCount);
             Interlocked.Increment(ref m_ReadBytes);
             switch (command)
@@ -229,12 +228,13 @@ namespace MaxMix.Services.Communication
                 case Command.TEST:
                     {
                         var firmware = m_SerialPort.ReadLine().Replace("\r", "");
-                        AppLogging.DebugLog("FW:", firmware);
+                        AppLogging.DebugLog(nameof(Read), command.ToString(), firmware);
                         m_LastMessageRead = DateTime.Now;
                     }
                     break;
                 case Command.OK:
                     {
+                        AppLogging.DebugLog(nameof(Read), command.ToString());
                         m_DeviceReady = true;
                         DateTime now = DateTime.Now;
                         m_LastMessageRead = now;
@@ -278,7 +278,7 @@ namespace MaxMix.Services.Communication
             // GetBuffer returns a reference to the underlying array, we can still use that after we reset the position if we store the length
             byte[] buffer = m_WriteBuffer.GetBuffer();
             int length = (int)m_WriteBuffer.Length;
-            AppLogging.DebugLog(nameof(WriteMessage), command.ToString(), $"{{{ToByteString(buffer, 0, length)}}}");
+            AppLogging.DebugLog(nameof(WriteMessage), command.ToString(), message != null ? message.ToString() : "");
 
             try { m_SerialPort.Write(buffer, 0, length); }
             catch (Exception e)
@@ -287,14 +287,6 @@ namespace MaxMix.Services.Communication
                 return;
             }
             m_LastMessageWrite = now;
-        }
-
-        private string ToByteString(byte[] bytes, int offset, int length)
-        {
-            string msg = "";
-            for (int i = offset; i < offset + length; i++)
-                msg += bytes[i].ToString("x1");
-            return msg;
         }
 
         private void Write(DateTime now)
@@ -322,7 +314,6 @@ namespace MaxMix.Services.Communication
                 return;
             }
 
-            AppLogging.DebugLog(nameof(Write), pair.Key.ToString());
             m_DeviceReady = false;
             Interlocked.Increment(ref m_WriteCount);
             switch (pair.Key)
