@@ -20,6 +20,7 @@ namespace MaxMix.Services.Communication
         VOLUME_ALT_CHANGE,
         VOLUME_PREV_CHANGE,
         VOLUME_NEXT_CHANGE,
+        MODE_STATES,
         DEBUG
     }
 
@@ -40,6 +41,28 @@ namespace MaxMix.Services.Communication
         MODE_APPLICATION,
         MODE_GAME,
         MODE_MAX
+    };
+
+    public enum SplashState
+    {
+        STATE_LOGO,
+        STATE_INFO,
+        STATE_MAX
+    };
+
+    public enum SessionState
+    {
+        STATE_NAVIGATE,
+        STATE_EDIT,
+        STATE_MAX
+    };
+
+    public enum GameState
+    {
+        STATE_SELECT_A,
+        STATE_SELECT_B,
+        STATE_GAME_EDIT,
+        STATE_MAX
     };
 
     internal static class MessageUtils
@@ -405,6 +428,73 @@ namespace MaxMix.Services.Communication
         public override string ToString()
         {
             return $"{sleepAfterSeconds}, {accelerationPercentage}, {continuousScroll}, {volumeMinColor}, {volumeMaxColor}, {mixChannelAColor}, {mixChannelBColor} > {this.ToByteString()}";
+        }
+    }
+
+    public unsafe struct ModeStates : IMessage, IEquatable<ModeStates>
+    {
+        fixed byte m_Data[5];
+
+        public SplashState splash
+        {
+            get => (SplashState)m_Data[0];
+            set => m_Data[0] = (byte)value;
+        }
+
+        public SessionState output
+        {
+            get => (SessionState)m_Data[1];
+            set => m_Data[1] = (byte)value;
+        }
+
+        public SessionState input
+        {
+            get => (SessionState)m_Data[2];
+            set => m_Data[2] = (byte)value;
+        }
+
+        public SessionState application
+        {
+            get => (SessionState)m_Data[3];
+            set => m_Data[3] = (byte)value;
+        }
+
+        public GameState game
+        {
+            get => (GameState)m_Data[4];
+            set => m_Data[4] = (byte)value;
+        }
+
+        public static ModeStates Default()
+        {
+            return new ModeStates
+            {
+                splash = SplashState.STATE_LOGO,
+                output = SessionState.STATE_EDIT,
+                input = SessionState.STATE_EDIT,
+                application = SessionState.STATE_NAVIGATE,
+                game = GameState.STATE_SELECT_A
+            };
+        }
+
+        public bool Equals(ModeStates other)
+        {
+            return this.UnsafeEquals(other);
+        }
+
+        public unsafe void GetBytes(MemoryStream stream)
+        {
+            this.UnsafeCopyTo(stream);
+        }
+
+        public void SetBytes(byte[] bytes)
+        {
+            this.UnsafeCopyFrom(bytes);
+        }
+
+        public override string ToString()
+        {
+            return $"{splash}, {output}, {input}, {application}, {game} > {this.ToByteString()}";
         }
     }
 }

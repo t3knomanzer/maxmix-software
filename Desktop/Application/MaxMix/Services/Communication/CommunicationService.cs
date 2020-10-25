@@ -297,6 +297,9 @@ namespace MaxMix.Services.Communication
                 case Command.VOLUME_NEXT_CHANGE:
                     ReadMessage<VolumeData>(now, command);
                     break;
+                case Command.MODE_STATES:
+                    ReadMessage<ModeStates>(now, command);
+                    break;
                 case Command.ERROR:
                 case Command.NONE:
                 case Command.DEBUG:
@@ -378,6 +381,7 @@ namespace MaxMix.Services.Communication
                 case Command.VOLUME_ALT_CHANGE:
                 case Command.VOLUME_PREV_CHANGE:
                 case Command.VOLUME_NEXT_CHANGE:
+                case Command.MODE_STATES:
                 case Command.DEBUG:
                     WriteMessage(now, pair.Key, pair.Value);
                     break;

@@ -16,6 +16,7 @@ enum Command : int8_t
     VOLUME_ALT_CHANGE,
     VOLUME_PREV_CHANGE,
     VOLUME_NEXT_CHANGE,
+    MODE_STATES,
     DEBUG
 };
 

@@ -4,6 +4,7 @@
 extern DeviceSettings g_Settings;
 extern SessionInfo g_SessionInfo;
 extern SessionData g_Sessions[4];
+extern ModeStates g_ModeStates;
 extern uint32_t g_HeartbeatTimeout;
 extern uint32_t g_Now;
 
@@ -39,6 +40,8 @@ namespace Communications
             else if (command >= Command::VOLUME_CURR_CHANGE && command <= Command::VOLUME_NEXT_CHANGE)
                 // SessionIndex follows same ordering as Command.
                 Serial.readBytes((char *)&g_Sessions[command - Command::VOLUME_CURR_CHANGE].data, sizeof(VolumeData));
+            else if (command == Command::MODE_STATES)
+                Serial.readBytes((char *)&g_ModeStates, sizeof(ModeStates));
             // Do nothing: DEBUG, NONE, ERROR?
 #ifdef TEST_HARNESS
             else if (command == Command::DEBUG)
@@ -77,6 +80,8 @@ namespace Communications
             Serial.write((char *)&g_Sessions[command - Command::CURRENT_SESSION], sizeof(SessionData));
         else if (command >= Command::VOLUME_CURR_CHANGE && command <= Command::VOLUME_NEXT_CHANGE)
             Serial.write((char *)&g_Sessions[command - Command::VOLUME_CURR_CHANGE].data, sizeof(VolumeData));
+        else if (command == Command::MODE_STATES)
+            Serial.write((char *)&g_ModeStates, sizeof(ModeStates));
         // command == Command::OK just replies with command
         // Send buffered data
         Serial.flush();

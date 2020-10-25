@@ -62,3 +62,13 @@ struct __attribute__((__packed__)) DeviceSettings
                  volumeMinColor(0, 0, 255), volumeMaxColor(255, 0, 0), mixChannelAColor(0, 0, 255), mixChannelBColor(255, 0, 255) {}
 };
 static_assert(sizeof(DeviceSettings) == 14, "Invalid Expected Message Size");
+
+struct __attribute__((__packed__)) ModeStates
+{
+    uint8_t states[DisplayMode::MODE_MAX]; // 40 bits
+    // 40 bits - 5 bytes
+
+    ModeStates() : states{0, 1, 1, 0, 0} {}
+    // states{STATE_LOGO, STATE_EDIT, STATE_EDIT, STATE_NAVIGATE, STATE_SELECT_A}
+};
+static_assert(sizeof(ModeStates) == 5, "Invalid Expected Message Size");
