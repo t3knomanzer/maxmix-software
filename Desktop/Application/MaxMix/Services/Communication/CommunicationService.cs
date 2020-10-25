@@ -1,4 +1,6 @@
-﻿using MaxMix.Framework;
+﻿#define POLLING_SERIAL
+
+using MaxMix.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,6 +34,11 @@ namespace MaxMix.Services.Communication
         private DateTime m_LastMessageWrite;
         private readonly TimeSpan k_DeviceTimeout = new TimeSpan(0, 0, 5);
         private readonly TimeSpan k_DeviceReconnect = new TimeSpan(0, 0, 1);
+#if POLLING_SERIAL
+        private readonly TimeSpan k_PollngInterval = new TimeSpan(0, 0, 0, 0, 10); //d,h,m,s,mil
+#else
+        private readonly TimeSpan k_PollngInterval = new TimeSpan(0, 0, 1); // h,m,s
+#endif
 
         private const int k_ReadTimeout = 20;
         private const int k_WriteTimeout = 20;
@@ -96,10 +103,13 @@ namespace MaxMix.Services.Communication
                 }
                 else
                 {
+#if POLLING_SERIAL
+                    Read(now);
+#endif
                     if (now - m_LastMessageWrite > k_DeviceReconnect)
                         Write(now);
                     Disconnect(now);
-                    Thread.Sleep(k_DeviceReconnect);
+                    Thread.Sleep(k_PollngInterval);
                 }
 
                 if (m_Stopping)
@@ -138,9 +148,12 @@ namespace MaxMix.Services.Communication
                     if (command != Command.TEST)
                         throw new InvalidOperationException($"Firmware Test reply failed. Reply: '{command}' Bytes: '{m_SerialPort.BytesToRead}'");
                     firmware = m_SerialPort.ReadLine().Replace("\r", "");
+                    AppLogging.DebugLog(nameof(Connect), command.ToString(), firmware);
                     if (!FirmwareVersions.IsCompatible(firmware))
                         throw new ArgumentException($"Incompatible Firmware: '{firmware}'.");
-                    m_SerialPort.DataReceived += Read;
+#if !POLLING_SERIAL
+                    m_SerialPort.DataReceived += OnDataReceived;
+#endif
                     m_DeviceConnected = true;
                     m_DeviceReady = true;
                     m_MessageContext.Post(x => OnDeviceConnected?.Invoke(), null);
@@ -166,7 +179,9 @@ namespace MaxMix.Services.Communication
             {
                 if (m_SerialPort != null)
                 {
+#if !POLLING_SERIAL
                     m_SerialPort.DataReceived -= Read;
+#endif
                     m_SerialPort.Close();
                     m_SerialPort.Dispose();
                 }
@@ -192,7 +207,7 @@ namespace MaxMix.Services.Communication
         }
 
         // Using a template, with a constraint of IMessage allows us to pass the message without boxing reducing garbage generation
-        private unsafe void ReadMessage<T>(Command command) where T : unmanaged, IMessage
+        private unsafe void ReadMessage<T>(DateTime now, Command command) where T : unmanaged, IMessage
         {
             int length = 0;
             try
@@ -215,15 +230,20 @@ namespace MaxMix.Services.Communication
             AppLogging.DebugLog(nameof(ReadMessage), command.ToString(), message.ToString());
 
             Interlocked.Add(ref m_ReadBytes, length);
-            DateTime now = DateTime.Now;
             m_LastMessageRead = now;
             m_MessageContext.Post(x => OnMessageRecieved?.Invoke(command, message), null);
         }
 
-        private void Read(object sender, SerialDataReceivedEventArgs e)
+        private void Read(DateTime now)
         {
-            if (e.EventType == SerialData.Eof)
-                return;
+#if POLLING_SERIAL
+            try
+            {
+                if (m_SerialPort == null || !m_SerialPort.IsOpen || m_SerialPort.BytesToRead <= 0)
+                    return;
+            }
+            catch { return; }
+#endif
 
             Command command;
             try { command = (Command)m_SerialPort.ReadByte(); }
@@ -242,36 +262,36 @@ namespace MaxMix.Services.Communication
                     {
                         var firmware = m_SerialPort.ReadLine().Replace("\r", "");
                         AppLogging.DebugLog(nameof(Read), command.ToString(), firmware);
-                        m_LastMessageRead = DateTime.Now;
+                        m_LastMessageRead = now;
+                        m_LastMessageWrite = now;
                     }
                     break;
                 case Command.OK:
                     {
                         AppLogging.DebugLog(nameof(Read), command.ToString());
                         m_DeviceReady = true;
-                        DateTime now = DateTime.Now;
                         m_LastMessageRead = now;
                         m_LastMessageWrite = now;
                         Write(m_LastMessageRead);
                     }
                     break;
                 case Command.SETTINGS:
-                    ReadMessage<DeviceSettings>(command);
+                    ReadMessage<DeviceSettings>(now, command);
                     break;
                 case Command.SESSION_INFO:
-                    ReadMessage<SessionInfo>(command);
+                    ReadMessage<SessionInfo>(now, command);
                     break;
                 case Command.CURRENT_SESSION:
                 case Command.ALTERNATE_SESSION:
                 case Command.PREVIOUS_SESSION:
                 case Command.NEXT_SESSION:
-                    ReadMessage<SessionData>(command);
+                    ReadMessage<SessionData>(now, command);
                     break;
                 case Command.VOLUME_CURR_CHANGE:
                 case Command.VOLUME_ALT_CHANGE:
                 case Command.VOLUME_PREV_CHANGE:
                 case Command.VOLUME_NEXT_CHANGE:
-                    ReadMessage<VolumeData>(command);
+                    ReadMessage<VolumeData>(now, command);
                     break;
                 case Command.ERROR:
                 case Command.NONE:
@@ -280,6 +300,16 @@ namespace MaxMix.Services.Communication
                     break;
             }
         }
+
+#if !POLLING_SERIAL
+        private void OnDataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            if (e.EventType == SerialData.Eof)
+                return;
+
+            Read(DateTime.Now);
+        }
+#endif
 
         private void WriteMessage(DateTime now, Command command, IMessage message = null)
         {

@@ -8,7 +8,7 @@ namespace MaxMix.Framework
         [Conditional("DEBUG")]
         public static void DebugLog(string area, params string[] msgs)
         {
-            Console.WriteLine($"{area}\t{string.Join("\t", msgs)}");
+            Console.WriteLine($"{DateTime.Now:MM/dd/yyyy hh:mm:ss.fff tt}: {area}\t{string.Join("\t", msgs)}");
         }
 
         [Conditional("DEBUG")]

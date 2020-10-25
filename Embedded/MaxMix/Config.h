@@ -34,10 +34,28 @@ static const uint32_t BAUD_RATE = 115200;
 static const uint64_t SERIAL_TIMEOUT = 10;
 
 // --- Pins
-static const uint8_t PIN_PIXELS = 12;         //D12
-static const uint8_t PIN_ENCODER_OUTA = 15;   //A1
-static const uint8_t PIN_ENCODER_OUTB = 16;   //A2
-static const uint8_t PIN_ENCODER_SWITCH = 17; //A3
+#if defined(NANO)
+    static const uint8_t  PIN_PIXELS = 12; //D12
+    static const uint8_t  PIN_ENCODER_OUTA = 15; //A1
+    static const uint8_t  PIN_ENCODER_OUTB = 16; //A2
+    static const uint8_t  PIN_ENCODER_SWITCH = 17; //A3
+    // OLED SDA - 18 //A4
+    // OLED SCL - 19 //A5
+#elif defined(PRO_MICRO)
+    static const uint8_t  PIN_PIXELS = 15; //15
+    static const uint8_t  PIN_ENCODER_OUTA = 19; //A1
+    static const uint8_t  PIN_ENCODER_OUTB = 20; //A2
+    static const uint8_t  PIN_ENCODER_SWITCH = 21; //A3
+    // OLED SDA - 2 //D2
+    // OLED SCL - 3 //D3
+#elif defined(TEENSY)
+    static const uint8_t  PIN_PIXELS = 2; //2
+    static const uint8_t  PIN_ENCODER_OUTA = 3; //3
+    static const uint8_t  PIN_ENCODER_OUTB = 4; //4
+    static const uint8_t  PIN_ENCODER_SWITCH = 5; //5
+    // OLED SDA - 18 //A4
+    // OLED SCL - 19 //A5
+#endif
 
 // --- States
 static const uint8_t STATE_NAVIGATE = 0;
@@ -55,7 +73,7 @@ static const uint8_t DISPLAY_RESET = 4; // Reset pin # (or -1 if sharing Arduino
 static const uint32_t DISPLAY_SPEED = 400000;
 
 // --- Lighting
-static const uint8_t PIXELS_COUNT = 8;      // Number of pixels in ring
+static const uint8_t PIXELS_COUNT = 12;      // Number of pixels in ring
 static const uint8_t PIXELS_BRIGHTNESS = 96; // Master brightness of all the pixels. [0..255] Be carefull of the current draw on the USB port.
 
 // --- Rotary Encoder
