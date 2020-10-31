@@ -32,8 +32,15 @@ namespace MaxMix.Services.Audio
         {
             string fileName = process.GetMainModuleFileName();
             if (string.IsNullOrEmpty(fileName)) return null;
-            var versionInfo = FileVersionInfo.GetVersionInfo(fileName);
-            return versionInfo.ProductName;
+            try
+            {
+                var versionInfo = FileVersionInfo.GetVersionInfo(fileName);
+                return versionInfo.ProductName;
+            }
+            catch
+            {
+                return "";
+            }
         }
 
         public static void SetDefaultEndpoint(string deviceID, Role role)

@@ -104,12 +104,7 @@ namespace MaxMix.Services.Communication
 
                 if (m_Stopping)
                 {
-                    if (m_SerialPort != null)
-                    {
-                        m_SerialPort.Close();
-                        m_SerialPort.Dispose();
-                        m_SerialPort = null;
-                    }
+                    TryCloseSerialPort();
                     break;
                 }
             }
@@ -155,9 +150,7 @@ namespace MaxMix.Services.Communication
                 catch (Exception e)
                 {
                     AppLogging.DebugLogException(nameof(Connect), e);
-                    m_SerialPort.Close();
-                    m_SerialPort.Dispose();
-                    m_SerialPort = null;
+                    TryCloseSerialPort();
 
                     if (e is ArgumentException) // Incompatible Firmware
                     {
@@ -165,6 +158,21 @@ namespace MaxMix.Services.Communication
                     }
                 }
             }
+        }
+
+        private void TryCloseSerialPort()
+        {
+            try
+            {
+                if (m_SerialPort != null)
+                {
+                    m_SerialPort.DataReceived -= Read;
+                    m_SerialPort.Close();
+                    m_SerialPort.Dispose();
+                }
+            }
+            catch { }
+            m_SerialPort = null;
         }
 
         private void Disconnect(DateTime now)
@@ -178,10 +186,7 @@ namespace MaxMix.Services.Communication
             m_DeviceReady = false;
             m_DeviceConnected = false;
 
-            m_SerialPort.DataReceived -= Read;
-            m_SerialPort.Close();
-            m_SerialPort.Dispose();
-            m_SerialPort = null;
+            TryCloseSerialPort();
 
             m_MessageContext.Post(x => OnDeviceDisconnected?.Invoke(), null);
         }
@@ -220,7 +225,15 @@ namespace MaxMix.Services.Communication
             if (e.EventType == SerialData.Eof)
                 return;
 
-            Command command = (Command)m_SerialPort.ReadByte();
+            Command command;
+            try { command = (Command)m_SerialPort.ReadByte(); }
+            catch (Exception ex)
+            {
+                AppLogging.DebugLogException(nameof(Read), ex);
+                m_ErrorCount++;
+                return;
+            }
+
             Interlocked.Increment(ref m_ReadCount);
             Interlocked.Increment(ref m_ReadBytes);
             switch (command)
@@ -305,9 +318,14 @@ namespace MaxMix.Services.Communication
                 return;
             }
             else if (m_MessageQueue.Count != 0)
-            { 
+            {
                 lock (m_MessageLock)
-                    pair = m_MessageQueue.Dequeue();
+                {
+                    if (m_MessageQueue.Count != 0)
+                        pair = m_MessageQueue.Dequeue();
+                    else
+                        return;
+                }
             }
             else
             {

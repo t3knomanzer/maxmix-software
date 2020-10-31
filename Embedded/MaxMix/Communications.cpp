@@ -39,6 +39,9 @@ namespace Communications
             else if (command >= Command::VOLUME_CURR_CHANGE && command <= Command::VOLUME_NEXT_CHANGE)
                 // SessionIndex follows same ordering as Command.
                 Serial.readBytes((char *)&g_Sessions[command - Command::VOLUME_CURR_CHANGE].data, sizeof(VolumeData));
+            else if (command == Command::OK && g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
+                // If we are in the splash screen, don't respond to heartbeat requests
+                return;
             // Do nothing: DEBUG, NONE, ERROR?
 #ifdef TEST_HARNESS
             else if (command == Command::DEBUG)
