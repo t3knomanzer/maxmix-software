@@ -163,12 +163,25 @@ namespace MaxMix.Services.Audio
         {
             try
             {
-                _events.StateChanged -= OnStateChanged;
-                _events.SimpleVolumeChanged -= OnVolumeChanged;
-                Session.UnregisterAudioSessionNotification(_events);
+                // Do unregistration, can throw
+                if (_events != null)
+                {
+                    _events.StateChanged -= OnStateChanged;
+                    _events.SimpleVolumeChanged -= OnVolumeChanged;
+                    Session.UnregisterAudioSessionNotification(_events);
+                }
             }
             catch { }
 
+            // Do disposal chains, each can throw
+            try { Session.Dispose(); }
+            catch { }
+            try { _session2.Dispose(); }
+            catch { }
+            try { _simpleAudio.Dispose(); }
+            catch { }
+
+            // Set to null
             Session = null;
             _session2 = null;
             _simpleAudio = null;

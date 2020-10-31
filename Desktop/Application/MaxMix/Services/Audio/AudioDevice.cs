@@ -185,27 +185,39 @@ namespace MaxMix.Services.Audio
         #region IDisposable
         public void Dispose()
         {
-            if (_deviceEnumerator != null)
+            try
             {
-                _deviceEnumerator.DefaultDeviceChanged -= OnDefaultDeviceChanged;
-                _deviceEnumerator.DeviceRemoved -= OnDeviceRemoved;
-                _deviceEnumerator.DeviceStateChanged -= OnDeviceStateChanged;
-            }
+                // Do unregistration, can throw
+                if (_deviceEnumerator != null)
+                {
+                    _deviceEnumerator.DefaultDeviceChanged -= OnDefaultDeviceChanged;
+                    _deviceEnumerator.DeviceRemoved -= OnDeviceRemoved;
+                    _deviceEnumerator.DeviceStateChanged -= OnDeviceStateChanged;
+                }
+                if (_callback != null)
+                {
+                    _callback.NotifyRecived -= OnEndpointVolumeChanged;
+                }
 
-            if (_callback != null)
-            {
-                _callback.NotifyRecived -= OnEndpointVolumeChanged;
+                if (_endpointVolume != null)
+                {
+                    _endpointVolume.UnregisterControlChangeNotify(_callback);
+                }
             }
+            catch { }
 
-            if (_endpointVolume != null)
-            {
-                _endpointVolume.UnregisterControlChangeNotify(_callback);
-            }
+            // Do disposal chains, each can throw
+            try { _deviceEnumerator.Dispose(); }
+            catch { }
+            try { _endpointVolume.Dispose(); }
+            catch { }
+            try { Device.Dispose(); }
+            catch { }
 
+            // Set to null
             _deviceEnumerator = null;
             _endpointVolume = null;
             _callback = null;
-
             Device = null;
         }
         #endregion
