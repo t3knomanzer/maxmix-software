@@ -174,17 +174,17 @@ namespace MaxMix.Services.Audio
             catch { }
 
             // Do disposal chains, each can throw
-            try { Session.Dispose(); }
+            try { _simpleAudio.Dispose(); }
             catch { }
             try { _session2.Dispose(); }
             catch { }
-            try { _simpleAudio.Dispose(); }
+            try { Session.Dispose(); }
             catch { }
 
             // Set to null
-            Session = null;
-            _session2 = null;
             _simpleAudio = null;
+            _session2 = null;
+            Session = null;
         }
         #endregion
     }

@@ -198,7 +198,6 @@ namespace MaxMix.Services.Audio
                 {
                     _callback.NotifyRecived -= OnEndpointVolumeChanged;
                 }
-
                 if (_endpointVolume != null)
                 {
                     _endpointVolume.UnregisterControlChangeNotify(_callback);
