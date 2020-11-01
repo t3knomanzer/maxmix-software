@@ -25,9 +25,9 @@ namespace MaxMix.Services.Audio
 
             SessionIdentifier = _session2.SessionInstanceIdentifier;
 
-            string appPath = SessionIdentifier.ExtractAppPath();
-            IsSystemSound = appPath == "#";
-            Id = IsSystemSound ? int.MinValue : appPath.GetHashCode();
+            IsSystemSound = _session2.IsSystemSoundSession || _session2.ProcessID == 0 || _session2.Process == null;
+            string appId = SessionIdentifier.ExtractAppId();
+            Id = IsSystemSound ? int.MinValue : appId.GetHashCode();
 
             UpdateDisplayName();
         }
@@ -125,9 +125,10 @@ namespace MaxMix.Services.Audio
             {
                 if (_session2.Process != null)
                 {
-                    if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.GetProductName(); }
-                    if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.MainWindowTitle; }
-                    if (string.IsNullOrEmpty(displayName)) { displayName = _session2.Process.ProcessName; }
+                    if (string.IsNullOrEmpty(displayName)) { try { displayName = _session2.Process.GetProductName(); } catch { } }
+                    if (string.IsNullOrEmpty(displayName)) { try { displayName = _session2.Process.MainWindowTitle; } catch { } }
+                    if (string.IsNullOrEmpty(displayName)) { try { displayName = _session2.Process.ProcessName; } catch { } }
+                    if (string.IsNullOrEmpty(displayName)) { try { displayName = _session2.Process.GetMainModuleFileName(); } catch { } }
                 }
                 if (string.IsNullOrEmpty(displayName)) { displayName = Path.GetFileNameWithoutExtension(_session2.SessionIdentifier.ExtractAppPath()); }
                 if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
@@ -174,8 +175,6 @@ namespace MaxMix.Services.Audio
             catch { }
 
             // Do disposal chains, each can throw
-            try { _simpleAudio.Dispose(); }
-            catch { }
             try { _session2.Dispose(); }
             catch { }
             try { Session.Dispose(); }

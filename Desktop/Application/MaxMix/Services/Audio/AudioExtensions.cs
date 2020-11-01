@@ -69,6 +69,18 @@ namespace MaxMix.Services.Audio
             return id.Substring(i1 + 1, i2 - i1 - 1);
         }
 
+        public static string ExtractAppId(this string id)
+        {
+            var i1 = id.IndexOf('|');
+            if (i1 < 0)
+                return id;
+
+            var i2 = id.IndexOf("|", i1 + 1);
+            if (i2 < 0)
+                return id;
+            return id.Substring(i1 + 1, i2 - i1 - 1);
+        }
+
         public static string ExtractSessionId(this string id)
         {
             var i1 = id.IndexOf("%b");
