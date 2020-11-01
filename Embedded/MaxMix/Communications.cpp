@@ -4,7 +4,7 @@
 extern DeviceSettings g_Settings;
 extern SessionInfo g_SessionInfo;
 extern SessionData g_Sessions[4];
-extern uint32_t g_LastMessage;
+extern uint32_t g_HeartbeatTimeout;
 extern uint32_t g_Now;
 
 //#define TEST_HARNESS
@@ -25,7 +25,7 @@ namespace Communications
         Command command = Command::NONE;
         if (Serial.available())
         {
-            g_LastMessage = g_Now;
+            g_HeartbeatTimeout = g_Now + DEVICE_RESET_AFTER_INACTIVTY;
             command = (Command)Serial.read();
             if (command == Command::TEST)
                 Write(command);

@@ -48,9 +48,9 @@ volatile int8_t g_EncoderSteps;
 
 // Time & Sleep
 uint32_t g_Now;
-uint32_t g_LastMessage;
+uint32_t g_HeartbeatTimeout;
 uint32_t g_LastActivity;
-uint32_t g_LastPixelUpdate;
+uint32_t g_NextPixelUpdate;
 uint32_t g_LastSteps;
 
 // Lighting
@@ -148,14 +148,14 @@ void loop()
     g_DisplayDirty = false;
 
     // Update Lighting at 30Hz
-    if (g_Now >= (g_LastPixelUpdate + 33))
+    if (g_Now - g_NextPixelUpdate < 0x80000000U)
     {
-        g_LastPixelUpdate = g_Now;
+        g_NextPixelUpdate = g_Now + 33;
         UpdateLighting();
     }
 
     // Reset / Disconnect if no serial activity.
-    if ((g_SessionInfo.mode != DisplayMode::MODE_SPLASH) && (g_LastMessage + DEVICE_RESET_AFTER_INACTIVTY < g_Now))
+    if ((g_SessionInfo.mode != DisplayMode::MODE_SPLASH) && (g_Now - g_HeartbeatTimeout < 0x80000000U))
         ResetState();
 }
 
@@ -187,9 +187,9 @@ void ResetState()
 
     // Time & Sleep
     g_Now = millis();
-    g_LastMessage = 0;
+    g_HeartbeatTimeout = 0;
     g_LastActivity = g_Now;
-    g_LastPixelUpdate = 0;
+    g_NextPixelUpdate = 0;
     g_LastSteps = 0;
 }
 
