@@ -155,7 +155,11 @@ namespace MaxMix.Services.Communication
                     m_SerialPort.DataReceived += OnDataReceived;
 #endif
                     m_DeviceConnected = true;
+#if POLLING_SERIAL
+                    m_DeviceReady = false;
+#else
                     m_DeviceReady = true;
+#endif
                     m_MessageContext.Post(x => OnDeviceConnected?.Invoke(), null);
                     m_LastMessageRead = now;
                     return;
@@ -334,7 +338,7 @@ namespace MaxMix.Services.Communication
 
         private void Write(DateTime now)
         {
-            if (!m_DeviceConnected)
+            if (!m_DeviceConnected || !m_DeviceReady)
                 return;
 
             KeyValuePair<Command, IMessage> pair = default;
@@ -342,10 +346,6 @@ namespace MaxMix.Services.Communication
             {
                 // Send OK test even if we think the device is not ready
                 pair = new KeyValuePair<Command, IMessage>(Command.OK, null);
-            }
-            else if (!m_DeviceReady)
-            {
-                return;
             }
             else if (m_MessageQueue.Count != 0)
             {

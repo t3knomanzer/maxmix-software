@@ -280,6 +280,14 @@ uint8_t GetIndexForMode(DisplayMode mode)
 
 //---------------------------------------------------------
 //---------------------------------------------------------
+void ComputeVolumeChange(int8_t index, int8_t encoderSteps, uint32_t deltaTime)
+{
+    uint8_t prev = g_Sessions[index].data.volume;
+    g_Sessions[index].data.volume = ComputeAcceleratedVolume(encoderSteps, deltaTime, prev);
+    if (prev != g_Sessions[index].data.volume)
+        Communications::Write((Command)(Command::VOLUME_CURR_CHANGE + index));
+}
+
 bool ProcessEncoderRotation()
 {
     int8_t encoderSteps = 0;
@@ -302,21 +310,20 @@ bool ProcessEncoderRotation()
     {
         if (!inGameMode)
         {
-            g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = ComputeAcceleratedVolume(encoderSteps, deltaTime, g_Sessions[SessionIndex::INDEX_CURRENT].data.volume);
-            Communications::Write(Command::VOLUME_CURR_CHANGE);
+            ComputeVolumeChange(SessionIndex::INDEX_CURRENT, encoderSteps, deltaTime);
         }
         else
         {
             // NOTES: Game mode works by selecting 2 sessions, to make things simpler for all "NAVIGATE" logic, CURRENT_SESSION/INDEX_CURRENT sould always be what we work with
             // and when we "select" a session for A, we copy it into ALTERNATE_SESSION/INDEX_ALTERNATE. We could simplify this logic by swapping INDEX_CURRENT & INDEX_ALTERNATE after B is selected,
             // but that just makes for a very messy logic for the App to keep PREVIOUS/NEXT/CURRENT logic in order. So lets just reverse it here so A = INDEX_ALTERNATE, B = INDEX_CURRENT
-            g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume = ComputeAcceleratedVolume(encoderSteps, deltaTime, g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume);
-            Communications::Write(Command::VOLUME_ALT_CHANGE);
-
+            ComputeVolumeChange(SessionIndex::INDEX_ALTERNATE, encoderSteps, deltaTime);
             if (g_Sessions[SessionIndex::INDEX_ALTERNATE].data.id != g_Sessions[SessionIndex::INDEX_CURRENT].data.id)
             {
+                uint8_t prev = g_Sessions[SessionIndex::INDEX_CURRENT].data.volume;
                 g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = 100 - g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume;
-                Communications::Write(Command::VOLUME_CURR_CHANGE);
+                if (prev != g_Sessions[SessionIndex::INDEX_CURRENT].data.volume)
+                    Communications::Write(Command::VOLUME_CURR_CHANGE);
             }
             else
                 g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume;
