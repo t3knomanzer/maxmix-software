@@ -279,7 +279,7 @@ namespace MaxMix.ViewModels
                 if (addition && _settingsViewModel.DisplayNewSession && m_SessionInfo.mode != DisplayMode.MODE_GAME)
                 {
                     PopulateIndexToIdMap(sessions);
-                    m_SessionInfo.current = FindDefaultSessionIndex(sessions);
+                    m_SessionInfo.current = FindSessionIndex(sessions, x => x.Id == id);
                 }
                 UpdateAndFlushSessionData(sessions, true);
             }
@@ -317,7 +317,7 @@ namespace MaxMix.ViewModels
             // NOTE: we can now have a setting to determin the initial screen
             ISession[] sessions = _audioSessionService.GetSessions(DisplayMode.MODE_OUTPUT);
             m_SessionInfo.mode = DisplayMode.MODE_OUTPUT;
-            m_SessionInfo.current = FindDefaultSessionIndex(sessions);
+            m_SessionInfo.current = FindSessionIndex(sessions, x => x.IsDefault);
             m_SessionInfo.output = (byte)sessions.Length;
             m_SessionInfo.input = (byte)_audioSessionService.GetSessions(DisplayMode.MODE_INPUT).Length;
             m_SessionInfo.application = (byte)_audioSessionService.GetSessions(DisplayMode.MODE_APPLICATION).Length;
@@ -353,7 +353,7 @@ namespace MaxMix.ViewModels
 
                 ISession[] sessions = _audioSessionService.GetSessions(m_SessionInfo.mode);
                 if (updateCurrent)
-                    m_SessionInfo.current = FindDefaultSessionIndex(sessions);
+                    m_SessionInfo.current = FindSessionIndex(sessions, x => x.IsDefault);
                 UpdateAndFlushSessionData(sessions, updateIndexMap);
                 if (updateCurrent)
                     _communicationService.SendMessage(Command.SESSION_INFO, m_SessionInfo);
@@ -366,9 +366,9 @@ namespace MaxMix.ViewModels
             }
         }
 
-        byte FindDefaultSessionIndex(ISession[] sessions)
+        byte FindSessionIndex(ISession[] sessions, Predicate<ISession> match)
         {
-            var index = Array.FindIndex(sessions, x => x.IsDefault);
+            var index = Array.FindIndex(sessions, match);
             if (index >= 0)
                 return (byte)index;
             return 0;
