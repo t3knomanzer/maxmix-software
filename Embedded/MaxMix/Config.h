@@ -55,6 +55,8 @@ static const uint64_t SERIAL_TIMEOUT = 10;
     static const uint8_t  PIN_ENCODER_SWITCH = 5; //5
     // OLED SDA - 18 //A4
     // OLED SCL - 19 //A5
+#else
+    #error Unsuported Platform Target.
 #endif
 
 // --- States
