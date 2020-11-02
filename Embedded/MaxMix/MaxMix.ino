@@ -409,7 +409,8 @@ bool ProcessEncoderButton()
         if (g_SessionInfo.mode == DisplayMode::MODE_GAME)
             g_ModeState[DisplayMode::MODE_GAME] = STATE_SELECT_A;
         g_SessionInfo.current = 0;
-
+        // Clear name to reduce confusing current session name flash to make SgtSarcasm happy =D
+        memset(g_Sessions[SessionIndex::INDEX_CURRENT].name, 0, sizeof(g_Sessions[SessionIndex::INDEX_CURRENT].name));
         Communications::Write(Command::SESSION_INFO);
         Display::ResetTimers();
         return true;
