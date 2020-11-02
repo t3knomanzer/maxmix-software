@@ -64,7 +64,7 @@ namespace MaxMix.Services.Audio
         /// <inheritdoc/>
         public string DisplayName { get; protected set; }
 
-        public bool IsDefault => false;
+        public bool IsDefault => IsSystemSound;
 
         /// <inheritdoc/>
         public bool IsSystemSound { get; protected set; }

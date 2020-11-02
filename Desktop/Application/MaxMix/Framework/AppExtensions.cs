@@ -21,14 +21,14 @@ namespace MaxMix.Framework
             return settings;
         }
 
-        public static SessionData ToSessionData(this ISession audioDevice, int index)
+        public static SessionData ToSessionData(this ISession[] audioDevices, int index)
         {
             SessionData session = SessionData.Default();
-            session.name = audioDevice.DisplayName;
+            session.name = audioDevices[index].DisplayName;
             session.data.id = (byte)index;
-            session.data.isDefault = audioDevice.IsDefault;
-            session.data.volume = (byte)audioDevice.Volume;
-            session.data.isMuted = audioDevice.IsMuted;
+            session.data.isDefault = audioDevices[index].IsDefault;
+            session.data.volume = (byte)audioDevices[index].Volume;
+            session.data.isMuted = audioDevices[index].IsMuted;
             return session;
         }
     }

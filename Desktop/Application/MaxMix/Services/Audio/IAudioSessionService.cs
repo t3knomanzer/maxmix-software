@@ -9,6 +9,7 @@ namespace MaxMix.Services.Audio
         void SetItemVolume(int id, int volume, bool isMuted);
         void SetDefaultEndpoint(int id);
         ISession[] GetSessions(DisplayMode mode);
+        void GetSessionCounts(out int output, out int input, out int application);
 
         event ServiceStartedDelegate ServiceStarted;
 

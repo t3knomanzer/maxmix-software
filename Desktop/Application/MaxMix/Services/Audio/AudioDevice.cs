@@ -208,8 +208,6 @@ namespace MaxMix.Services.Audio
             // Do disposal chains, each can throw
             try { _deviceEnumerator.Dispose(); }
             catch { }
-            try { _endpointVolume.Dispose(); }
-            catch { }
             try { Device.Dispose(); }
             catch { }
 

@@ -11,11 +11,12 @@ namespace MaxMix.Services.Audio
     public class AudioSessionGroup : IAudioSession
     {
         #region Constructor
-        public AudioSessionGroup(int id, string displayName)
+        public AudioSessionGroup(int id, string displayName, bool isDefault)
         {
             Id = id;
             DisplayName = displayName;
             SessionIdentifier = $"{Id}: {DisplayName}";
+            IsDefault = isDefault;
         }
         #endregion
 
@@ -44,7 +45,7 @@ namespace MaxMix.Services.Audio
         public string DisplayName { get; protected set; }
 
         /// <inheritdoc/>
-        public bool IsDefault => false;
+        public bool IsDefault { get; protected set; }
 
         /// <inheritdoc/>
         public int Volume

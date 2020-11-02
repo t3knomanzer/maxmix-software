@@ -128,6 +128,13 @@ namespace MaxMix.Services.Audio
                 return _devices.Values.Where(x => x.Flow == DeviceFlow.Output).OrderBy(x => x.Id).ToArray();
             return null;
         }
+
+        public void GetSessionCounts(out int output, out int input, out int application)
+        {
+            output = _devices.Values.Count(x => x.Flow == DeviceFlow.Output);
+            input = _devices.Values.Count(x => x.Flow == DeviceFlow.Input);
+            application = _sessionGoups.Values.Count;
+        }
         #endregion
 
         #region Private Methods
@@ -177,7 +184,7 @@ namespace MaxMix.Services.Audio
             }
             else
             {
-                var sessionGroup = new AudioSessionGroup(session.Id, session.DisplayName);
+                var sessionGroup = new AudioSessionGroup(session.Id, session.DisplayName, session.IsDefault);
                 sessionGroup.AddSession(session);
 
                 _sessionGoups.Add(sessionGroup.Id, sessionGroup);
