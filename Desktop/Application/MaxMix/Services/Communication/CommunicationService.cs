@@ -225,7 +225,7 @@ namespace MaxMix.Services.Communication
             catch (Exception e)
             {
                 AppLogging.DebugLogException(nameof(ReadMessage), e);
-                m_ErrorCount++;
+                Interlocked.Increment(ref m_ErrorCount);
                 return;
             }
 
@@ -254,7 +254,7 @@ namespace MaxMix.Services.Communication
             catch (Exception ex)
             {
                 AppLogging.DebugLogException(nameof(Read), ex);
-                m_ErrorCount++;
+                Interlocked.Increment(ref m_ErrorCount);
                 return;
             }
 
@@ -264,10 +264,19 @@ namespace MaxMix.Services.Communication
             {
                 case Command.TEST:
                     {
-                        var firmware = m_SerialPort.ReadLine().Replace("\r", "");
-                        AppLogging.DebugLog(nameof(Read), command.ToString(), firmware);
-                        m_LastMessageRead = now;
-                        m_LastMessageWrite = now;
+                        try
+                        {
+                            var firmware = m_SerialPort.ReadLine().Replace("\r", "");
+                            AppLogging.DebugLog(nameof(Read), command.ToString(), firmware);
+                            m_LastMessageRead = now;
+                            m_LastMessageWrite = now;
+                        }
+                        catch (Exception e)
+                        {
+                            AppLogging.DebugLogException(nameof(ReadMessage), e);
+                            Interlocked.Increment(ref m_ErrorCount);
+                            return;
+                        }
                     }
                     break;
                 case Command.OK:
