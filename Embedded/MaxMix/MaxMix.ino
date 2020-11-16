@@ -33,7 +33,7 @@
 DeviceSettings g_Settings;
 SessionInfo g_SessionInfo;
 SessionData g_Sessions[SessionIndex::INDEX_MAX];
-uint8_t g_ModeState[DisplayMode::MODE_MAX];
+ModeStates g_ModeStates;
 uint8_t g_DisplayDirty;
 bool g_DisplayAsleep;
 
@@ -170,11 +170,7 @@ void ResetState()
     g_Sessions[SessionIndex::INDEX_CURRENT] = SessionData();
     g_Sessions[SessionIndex::INDEX_ALTERNATE] = SessionData();
     g_Sessions[SessionIndex::INDEX_NEXT] = SessionData();
-    g_ModeState[DisplayMode::MODE_SPLASH] = STATE_LOGO;
-    g_ModeState[DisplayMode::MODE_OUTPUT] = STATE_EDIT;
-    g_ModeState[DisplayMode::MODE_INPUT] = STATE_EDIT;
-    g_ModeState[DisplayMode::MODE_APPLICATION] = STATE_NAVIGATE;
-    g_ModeState[DisplayMode::MODE_GAME] = STATE_SELECT_A;
+    g_ModeStates = ModeStates();
     g_DisplayDirty = true;
     g_DisplayAsleep = false;
 
@@ -306,7 +302,7 @@ bool ProcessEncoderRotation()
         return true;
 
     bool inGameMode = g_SessionInfo.mode == DisplayMode::MODE_GAME;
-    if ((inGameMode && g_ModeState[g_SessionInfo.mode] == STATE_GAME_EDIT) || (!inGameMode && g_ModeState[g_SessionInfo.mode] == STATE_EDIT))
+    if ((inGameMode && g_ModeStates.states[g_SessionInfo.mode] == STATE_GAME_EDIT) || (!inGameMode && g_ModeStates.states[g_SessionInfo.mode] == STATE_EDIT))
     {
         if (!inGameMode)
         {
@@ -356,7 +352,8 @@ bool ProcessEncoderButton()
         if (g_DisplayAsleep)
             return true;
 
-        g_ModeState[g_SessionInfo.mode] = (g_ModeState[g_SessionInfo.mode] + 1) % (g_SessionInfo.mode != DisplayMode::MODE_GAME ? STATE_MAX : STATE_GAME_MAX);
+        g_ModeStates.states[g_SessionInfo.mode] = (g_ModeStates.states[g_SessionInfo.mode] + 1) % (g_SessionInfo.mode != DisplayMode::MODE_GAME ? STATE_MAX : STATE_GAME_MAX);
+        Communications::Write(Command::MODE_STATES);
 
         if (g_SessionInfo.mode == DisplayMode::MODE_INPUT || g_SessionInfo.mode == DisplayMode::MODE_OUTPUT)
         {
@@ -365,7 +362,7 @@ bool ProcessEncoderButton()
             g_Sessions[SessionIndex::INDEX_CURRENT].data.isDefault = true;
             Communications::Write(Command::VOLUME_CURR_CHANGE);
         }
-        else if (g_SessionInfo.mode == DisplayMode::MODE_GAME && g_ModeState[g_SessionInfo.mode] == STATE_SELECT_B)
+        else if (g_SessionInfo.mode == DisplayMode::MODE_GAME && g_ModeStates.states[g_SessionInfo.mode] == STATE_SELECT_B)
         {
             g_Sessions[SessionIndex::INDEX_ALTERNATE] = g_Sessions[SessionIndex::INDEX_CURRENT];
             Communications::Write(Command::ALTERNATE_SESSION);
@@ -407,7 +404,10 @@ bool ProcessEncoderButton()
         if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
             g_SessionInfo.mode = DisplayMode::MODE_OUTPUT;
         if (g_SessionInfo.mode == DisplayMode::MODE_GAME)
-            g_ModeState[DisplayMode::MODE_GAME] = STATE_SELECT_A;
+        {
+            g_ModeStates.states[DisplayMode::MODE_GAME] = STATE_SELECT_A;
+            Communications::Write(Command::MODE_STATES);
+        }
         g_SessionInfo.current = 0;
         // Clear name to reduce confusing current session name flash to make SgtSarcasm happy =D
         memset(g_Sessions[SessionIndex::INDEX_CURRENT].name, 0, sizeof(g_Sessions[SessionIndex::INDEX_CURRENT].name));
@@ -445,7 +445,7 @@ bool ProcessDisplayScroll()
     }
     else
     {
-        if (g_ModeState[g_SessionInfo.mode] == STATE_GAME_EDIT)
+        if (g_ModeStates.states[g_SessionInfo.mode] == STATE_GAME_EDIT)
             return strlen(g_Sessions[SessionIndex::INDEX_CURRENT].name) > DISPLAY_GAME_EDIT_CHAR_MAX;
         return strlen(g_Sessions[SessionIndex::INDEX_CURRENT].name) > DISPLAY_CHAR_MAX_X2;
     }
@@ -464,14 +464,14 @@ void UpdateDisplay()
 
     if (g_SessionInfo.mode == DisplayMode::MODE_SPLASH)
     {
-        if (g_ModeState[g_SessionInfo.mode] == STATE_LOGO)
+        if (g_ModeStates.states[g_SessionInfo.mode] == STATE_LOGO)
             Display::SplashScreen();
         else
             Display::InfoScreen();
     }
     else if (g_SessionInfo.mode == DisplayMode::MODE_INPUT || g_SessionInfo.mode == DisplayMode::MODE_OUTPUT)
     {
-        if (g_ModeState[g_SessionInfo.mode] == STATE_NAVIGATE)
+        if (g_ModeStates.states[g_SessionInfo.mode] == STATE_NAVIGATE)
         {
             Display::DeviceSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], CanScrollLeft(), CanScrollRight(), g_SessionInfo.mode);
         }
@@ -482,7 +482,7 @@ void UpdateDisplay()
     }
     else if (g_SessionInfo.mode == DisplayMode::MODE_APPLICATION)
     {
-        if (g_ModeState[g_SessionInfo.mode] == STATE_NAVIGATE)
+        if (g_ModeStates.states[g_SessionInfo.mode] == STATE_NAVIGATE)
         {
             Display::ApplicationSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], CanScrollLeft(), CanScrollRight(), g_SessionInfo.mode);
         }
@@ -493,9 +493,9 @@ void UpdateDisplay()
     }
     else if (g_SessionInfo.mode == DisplayMode::MODE_GAME)
     {
-        if (g_ModeState[g_SessionInfo.mode] != STATE_GAME_EDIT)
+        if (g_ModeStates.states[g_SessionInfo.mode] != STATE_GAME_EDIT)
         {
-            Display::GameSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_ModeState[g_SessionInfo.mode] == STATE_SELECT_A ? 'A' : 'B', CanScrollLeft(), CanScrollRight(), g_SessionInfo.mode);
+            Display::GameSelectScreen(&g_Sessions[SessionIndex::INDEX_CURRENT], g_ModeStates.states[g_SessionInfo.mode] == STATE_SELECT_A ? 'A' : 'B', CanScrollLeft(), CanScrollRight(), g_SessionInfo.mode);
         }
         else
         {
