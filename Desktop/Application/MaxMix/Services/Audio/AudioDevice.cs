@@ -127,7 +127,9 @@ namespace MaxMix.Services.Audio
         #region Private Methods
         private void UpdateDisplayName()
         {
-            var displayName = Device.FriendlyName;
+            var displayName = "Unnamed";
+            try { displayName = Device.FriendlyName; } catch { }
+            if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
             var match = Regex.Match(displayName, @"\(+.*\)+");
             if (match.Success)
             {

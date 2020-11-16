@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Input;
+using Sentry;
 
 namespace MaxMix.ViewModels
 {
@@ -379,6 +380,22 @@ namespace MaxMix.ViewModels
 
             int index = m_SessionInfo.current;
             ComputeIndexes(index, out int prevIndex, out int nextIndex);
+
+            if (data == null || (uint)prevIndex > (uint)data.Length || (uint)index > (uint)data.Length || (uint)nextIndex > (uint)data.Length)
+            {
+                SentrySdk.ConfigureScope(scope =>
+                {
+                    scope.SetExtra("updateIndexMap", updateIndexMap);
+                    if (data != null)
+                        scope.SetExtra("data.Length", data.Length);
+                    else
+                        scope.SetExtra("data", "null");
+                    scope.SetExtra("m_IndexToId.Count", m_IndexToId.Count);
+                    scope.SetExtra("prevIndex", prevIndex);
+                    scope.SetExtra("index", index);
+                    scope.SetExtra("nextIndex", nextIndex);
+                });
+            }
 
             // The device can easily spin the encoder faster than we can respond via Serial.
             // So just flush all 3 sessions to the device to ensure it will have fresh data when it stops, whatever it stops on.
