@@ -28,8 +28,9 @@
 //********************************************************
 
 // --- Serial Comms
-static const uint32_t BAUD_RATE = 115200;
-// Default serial timeout is 1000 ms, at 115200 baud (bit/s)
+static const uint32_t BAUD_RATE = 76800;
+// Default serial timeout is 1000 ms, at 76800 baud (bit/s)
+// Try avoiding 115200 or 230400 baud rates as Atmega328p leaves not much recovery headroom at these baud rates, especialy for arduino clones.
 // our longest message at 296 bits (33 bytes) takes 2.29ms to send.
 static const uint64_t SERIAL_TIMEOUT = 10;
 

@@ -135,7 +135,7 @@ namespace MaxMix.Services.Communication
                 try
                 {
                     AppLogging.DebugLog(nameof(Connect), portName);
-                    m_SerialPort = new SerialPort(portName, 115200);
+                    m_SerialPort = new SerialPort(portName, 76800);
                     m_SerialPort.ReadTimeout = k_ReadTimeout;
                     m_SerialPort.WriteTimeout = k_WriteTimeout;
                     m_SerialPort.Open();
