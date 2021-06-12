@@ -1,5 +1,5 @@
-﻿using CSCore.CoreAudioAPI;
-using MaxMix.Services.Communication;
+﻿using MaxMix.Services.Communication;
+using NAudio.CoreAudioApi;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -45,8 +45,9 @@ namespace MaxMix.Services.Audio
 
         public static void SetDefaultEndpoint(string deviceID, Role role)
         {
-            var policyConfig = new PolicyConfig();
-            policyConfig.SetDefaultEndpoint(deviceID, role);
+            // TODO
+            //var policyConfig = new PolicyConfig();
+            //policyConfig.SetDefaultEndpoint(deviceID, role);
         }
 
         public static string ExtractDeviceId(this string id)
