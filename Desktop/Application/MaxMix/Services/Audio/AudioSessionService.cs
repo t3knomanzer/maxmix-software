@@ -113,7 +113,8 @@ namespace MaxMix.Services.Audio
         {
             if (_devices.TryGetValue(id, out var device))
             {
-                AudioExtensions.SetDefaultEndpoint(device.Device.ID, Role.Multimedia);
+                using (var policyConfig = new PolicyConfig())
+                    policyConfig.SetDefaultEndpoint(device.DeviceId, Role.Multimedia);
             }
 
         }

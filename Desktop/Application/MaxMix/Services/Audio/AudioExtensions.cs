@@ -45,9 +45,8 @@ namespace MaxMix.Services.Audio
 
         public static void SetDefaultEndpoint(string deviceID, Role role)
         {
-            // TODO
-            //var policyConfig = new PolicyConfig();
-            //policyConfig.SetDefaultEndpoint(deviceID, role);
+            using (var policyConfig = new PolicyConfig())
+                policyConfig.SetDefaultEndpoint(deviceID, role);
         }
 
         public static string ExtractDeviceId(this string id)
