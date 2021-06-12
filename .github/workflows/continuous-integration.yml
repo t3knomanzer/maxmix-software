@@ -1,0 +1,62 @@
+name: 'Continuous Integration'
+on: [push, pull_request]
+defaults:
+  run:
+    shell: cmd
+
+jobs:
+  build-firware:
+    name: 'Build MaxMix Firmware'
+    runs-on: windows-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+    - name: Setup Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Setup PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install -U platformio    
+    - name: Build Firmware
+      run: platformio run --project-dir .\Embedded\Maxmix -e nano-cli 
+
+  build-app:
+    name: 'Build MaxMix App'
+    runs-on: windows-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1
+    - name: Setup MSBuild ExtensionPack
+      run: choco install msbuild.extensionpack --version=4.0.15.0 -y 
+    - name: Build
+      run: msbuild Desktop\Build.msbuild -t:restore -p:SolutionDir=Application -p:Version=0.0.0.0 -p:Configuration=Release -p:Platform="Any CPU"
+
+  build-driver-installer:
+    name: 'Build Driver Installer'
+    runs-on: windows-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1
+    - name: Setup MSBuild ExtensionPack
+      run: choco install msbuild.extensionpack --version=4.0.15.0 -y 
+    - name: Build
+      run: msbuild Desktop\Build.msbuild -t:restore -p:SolutionDir=DriverInstaller -p:Version=0.0.0.0 -p:Configuration=Release -p:Platform="Any CPU"
+
+  build-firmware-installer:
+    name: 'Build Firware Installer'
+    runs-on: windows-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1
+    - name: Setup MSBuild ExtensionPack
+      run: choco install msbuild.extensionpack --version=4.0.15.0 -y 
+    - name: Build
+      run: msbuild Desktop\Build.msbuild -t:restore -p:SolutionDir=FirmwareInstaller  -p:Version=0.0.0.0 -p:Configuration=Release -p:Platform="Any CPU"
