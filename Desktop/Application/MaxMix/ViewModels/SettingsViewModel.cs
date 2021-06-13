@@ -12,6 +12,12 @@ namespace MaxMix.ViewModels
         public SettingsViewModel()
         {
             _settings = Properties.Settings.Default;
+            if (_settings.UpgradeRequired)
+            {
+                _settings.Upgrade();
+                _settings.UpgradeRequired = false;
+                _settings.Save();
+            }
         }
         #endregion
 
