@@ -1,5 +1,6 @@
-﻿using CSCore.CoreAudioAPI;
-using MaxMix.Framework;
+﻿using MaxMix.Framework;
+using NAudio.CoreAudioApi;
+using NAudio.CoreAudioApi.Interfaces;
 using System;
 using System.Text.RegularExpressions;
 
@@ -8,30 +9,29 @@ namespace MaxMix.Services.Audio
     /// <summary>
     /// Provides a facade with a simpler interface over the MMDevice CSCore class.
     /// </summary>
-    public class AudioDevice : IAudioDevice
+    public class AudioDevice : IAudioDevice, IMMNotificationClient
     {
+        private readonly NLog.Logger m_Logger = NLog.LogManager.GetCurrentClassLogger();
+
         #region Constructor
         public AudioDevice(MMDevice device)
         {
             Device = device;
 
             _deviceEnumerator = new MMDeviceEnumerator();
-            _deviceEnumerator.DefaultDeviceChanged += OnDefaultDeviceChanged;
-            _deviceEnumerator.DeviceStateChanged += OnDeviceStateChanged;
-            _deviceEnumerator.DeviceRemoved += OnDeviceRemoved;
+            _deviceEnumerator.RegisterEndpointNotificationCallback(this);
 
-            _endpointVolume = AudioEndpointVolume.FromDevice(Device);
-            _endpointVolume.RegisterControlChangeNotify(_callback);
-            _callback.NotifyRecived += OnEndpointVolumeChanged;
+            Device.AudioEndpointVolume.OnVolumeNotification += OnEndpointVolumeChanged;
 
             UpdateDisplayName();
             Flow = Device.DataFlow.ToDeviceFlow();
-            DeviceId = Device.DeviceID;
+            DeviceId = Device.ID;
             Id = DeviceId.GetHashCode();
 
             // This is kinda silly...
             var defaultDevice = _deviceEnumerator.GetDefaultAudioEndpoint(Device.DataFlow, Role.Console); // Multimedia? Communications?
-            IsDefault = defaultDevice.DeviceID == DeviceId;
+            IsDefault = defaultDevice.ID == DeviceId;
+            defaultDevice.Dispose();
         }
         #endregion
 
@@ -49,8 +49,6 @@ namespace MaxMix.Services.Audio
 
         #region Fields
         private MMDeviceEnumerator _deviceEnumerator;
-        private AudioEndpointVolume _endpointVolume;
-        private AudioEndpointVolumeCallback _callback = new AudioEndpointVolumeCallback();
 
         private bool _isNotifyEnabled = true;
         private int _volume;
@@ -80,7 +78,7 @@ namespace MaxMix.Services.Audio
         {
             get
             {
-                try { _volume = (int)Math.Round(_endpointVolume.MasterVolumeLevelScalar * 100); }
+                try { _volume = (int)Math.Round(Device.AudioEndpointVolume.MasterVolumeLevelScalar * 100); }
                 catch { }
 
                 return _volume;
@@ -94,7 +92,7 @@ namespace MaxMix.Services.Audio
 
                 _isNotifyEnabled = false;
                 _volume = value;
-                try { _endpointVolume.MasterVolumeLevelScalar = value / 100f; }
+                try { Device.AudioEndpointVolume.MasterVolumeLevelScalar = value / 100f; }
                 catch { }
             }
         }
@@ -104,7 +102,7 @@ namespace MaxMix.Services.Audio
         {
             get
             {
-                try { _isMuted = _endpointVolume.IsMuted; }
+                try { _isMuted = Device.AudioEndpointVolume.Mute; }
                 catch { }
 
                 return _isMuted;
@@ -118,7 +116,7 @@ namespace MaxMix.Services.Audio
 
                 _isNotifyEnabled = false;
                 _isMuted = value;
-                try { _endpointVolume.IsMuted = value; }
+                try { Device.AudioEndpointVolume.Mute = value; }
                 catch { }
             }
         }
@@ -130,57 +128,16 @@ namespace MaxMix.Services.Audio
             var displayName = "Unnamed";
             try { displayName = Device.FriendlyName; } catch { }
             if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
-            var match = Regex.Match(displayName, @"\(+.*\)+");
+            var match = Regex.Match(displayName, @"(.+?) \((.+)\)");
             if (match.Success)
             {
-                displayName = match.Value;
-                displayName = displayName.Substring(1, displayName.Length - 2);
+                // TODO: Expose settings for this?
+                //if (settings.UseHardwareName)
+                //    displayName = match.Groups[2].Value;
+                //else
+                displayName = match.Groups[1].Value;
             }
-
             DisplayName = displayName;
-        }
-        #endregion
-
-        #region Event Handlers
-        private void OnDefaultDeviceChanged(object sender, DefaultDeviceChangedEventArgs e)
-        {
-            if (e.DataFlow != Flow.ToDataFlow())
-                return;
-
-            bool newDefault = e.DeviceId == DeviceId;
-            if (IsDefault != newDefault)
-            {
-                AppLogging.DebugLog(nameof(OnDefaultDeviceChanged), DeviceId, newDefault.ToString());
-                IsDefault = newDefault;
-                DeviceDefaultChanged?.Invoke(this);
-            }
-        }
-
-        private void OnDeviceStateChanged(object sender, DeviceStateChangedEventArgs e)
-        {
-            if (e.DeviceId != DeviceId || e.DeviceState.HasFlag(DeviceState.Active))
-                return;
-
-            DeviceRemoved?.Invoke(this);
-        }
-
-        private void OnDeviceRemoved(object sender, DeviceNotificationEventArgs e)
-        {
-            if (e.DeviceId != DeviceId)
-                return;
-
-            DeviceRemoved?.Invoke(this);
-        }
-
-        private void OnEndpointVolumeChanged(object sender, AudioEndpointVolumeCallbackEventArgs e)
-        {
-            if (!_isNotifyEnabled)
-            {
-                _isNotifyEnabled = true;
-                return;
-            }
-
-            DeviceVolumeChanged?.Invoke(this);
         }
         #endregion
 
@@ -189,21 +146,8 @@ namespace MaxMix.Services.Audio
         {
             try
             {
-                // Do unregistration, can throw
-                if (_deviceEnumerator != null)
-                {
-                    _deviceEnumerator.DefaultDeviceChanged -= OnDefaultDeviceChanged;
-                    _deviceEnumerator.DeviceRemoved -= OnDeviceRemoved;
-                    _deviceEnumerator.DeviceStateChanged -= OnDeviceStateChanged;
-                }
-                if (_callback != null)
-                {
-                    _callback.NotifyRecived -= OnEndpointVolumeChanged;
-                }
-                if (_endpointVolume != null)
-                {
-                    _endpointVolume.UnregisterControlChangeNotify(_callback);
-                }
+                Device.AudioEndpointVolume.OnVolumeNotification -= OnEndpointVolumeChanged;
+                _deviceEnumerator.UnregisterEndpointNotificationCallback(this);
             }
             catch { }
 
@@ -215,10 +159,59 @@ namespace MaxMix.Services.Audio
 
             // Set to null
             _deviceEnumerator = null;
-            _endpointVolume = null;
-            _callback = null;
             Device = null;
         }
         #endregion
+
+        private void OnEndpointVolumeChanged(AudioVolumeNotificationData data)
+        {
+            if (!_isNotifyEnabled)
+            {
+                _isNotifyEnabled = true;
+                return;
+            }
+
+            DeviceVolumeChanged?.Invoke(this);
+        }
+
+        public void OnDeviceStateChanged(string deviceId, DeviceState newState)
+        {
+            if (deviceId != DeviceId || newState.HasFlag(DeviceState.Active))
+                return;
+
+            DeviceRemoved?.Invoke(this);
+        }
+
+        public void OnDeviceAdded(string pwstrDeviceId)
+        {
+            // NOOP
+        }
+
+        public void OnDeviceRemoved(string deviceId)
+        {
+            if (deviceId != DeviceId)
+                return;
+
+            DeviceRemoved?.Invoke(this);
+        }
+
+        public void OnDefaultDeviceChanged(DataFlow flow, Role role, string defaultDeviceId)
+        {
+            if (flow != Flow.ToDataFlow())
+                return;
+
+            bool newDefault = defaultDeviceId == DeviceId;
+            if (IsDefault != newDefault)
+            {
+                m_Logger.Debug(string.Join("\t", nameof(OnDefaultDeviceChanged), DeviceId, newDefault));
+                IsDefault = newDefault;
+                DeviceDefaultChanged?.Invoke(this);
+            }
+        }
+
+        public void OnPropertyValueChanged(string pwstrDeviceId, PropertyKey key)
+        {
+            // NOOP
+        }
     }
 }

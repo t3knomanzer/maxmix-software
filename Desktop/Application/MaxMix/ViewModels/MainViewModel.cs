@@ -301,9 +301,8 @@ namespace MaxMix.ViewModels
             // Send device initial screen data
 
             if (!m_HasPreviouslyConnected)
-                m_SessionInfo.mode = DisplayMode.MODE_OUTPUT;
+                m_SessionInfo.mode = _settingsViewModel.StartupMode;
 
-            // NOTE: we can now have a setting to determin the initial screen
             ISession[] sessions = _audioSessionService.GetSessions(m_SessionInfo.mode);
             _audioSessionService.GetSessionCounts(out var output, out var input, out int application);
 

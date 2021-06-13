@@ -17,6 +17,7 @@ namespace MaxMix.Services.Communication
         private readonly object m_MessageLock = new object();
         private readonly byte[] m_ReadBuffer = new byte[128];
         private readonly MemoryStream m_WriteBuffer = new MemoryStream(128);
+        private readonly NLog.Logger m_Logger = NLog.LogManager.GetCurrentClassLogger();
 
         private SerialPort m_SerialPort;
         private Thread m_Thread;
@@ -134,7 +135,7 @@ namespace MaxMix.Services.Communication
                 string firmware = "";
                 try
                 {
-                    AppLogging.DebugLog(nameof(Connect), portName);
+                    m_Logger.Debug(string.Join("\t", nameof(Connect), portName));
                     m_SerialPort = new SerialPort(portName, 76800);
                     m_SerialPort.ReadTimeout = k_ReadTimeout;
                     m_SerialPort.WriteTimeout = k_WriteTimeout;
@@ -148,7 +149,7 @@ namespace MaxMix.Services.Communication
                     if (command != Command.TEST)
                         throw new InvalidOperationException($"Firmware Test reply failed. Reply: '{command}' Bytes: '{m_SerialPort.BytesToRead}'");
                     firmware = m_SerialPort.ReadLine().Replace("\r", "");
-                    AppLogging.DebugLog(nameof(Connect), command.ToString(), firmware);
+                    m_Logger.Debug(string.Join("\t", nameof(Connect), command, firmware));
                     if (!FirmwareVersions.IsCompatible(firmware))
                         throw new ArgumentException($"Incompatible Firmware: '{firmware}'.");
 #if !POLLING_SERIAL
@@ -166,7 +167,7 @@ namespace MaxMix.Services.Communication
                 }
                 catch (Exception e)
                 {
-                    AppLogging.DebugLogException(nameof(Connect), e);
+                    m_Logger.Debug(e, nameof(Connect));
                     TryCloseSerialPort();
 
                     if (e is ArgumentException) // Incompatible Firmware
@@ -224,14 +225,14 @@ namespace MaxMix.Services.Communication
             }
             catch (Exception e)
             {
-                AppLogging.DebugLogException(nameof(ReadMessage), e);
+                m_Logger.Debug(e, nameof(ReadMessage));
                 Interlocked.Increment(ref m_ErrorCount);
                 return;
             }
 
             T message = new T();
             message.SetBytes(m_ReadBuffer);
-            AppLogging.DebugLog(nameof(ReadMessage), command.ToString(), message.ToString());
+            m_Logger.Debug(string.Join("\t", nameof(ReadMessage), command, message));
 
             Interlocked.Add(ref m_ReadBytes, length);
             m_LastMessageRead = now;
@@ -251,9 +252,9 @@ namespace MaxMix.Services.Communication
 
             Command command;
             try { command = (Command)m_SerialPort.ReadByte(); }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                AppLogging.DebugLogException(nameof(Read), ex);
+                m_Logger.Debug(e, nameof(Read));
                 Interlocked.Increment(ref m_ErrorCount);
                 return;
             }
@@ -267,13 +268,13 @@ namespace MaxMix.Services.Communication
                         try
                         {
                             var firmware = m_SerialPort.ReadLine().Replace("\r", "");
-                            AppLogging.DebugLog(nameof(Read), command.ToString(), firmware);
+                            m_Logger.Debug(string.Join("\t", nameof(Read), command, firmware));
                             m_LastMessageRead = now;
                             m_LastMessageWrite = now;
                         }
                         catch (Exception e)
                         {
-                            AppLogging.DebugLogException(nameof(ReadMessage), e);
+                            m_Logger.Debug(e, nameof(ReadMessage));
                             Interlocked.Increment(ref m_ErrorCount);
                             return;
                         }
@@ -281,7 +282,7 @@ namespace MaxMix.Services.Communication
                     break;
                 case Command.OK:
                     {
-                        AppLogging.DebugLog(nameof(Read), command.ToString());
+                        m_Logger.Debug(string.Join("\t", nameof(Read), command));
                         m_DeviceReady = true;
                         m_LastMessageRead = now;
                         m_LastMessageWrite = now;
@@ -337,12 +338,12 @@ namespace MaxMix.Services.Communication
             // GetBuffer returns a reference to the underlying array, we can still use that after we reset the position if we store the length
             byte[] buffer = m_WriteBuffer.GetBuffer();
             int length = (int)m_WriteBuffer.Length;
-            AppLogging.DebugLog(nameof(WriteMessage), command.ToString(), message != null ? message.ToString() : "");
+            m_Logger.Debug(string.Join("\t", nameof(WriteMessage), command, message != null ? message.ToString() : ""));
 
             try { m_SerialPort.Write(buffer, 0, length); }
             catch (Exception e)
             {
-                AppLogging.DebugLogException(nameof(WriteMessage), e);
+                m_Logger.Debug(e, nameof(WriteMessage));
                 return;
             }
             m_LastMessageWrite = now;

@@ -1,43 +1,46 @@
-﻿using CSCore.CoreAudioAPI;
-using CSCore.Win32;
+﻿using NAudio.CoreAudioApi;
 using System;
 using System.Runtime.InteropServices;
 
 namespace MaxMix.Services.Audio
 {
     [Guid("8F9FB2AA-1C0B-4D54-B6BB-B2F2A10CE03C")]
-    class PolicyConfig : ComObject
+    class PolicyConfig : IDisposable
     {
-        public PolicyConfig() : base(CreatePolicyConfig()) { }
+        private IPolicyConfig _policyConfig;
 
-        private static IntPtr CreatePolicyConfig()
+        public PolicyConfig() 
         {
-            var obj = new PolicyConfigObject();
-            if (obj is IPolicyConfig c)
-                return Marshal.GetComInterfaceForObject(c, typeof(IPolicyConfig));
-            throw new NotSupportedException("Unable to create PolicyConfig on this OS.");
+            _policyConfig = new PolicyConfigComObject() as IPolicyConfig;
         }
 
         public void SetDefaultEndpoint(string id, Role role)
         {
-            var obj = Marshal.GetObjectForIUnknown(BasePtr);
-            int result = unchecked((int)0x80090011); // Object not found error
-            if (obj is IPolicyConfig c)
-                result = c.SetDefaultEndpoint(id, role);
-            Marshal.ThrowExceptionForHR(result);
+            Marshal.ThrowExceptionForHR(_policyConfig.SetDefaultEndpoint(id, role));
         }
 
         [ComImport]
         [Guid("870AF99C-171D-4F9E-AF0D-E63DF40C2BC9")]
-        private class PolicyConfigObject
+        private class PolicyConfigComObject
         {
+        }
+
+        public void Dispose()
+        {
+            Marshal.ReleaseComObject(_policyConfig);
+            GC.SuppressFinalize(this);
+        }
+
+        ~PolicyConfig()
+        {
+            Dispose();
         }
     }
 
     [ComImport]
     [Guid("F8679F50-850A-41CF-9C72-430F290290C8")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    interface IPolicyConfig : IUnknown
+    interface IPolicyConfig
     {
         void Unused1();
         void Unused2();

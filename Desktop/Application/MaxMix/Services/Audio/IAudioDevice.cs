@@ -1,4 +1,4 @@
-﻿using CSCore.CoreAudioAPI;
+﻿using NAudio.CoreAudioApi;
 using System;
 
 namespace MaxMix.Services.Audio
