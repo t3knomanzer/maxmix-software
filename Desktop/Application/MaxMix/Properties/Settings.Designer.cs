@@ -145,6 +145,18 @@ namespace MaxMix.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("MODE_OUTPUT")]
+        public global::MaxMix.Services.Communication.DisplayMode StartupMode {
+            get {
+                return ((global::MaxMix.Services.Communication.DisplayMode)(this["StartupMode"]));
+            }
+            set {
+                this["StartupMode"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool UpgradeRequired {
             get {

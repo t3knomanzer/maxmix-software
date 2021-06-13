@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using MaxMix.Services.Communication;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace MaxMix.ViewModels
@@ -194,6 +195,23 @@ namespace MaxMix.ViewModels
                 if (_settings.MixChanneBColor == value)
                     return;
                 _settings.MixChanneBColor = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Value used to set the light color for maximum volume
+        /// </summary>
+        public DisplayMode StartupMode
+        {
+            get => _settings.StartupMode;
+            set
+            {
+                if (_settings.StartupMode == value)
+                    return;
+                if (_settings.StartupMode == DisplayMode.MODE_SPLASH || _settings.StartupMode == DisplayMode.MODE_MAX)
+                    return;
+                _settings.StartupMode = value;
                 RaisePropertyChanged();
             }
         }
