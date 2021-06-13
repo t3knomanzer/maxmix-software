@@ -67,10 +67,9 @@ jobs:
     - name: Setup Advanced Installer
       run: choco install advanced-installer --version=17.1.2 -y
     - name: Add Advanced Installer to path
-      run: |
-        echo 'C:\Program Files (x86)\Caphyon\Advanced Installer 17.1.2\bin\x86' >> $GITHUB_PATH
+      run: echo "C:/Program Files (x86)/Caphyon/Advanced Installer 17.1.2/bin/x86" >> $GITHUB_PATH
     - name: Debug Paths
-      run: echo "$PATH"
+      run: echo $PATH
     - name: Register Advanced Installer
       run: AdvancedInstaller.com /register ${{secrets.ADVANCEDINSTALLER_LICENSE}}
     
