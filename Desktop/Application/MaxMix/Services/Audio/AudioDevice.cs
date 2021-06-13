@@ -11,6 +11,8 @@ namespace MaxMix.Services.Audio
     /// </summary>
     public class AudioDevice : IAudioDevice, IMMNotificationClient
     {
+        private readonly NLog.Logger m_Logger = NLog.LogManager.GetCurrentClassLogger();
+
         #region Constructor
         public AudioDevice(MMDevice device)
         {
@@ -199,7 +201,7 @@ namespace MaxMix.Services.Audio
             bool newDefault = defaultDeviceId == DeviceId;
             if (IsDefault != newDefault)
             {
-                AppLogging.DebugLog(nameof(OnDefaultDeviceChanged), DeviceId, newDefault.ToString());
+                m_Logger.Debug(string.Join("\t", nameof(OnDefaultDeviceChanged), DeviceId, newDefault));
                 IsDefault = newDefault;
                 DeviceDefaultChanged?.Invoke(this);
             }
