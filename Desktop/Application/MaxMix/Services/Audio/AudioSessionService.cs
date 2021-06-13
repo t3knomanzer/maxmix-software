@@ -1,6 +1,7 @@
-﻿using CSCore.CoreAudioAPI;
-using MaxMix.Framework;
+﻿using MaxMix.Framework;
 using MaxMix.Services.Communication;
+using NAudio.CoreAudioApi;
+using NAudio.CoreAudioApi.Interfaces;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace MaxMix.Services.Audio
     /// Provides a higher level interface to interact with windows audio
     /// devices and sessions and adds extra features.
     /// </summary>
-    internal class AudioSessionService : IAudioSessionService
+    internal class AudioSessionService : IAudioSessionService, IMMNotificationClient
     {
         #region Constructor
         public AudioSessionService() { }
@@ -22,7 +23,7 @@ namespace MaxMix.Services.Audio
         private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
         private readonly IDictionary<int, IAudioDevice> _devices = new ConcurrentDictionary<int, IAudioDevice>();
         private readonly IDictionary<int, IAudioSession> _sessionGoups = new ConcurrentDictionary<int, IAudioSession>();
-        private readonly IDictionary<int, AudioSessionManager2> _sessionManagers = new ConcurrentDictionary<int, AudioSessionManager2>();
+        private readonly IDictionary<int, AudioSessionManager> _sessionManagers = new ConcurrentDictionary<int, AudioSessionManager>();
         private readonly MMDeviceEnumerator _deviceEnumerator = new MMDeviceEnumerator();
         private bool _stopping = false;
         #endregion
@@ -66,7 +67,7 @@ namespace MaxMix.Services.Audio
         public void Stop()
         {
             _stopping = true;
-            _deviceEnumerator.DeviceAdded -= OnDeviceAdded;
+            _deviceEnumerator.UnregisterEndpointNotificationCallback(this);
 
             foreach (var device in _devices.Values)
             {
@@ -112,7 +113,8 @@ namespace MaxMix.Services.Audio
         {
             if (_devices.TryGetValue(id, out var device))
             {
-                AudioExtensions.SetDefaultEndpoint(device.Device.DeviceID, Role.Multimedia);
+                using (var policyConfig = new PolicyConfig())
+                    policyConfig.SetDefaultEndpoint(device.DeviceId, Role.Multimedia);
             }
 
         }
@@ -145,10 +147,9 @@ namespace MaxMix.Services.Audio
         private void Initialize(object stateInfo)
         {
             _stopping = false;
-            _deviceEnumerator.DeviceAdded += OnDeviceAdded;
-            _deviceEnumerator.DeviceStateChanged += OnDeviceStateChanged;
+            _deviceEnumerator.RegisterEndpointNotificationCallback(this);
 
-            foreach (var device in _deviceEnumerator.EnumAudioEndpoints(DataFlow.All, DeviceState.Active))
+            foreach (var device in _deviceEnumerator.EnumerateAudioEndPoints(DataFlow.All, DeviceState.Active))
             {
                 OnDeviceAdded(device);
             }
@@ -234,12 +235,13 @@ namespace MaxMix.Services.Audio
 
             if (device.Flow == DeviceFlow.Output)
             {
-                var sessionManager = AudioSessionManager2.FromMMDevice(device.Device);
-                sessionManager.SessionCreated += OnSessionCreated;
+                var sessionManager = device.Device.AudioSessionManager;
+                sessionManager.OnSessionCreated += OnSessionCreated;
                 _sessionManagers.Add(device.Id, sessionManager);
 
-                foreach (var session in sessionManager.GetSessionEnumerator())
-                    OnSessionCreated(session);
+                var sessions = sessionManager.Sessions;
+                for (int i = 0; i < sessions.Count; i++)
+                    OnSessionCreated(sessions[i]);
             }
         }
 
@@ -252,7 +254,7 @@ namespace MaxMix.Services.Audio
             AppLogging.DebugLog(nameof(UnregisterDevice), device.DeviceId, device.DisplayName);
             if (_sessionManagers.ContainsKey(device.Id))
             {
-                _sessionManagers[device.Id].SessionCreated -= OnSessionCreated;
+                _sessionManagers[device.Id].OnSessionCreated -= OnSessionCreated;
                 _sessionManagers.Remove(device.Id);
             }
 
@@ -281,19 +283,6 @@ namespace MaxMix.Services.Audio
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnDeviceAdded(object sender, DeviceNotificationEventArgs e)
-        {
-            if (e.TryGetDevice(out var device))
-            {
-                OnDeviceAdded(device);
-            }
-        }
-
-        /// <summary>
         /// Handles wrapping the device into a higher level object, registering
         /// it in the service and notifying of the event.
         /// </summary>
@@ -310,19 +299,6 @@ namespace MaxMix.Services.Audio
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnDeviceStateChanged(object sender, DeviceStateChangedEventArgs e)
-        {
-            if (e.DeviceState.HasFlag(DeviceState.Active) && e.TryGetDevice(out var device))
-            {
-                OnDeviceAdded(device);
-            }
-        }
-
-        /// <summary>
         /// Handles changes and notifications required when the volume
         /// of a device or it's mute state has changed.
         /// </summary>
@@ -332,9 +308,9 @@ namespace MaxMix.Services.Audio
             RaiseDeviceVolumeChanged(device.Id, device.Volume, device.IsMuted, device.Flow);
         }
 
-        private void OnSessionCreated(object sender, SessionCreatedEventArgs e)
+        private void OnSessionCreated(object sender, IAudioSessionControl newSession)
         {
-            OnSessionCreated(e.NewSession);
+            OnSessionCreated(new AudioSessionControl(newSession));
         }
 
         /// <summary>
@@ -459,6 +435,44 @@ namespace MaxMix.Services.Audio
             {
                 SessionVolumeChanged?.Invoke(this, id, volume, isMuted);
             }
+        }
+
+        void IMMNotificationClient.OnDeviceStateChanged(string deviceId, DeviceState newState)
+        {
+            if (newState.HasFlag(DeviceState.Active))
+            {
+                try
+                {
+                    MMDevice device = _deviceEnumerator.GetDevice(deviceId);
+                    OnDeviceAdded(device);
+                }
+                catch { }
+            }
+        }
+
+        void IMMNotificationClient.OnDeviceAdded(string pwstrDeviceId)
+        {
+            try
+            {
+                MMDevice device = _deviceEnumerator.GetDevice(pwstrDeviceId);
+                OnDeviceAdded(device);
+            }
+            catch { }
+        }
+
+        void IMMNotificationClient.OnDeviceRemoved(string deviceId)
+        {
+            // NOOP
+        }
+
+        void IMMNotificationClient.OnDefaultDeviceChanged(DataFlow flow, Role role, string defaultDeviceId)
+        {
+            // NOOP
+        }
+
+        void IMMNotificationClient.OnPropertyValueChanged(string pwstrDeviceId, PropertyKey key)
+        {
+            // NOOP
         }
         #endregion
     }

@@ -1,5 +1,6 @@
-﻿using CSCore.CoreAudioAPI;
-using MaxMix.Framework;
+﻿using MaxMix.Framework;
+using NAudio.CoreAudioApi;
+using NAudio.CoreAudioApi.Interfaces;
 using System;
 using System.IO;
 
@@ -9,23 +10,17 @@ namespace MaxMix.Services.Audio
     /// Provides a facade with a simpler interface over the AudioSessionControl
     /// CSCore class.
     /// </summary>
-    public class AudioSession : IAudioSession
+    public class AudioSession : IAudioSession, IAudioSessionEventsHandler
     {
         #region Constructor
         public AudioSession(AudioSessionControl session)
         {
             Session = session;
-            Session.RegisterAudioSessionNotification(_events);
+            Session.RegisterEventClient(this);
 
-            _session2 = Session.QueryInterface<AudioSessionControl2>();
-            _simpleAudio = Session.QueryInterface<SimpleAudioVolume>();
+            SessionIdentifier = Session.GetSessionIdentifier;
 
-            _events.StateChanged += OnStateChanged;
-            _events.SimpleVolumeChanged += OnVolumeChanged;
-
-            SessionIdentifier = _session2.SessionInstanceIdentifier;
-
-            IsSystemSound = _session2.IsSystemSoundSession || _session2.ProcessID == 0 || _session2.Process == null;
+            IsSystemSound = Session.IsSystemSoundsSession || Session.GetProcessID == 0;
             string appId = SessionIdentifier.ExtractAppId();
             Id = IsSystemSound ? int.MinValue : appId.GetHashCode();
 
@@ -42,9 +37,6 @@ namespace MaxMix.Services.Audio
         #endregion
 
         #region Fields
-        private AudioSessionEvents _events = new AudioSessionEvents();
-        private AudioSessionControl2 _session2;
-        private SimpleAudioVolume _simpleAudio;
         private bool _isNotifyEnabled = true;
 
         private int _volume;
@@ -74,7 +66,7 @@ namespace MaxMix.Services.Audio
         {
             get
             {
-                try { _volume = (int)Math.Round(_simpleAudio.MasterVolume * 100); }
+                try { _volume = (int)Math.Round(Session.SimpleAudioVolume.Volume * 100); }
                 catch (Exception e) { AppLogging.DebugLogException(nameof(Volume), e); }
 
                 return _volume;
@@ -86,7 +78,7 @@ namespace MaxMix.Services.Audio
 
                 _isNotifyEnabled = false;
                 _volume = value;
-                try { _simpleAudio.MasterVolume = value / 100f; }
+                try { Session.SimpleAudioVolume.Volume = value / 100f; }
                 catch (Exception e) { AppLogging.DebugLogException(nameof(Volume), e); }
             }
         }
@@ -96,7 +88,7 @@ namespace MaxMix.Services.Audio
         {
             get
             {
-                try { _isMuted = _simpleAudio.IsMuted; }
+                try { _isMuted = Session.SimpleAudioVolume.Mute; }
                 catch { }
 
                 return _isMuted;
@@ -108,7 +100,7 @@ namespace MaxMix.Services.Audio
 
                 _isNotifyEnabled = false;
                 _isMuted = value;
-                try { _simpleAudio.IsMuted = value; }
+                try { Session.SimpleAudioVolume.Mute = value; }
                 catch { }
             }
         }
@@ -117,20 +109,26 @@ namespace MaxMix.Services.Audio
         #region Private Methods
         private void UpdateDisplayName()
         {
-            var displayName = _session2.DisplayName;
-            if (IsSystemSound) {
+            var displayName = Session.DisplayName;
+            if (IsSystemSound)
+            {
                 displayName = "System Sounds";
             }
             else
             {
-                if (_session2.Process != null)
+                if (Session.GetProcessID != 0)
                 {
-                    if (string.IsNullOrEmpty(displayName)) { try { displayName = _session2.Process.GetProductName(); } catch { } }
-                    if (string.IsNullOrEmpty(displayName)) { try { displayName = _session2.Process.MainWindowTitle; } catch { } }
-                    if (string.IsNullOrEmpty(displayName)) { try { displayName = _session2.Process.ProcessName; } catch { } }
-                    if (string.IsNullOrEmpty(displayName)) { try { displayName = _session2.Process.GetMainModuleFileName(); } catch { } }
+                    try
+                    {
+                        var process = System.Diagnostics.Process.GetProcessById((int)Session.GetProcessID);
+                        if (string.IsNullOrEmpty(displayName)) { try { displayName = process.GetProductName(); } catch { } }
+                        if (string.IsNullOrEmpty(displayName)) { try { displayName = process.MainWindowTitle; } catch { } }
+                        if (string.IsNullOrEmpty(displayName)) { try { displayName = process.ProcessName; } catch { } }
+                        if (string.IsNullOrEmpty(displayName)) { try { displayName = process.GetMainModuleFileName(); } catch { } }
+                    }
+                    catch { }
                 }
-                if (string.IsNullOrEmpty(displayName)) { displayName = Path.GetFileNameWithoutExtension(_session2.SessionIdentifier.ExtractAppPath()); }
+                if (string.IsNullOrEmpty(displayName)) { displayName = Path.GetFileNameWithoutExtension(Session.GetSessionIdentifier.ExtractAppPath()); }
                 if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
                 displayName = char.ToUpper(displayName[0]) + displayName.Substring(1);
             }
@@ -138,8 +136,23 @@ namespace MaxMix.Services.Audio
         }
         #endregion
 
-        #region Event Handlers
-        private void OnVolumeChanged(object sender, AudioSessionSimpleVolumeChangedEventArgs e)
+        #region IDisposable
+        public void Dispose()
+        {
+            try
+            {
+                Session.UnRegisterEventClient(this);
+            }
+            catch { }
+
+            try { Session.Dispose(); }
+            catch { }
+
+            // Set to null
+            Session = null;
+        }
+
+        void IAudioSessionEventsHandler.OnVolumeChanged(float volume, bool isMuted)
         {
             if (!_isNotifyEnabled)
             {
@@ -150,40 +163,37 @@ namespace MaxMix.Services.Audio
             VolumeChanged?.Invoke(this);
         }
 
-        private void OnStateChanged(object sender, AudioSessionStateChangedEventArgs e)
+        void IAudioSessionEventsHandler.OnDisplayNameChanged(string displayName)
         {
-            if (e.NewState != AudioSessionState.AudioSessionStateExpired)
+            // NOOP
+        }
+
+        void IAudioSessionEventsHandler.OnIconPathChanged(string iconPath)
+        {
+            // NOOP
+        }
+
+        void IAudioSessionEventsHandler.OnChannelVolumeChanged(uint channelCount, IntPtr newVolumes, uint channelIndex)
+        {
+            // NOOP
+        }
+
+        void IAudioSessionEventsHandler.OnGroupingParamChanged(ref Guid groupingId)
+        {
+            // NOOP
+        }
+
+        void IAudioSessionEventsHandler.OnStateChanged(AudioSessionState state)
+        {
+            if (state != AudioSessionState.AudioSessionStateExpired)
                 return;
 
             SessionEnded?.Invoke(this);
         }
-        #endregion
 
-        #region IDisposable
-        public void Dispose()
+        void IAudioSessionEventsHandler.OnSessionDisconnected(AudioSessionDisconnectReason disconnectReason)
         {
-            try
-            {
-                // Do unregistration, can throw
-                if (_events != null)
-                {
-                    _events.StateChanged -= OnStateChanged;
-                    _events.SimpleVolumeChanged -= OnVolumeChanged;
-                    Session.UnregisterAudioSessionNotification(_events);
-                }
-            }
-            catch { }
-
-            // Do disposal chains, each can throw
-            try { _session2.Dispose(); }
-            catch { }
-            try { Session.Dispose(); }
-            catch { }
-
-            // Set to null
-            _simpleAudio = null;
-            _session2 = null;
-            Session = null;
+            // NOOP
         }
         #endregion
     }
