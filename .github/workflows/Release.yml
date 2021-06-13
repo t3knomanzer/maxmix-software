@@ -43,7 +43,7 @@ jobs:
       run: platformio run --project-dir .\Embedded\Maxmix -e nano-cli -e nano-cli-halfstep
 
     - name: Setup NuGet.exe
-      uses: NuGet/setup-nuget@v1.0.2
+      uses: NuGet/setup-nuget@v1
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v1
     - name: Setup MSBuild ExtensionPack
