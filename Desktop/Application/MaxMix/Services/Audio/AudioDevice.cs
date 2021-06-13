@@ -126,13 +126,15 @@ namespace MaxMix.Services.Audio
             var displayName = "Unnamed";
             try { displayName = Device.FriendlyName; } catch { }
             if (string.IsNullOrEmpty(displayName)) { displayName = "Unnamed"; }
-            var match = Regex.Match(displayName, @"\(+.*\)+");
+            var match = Regex.Match(displayName, @"(.+?) \((.+)\)");
             if (match.Success)
             {
-                displayName = match.Value;
-                displayName = displayName.Substring(1, displayName.Length - 2);
+                // TODO: Expose settings for this?
+                //if (settings.UseHardwareName)
+                //    displayName = match.Groups[2].Value;
+                //else
+                displayName = match.Groups[1].Value;
             }
-
             DisplayName = displayName;
         }
         #endregion
