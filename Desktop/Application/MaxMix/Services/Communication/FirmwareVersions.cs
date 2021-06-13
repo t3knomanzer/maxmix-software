@@ -14,7 +14,9 @@ namespace MaxMix.Services.Communication
             "0.0.0",
 #endif
             "1.5.0",
-            "1.5.1"
+            "1.5.1",
+            "1.5.2",
+            "1.5.3"
         };
 
         public static bool IsCompatible(string version)
