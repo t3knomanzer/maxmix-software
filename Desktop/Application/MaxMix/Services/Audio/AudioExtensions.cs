@@ -49,6 +49,11 @@ namespace MaxMix.Services.Audio
                 policyConfig.SetDefaultEndpoint(deviceID, role);
         }
 
+        // SessionIdentifier Example:
+        // {0.0.0.00000000}.{09e7aedd-9901-4c3c-8ce3-e581147143e6}|\Device\HarddiskVolume11\Steam\steam.exe%b{00000000-0000-0000-0000-000000000000}
+        // Format:
+        // <Device ID>|<App Path>%b<Unknown GUID>
+
         public static string ExtractDeviceId(this string id)
         {
             var i1 = id.IndexOf('|');
@@ -69,29 +74,9 @@ namespace MaxMix.Services.Audio
             return id.Substring(i1 + 1, i2 - i1 - 1);
         }
 
-        public static string ExtractAppId(this string id)
-        {
-            var i1 = id.IndexOf('|');
-            if (i1 < 0)
-                return id;
-
-            var i2 = id.IndexOf("|", i1 + 1);
-            if (i2 < 0)
-                return id;
-            return id.Substring(i1 + 1, i2 - i1 - 1);
-        }
-
-        public static string ExtractSessionId(this string id)
+        public static string ExtractUnknownGuid(this string id)
         {
             var i1 = id.IndexOf("%b");
-            if (i1 < 0)
-                return id;
-            return id.Substring(i1 + 1, id.Length - i1 - 1);
-        }
-
-        public static string ExtractInstanceId(this string id)
-        {
-            var i1 = id.IndexOf("|1%b");
             if (i1 < 0)
                 return id;
             return id.Substring(i1 + 1, id.Length - i1 - 1);

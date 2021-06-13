@@ -15,6 +15,8 @@ namespace MaxMix.Services.Audio
     /// </summary>
     internal class AudioSessionService : IAudioSessionService, IMMNotificationClient
     {
+        private readonly NLog.Logger m_Logger = NLog.LogManager.GetCurrentClassLogger();
+
         #region Constructor
         public AudioSessionService() { }
         #endregion
@@ -219,7 +221,7 @@ namespace MaxMix.Services.Audio
         /// <param name="device"></param>
         private void RegisterDevice(IAudioDevice device)
         {
-            AppLogging.DebugLog(nameof(RegisterDevice), device.DeviceId, device.DisplayName, device.Device.DataFlow.ToString());
+            m_Logger.Debug(string.Join("\t", nameof(RegisterDevice), device.DeviceId, device.DisplayName, device.Device.DataFlow));
             if (_devices.ContainsKey(device.Id))
             {
                 device.Dispose();
@@ -251,7 +253,7 @@ namespace MaxMix.Services.Audio
         /// <param name="device">The device to unregister</param>
         private void UnregisterDevice(IAudioDevice device)
         {
-            AppLogging.DebugLog(nameof(UnregisterDevice), device.DeviceId, device.DisplayName);
+            m_Logger.Debug(string.Join("\t", nameof(UnregisterDevice), device.DeviceId, device.DisplayName));
             if (_sessionManagers.ContainsKey(device.Id))
             {
                 _sessionManagers[device.Id].OnSessionCreated -= OnSessionCreated;
@@ -321,7 +323,7 @@ namespace MaxMix.Services.Audio
         private void OnSessionCreated(AudioSessionControl session_)
         {
             var session = new AudioSession(session_);
-            AppLogging.DebugLog(nameof(OnSessionCreated), session.SessionIdentifier, session.DisplayName, session.Id.ToString());
+            m_Logger.Debug(string.Join("\t", nameof(OnSessionCreated), session.SessionIdentifier, session.DisplayName, session.Id));
             RegisterSession(session);
         }
 

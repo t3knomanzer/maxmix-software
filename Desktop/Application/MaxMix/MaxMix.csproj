@@ -64,6 +64,9 @@
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.7.10\lib\net45\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="Sentry, Version=3.5.0.0, Culture=neutral, PublicKeyToken=fba2ec45388e2af0, processorArchitecture=MSIL">
       <HintPath>..\packages\Sentry.3.5.0\lib\net461\Sentry.dll</HintPath>
     </Reference>
@@ -146,7 +149,6 @@
     <Compile Include="Framework\Converters\ColorToUint32Converter.cs" />
     <Compile Include="Framework\Converters\BoolToStringConverter.cs" />
     <Compile Include="Framework\Converters\BoolToVisibilityConverter.cs" />
-    <Compile Include="Framework\AppLogging.cs" />
     <Compile Include="Framework\Mvvm\DelegateCommand.cs" />
     <Compile Include="Framework\Mvvm\ObservableObject.cs" />
     <Compile Include="MainWindow.xaml.cs">
@@ -190,6 +192,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="..\..\Resources\NLog.config">
+      <Link>NLog.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="App.config" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

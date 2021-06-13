@@ -12,6 +12,8 @@ namespace MaxMix.Services.Audio
     /// </summary>
     public class AudioSession : IAudioSession, IAudioSessionEventsHandler
     {
+        private readonly NLog.Logger m_Logger = NLog.LogManager.GetCurrentClassLogger();
+
         #region Constructor
         public AudioSession(AudioSessionControl session)
         {
@@ -21,7 +23,7 @@ namespace MaxMix.Services.Audio
             SessionIdentifier = Session.GetSessionIdentifier;
 
             IsSystemSound = Session.IsSystemSoundsSession || Session.GetProcessID == 0;
-            string appId = SessionIdentifier.ExtractAppId();
+            string appId = SessionIdentifier.ExtractAppPath();
             Id = IsSystemSound ? int.MinValue : appId.GetHashCode();
 
             UpdateDisplayName();
@@ -67,7 +69,7 @@ namespace MaxMix.Services.Audio
             get
             {
                 try { _volume = (int)Math.Round(Session.SimpleAudioVolume.Volume * 100); }
-                catch (Exception e) { AppLogging.DebugLogException(nameof(Volume), e); }
+                catch (Exception e) { m_Logger.Debug(e, nameof(Volume)); }
 
                 return _volume;
             }
@@ -79,7 +81,7 @@ namespace MaxMix.Services.Audio
                 _isNotifyEnabled = false;
                 _volume = value;
                 try { Session.SimpleAudioVolume.Volume = value / 100f; }
-                catch (Exception e) { AppLogging.DebugLogException(nameof(Volume), e); }
+                catch (Exception e) { m_Logger.Debug(e, nameof(Volume)); }
             }
         }
 

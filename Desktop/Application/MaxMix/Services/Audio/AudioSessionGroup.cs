@@ -10,6 +10,8 @@ namespace MaxMix.Services.Audio
     /// </summary>
     public class AudioSessionGroup : IAudioSession
     {
+        private readonly NLog.Logger m_Logger = NLog.LogManager.GetCurrentClassLogger();
+
         #region Constructor
         public AudioSessionGroup(int id, string displayName, bool isDefault)
         {
@@ -127,7 +129,7 @@ namespace MaxMix.Services.Audio
 
         private void OnSessionEnded(IAudioSession session)
         {
-            AppLogging.DebugLog(nameof(OnSessionEnded), session.SessionIdentifier, session.DisplayName, session.Id.ToString());
+            m_Logger.Debug(string.Join("\t", nameof(OnSessionEnded), session.SessionIdentifier, session.DisplayName, session.Id));
             _sessions.Remove(session.SessionIdentifier);
             session.Dispose();
 
