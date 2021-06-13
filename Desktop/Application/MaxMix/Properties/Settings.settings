@@ -32,5 +32,8 @@
     <Setting Name="MixChanneBColor" Type="System.UInt32" Scope="User">
       <Value Profile="(Default)">4294902015</Value>
     </Setting>
+    <Setting Name="StartupMode" Type="MaxMix.Services.Communication.DisplayMode" Scope="User">
+      <Value Profile="(Default)">MODE_OUTPUT</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

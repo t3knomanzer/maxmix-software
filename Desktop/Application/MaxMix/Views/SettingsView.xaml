@@ -1,10 +1,11 @@
-﻿<UserControl x:Class="MaxMix.Views.SettingsView"
+﻿<UserControl
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:MaxMix.Views"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:Communication="clr-namespace:MaxMix.Services.Communication" x:Class="MaxMix.Views.SettingsView"
              mc:Ignorable="d" 
              d:DesignHeight="350" d:DesignWidth="300">
     <Grid>
@@ -78,7 +79,7 @@
                Content="Volume colors" />
         <StackPanel Grid.Column="1" Grid.Row="7" Orientation="Horizontal">
             <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding VolumeMinColor, Converter={StaticResource Cnv_ColorToUint32}}" />
-            <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding VolumeMaxColor,  Converter={StaticResource Cnv_ColorToUint32}}" />
+            <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding VolumeMaxColor, Converter={StaticResource Cnv_ColorToUint32}}" />
         </StackPanel>
 
         <!-- Mix Channel colors -->
@@ -86,8 +87,18 @@
                Content="Mix channel colors" />
         <StackPanel Grid.Column="1" Grid.Row="8" Orientation="Horizontal">
             <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding MixChannelAColor, Converter={StaticResource Cnv_ColorToUint32}}" />
-            <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding MixChannelBColor,  Converter={StaticResource Cnv_ColorToUint32}}" />
+            <xctk:ColorPicker MaxWidth="50" SelectedColor="{Binding MixChannelBColor, Converter={StaticResource Cnv_ColorToUint32}}" />
         </StackPanel>
+
+        <!-- Device Startup Mode -->
+        <Label Grid.Column="0" Grid.Row="9"  Margin="0,3,0,6"
+               Content="Device startup mode" />
+        <ComboBox Grid.Column="1" Grid.Row="9" SelectedValue="{Binding StartupMode, Mode=TwoWay}" >
+            <Communication:DisplayMode>MODE_OUTPUT</Communication:DisplayMode>
+            <Communication:DisplayMode>MODE_INPUT</Communication:DisplayMode>
+            <Communication:DisplayMode>MODE_APPLICATION</Communication:DisplayMode>
+            <Communication:DisplayMode>MODE_GAME</Communication:DisplayMode>
+        </ComboBox>
     </Grid>
 </UserControl>
 
