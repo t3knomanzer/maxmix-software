@@ -67,7 +67,10 @@ jobs:
     - name: Setup Advanced Installer
       run: choco install advanced-installer --version=17.1.2 -y
     - name: Add Advanced Installer to path
-      run: echo "C:/Program Files (x86)/Caphyon/Advanced Installer 17.1.2/bin/x86" >> $GITHUB_PATH
+      run: |
+        echo 'C:\Program Files (x86)\Caphyon\Advanced Installer 17.1.2\bin\x86' >> $GITHUB_PATH
+    - name: Debug Paths
+      run: echo "$PATH"        
     - name: Register Advanced Installer
       run: AdvancedInstaller.com /register ${{secrets.ADVANCEDINSTALLER_LICENSE}}
     
@@ -79,7 +82,7 @@ jobs:
    
     - name: Create Release
       id: create-release
-      uses: actions/create-release@v1.1.1
+      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -91,7 +94,7 @@ jobs:
 
     - name: Upload Release Assets - Installer
       id: upload-release-assets-installer
-      uses: actions/upload-release-asset@v1.0.2
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -102,7 +105,7 @@ jobs:
 
     - name: Upload Release Assets - Firmware (FullStep)
       id: upload-release-assets-firmware-fullstep
-      uses: actions/upload-release-asset@v1.0.2
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -113,7 +116,7 @@ jobs:
 
     - name: Upload Release Assets - Firmware (HalfStep)
       id: upload-release-assets-firmware-halfstep
-      uses: actions/upload-release-asset@v1.0.2
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
