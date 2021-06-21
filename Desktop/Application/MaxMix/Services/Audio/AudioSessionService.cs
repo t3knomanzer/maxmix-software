@@ -26,7 +26,7 @@ namespace MaxMix.Services.Audio
         private readonly IDictionary<int, IAudioDevice> _devices = new ConcurrentDictionary<int, IAudioDevice>();
         private readonly IDictionary<int, IAudioSession> _sessionGoups = new ConcurrentDictionary<int, IAudioSession>();
         private readonly IDictionary<int, AudioSessionManager> _sessionManagers = new ConcurrentDictionary<int, AudioSessionManager>();
-        private readonly MMDeviceEnumerator _deviceEnumerator = new MMDeviceEnumerator();
+        private MMDeviceEnumerator _deviceEnumerator = new MMDeviceEnumerator();
         private bool _stopping = false;
         #endregion
 
@@ -149,7 +149,19 @@ namespace MaxMix.Services.Audio
         private void Initialize(object stateInfo)
         {
             _stopping = false;
-            _deviceEnumerator.RegisterEndpointNotificationCallback(this);
+            bool success = false;
+            try
+            {
+                _deviceEnumerator.RegisterEndpointNotificationCallback(this);
+                success = true;
+            }
+            catch { }
+
+            if (!success)
+            {
+                _deviceEnumerator = new MMDeviceEnumerator();
+                _deviceEnumerator.RegisterEndpointNotificationCallback(this);
+            }
 
             foreach (var device in _deviceEnumerator.EnumerateAudioEndPoints(DataFlow.All, DeviceState.Active))
             {

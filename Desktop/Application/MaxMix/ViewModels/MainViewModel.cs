@@ -377,23 +377,14 @@ namespace MaxMix.ViewModels
                 PopulateIndexToIdMap(data);
 
             int index = m_SessionInfo.current;
-            ComputeIndexes(index, out int prevIndex, out int nextIndex);
-
-            if (data == null || (uint)prevIndex > (uint)data.Length || (uint)index > (uint)data.Length || (uint)nextIndex > (uint)data.Length)
+            if (index < 0 || index >= data.Length)
             {
-                SentrySdk.ConfigureScope(scope =>
-                {
-                    scope.SetExtra("updateIndexMap", updateIndexMap);
-                    if (data != null)
-                        scope.SetExtra("data.Length", data.Length);
-                    else
-                        scope.SetExtra("data", "null");
-                    scope.SetExtra("m_IndexToId.Count", m_IndexToId.Count);
-                    scope.SetExtra("prevIndex", prevIndex);
-                    scope.SetExtra("index", index);
-                    scope.SetExtra("nextIndex", nextIndex);
-                });
+                // Something caused session to get out of bounds, reset it to 0
+                index = 0;
+                m_SessionInfo.current = 0;
+                SendMessage(Command.SESSION_INFO, m_SessionInfo);
             }
+            ComputeIndexes(index, out int prevIndex, out int nextIndex);
 
             // The device can easily spin the encoder faster than we can respond via Serial.
             // So just flush all 3 sessions to the device to ensure it will have fresh data when it stops, whatever it stops on.
