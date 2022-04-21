@@ -72,6 +72,7 @@ namespace MaxMix.Services.Communication
             m_Thread.Name = "Communication Service";
             m_Thread.Start();
 
+            SystemEvents.PowerModeChanged -= OnPowerChange;
             SystemEvents.PowerModeChanged += OnPowerChange;
         }
 
@@ -82,9 +83,6 @@ namespace MaxMix.Services.Communication
             {
                 m_Thread.Join();
                 m_Thread = null;
-
-                //Maybe needed to prevent event leaks?
-                //SystemEvents.PowerModeChanged -= OnPowerChange;
             }
         }
 
