@@ -1,6 +1,7 @@
 ﻿#define POLLING_SERIAL
 
 using MaxMix.Framework;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,12 +50,30 @@ namespace MaxMix.Services.Communication
         public Action<string> OnFirmwareIncompatible;
         public Action<Command, IMessage> OnMessageRecieved;
 
+        void OnPowerChange(Object sender, PowerModeChangedEventArgs e)
+        {
+            switch (e.Mode)
+            {
+                case PowerModes.Resume:
+                    Start();
+                    break;
+                case PowerModes.Suspend:
+                    Stop();
+                    break;
+                default:
+                    break;
+            }
+        }
+
         public void Start()
         {
             m_Stopping = false;
             m_Thread = new Thread(Update);
             m_Thread.Name = "Communication Service";
             m_Thread.Start();
+
+            SystemEvents.PowerModeChanged -= OnPowerChange;
+            SystemEvents.PowerModeChanged += OnPowerChange;
         }
 
         public void Stop()
