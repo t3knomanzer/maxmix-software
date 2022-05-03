@@ -13,7 +13,7 @@
 ## Overview
 **Maxmix** is an open-source volume mixer that allows you to control the volume applications from an external custom controller.  
 It was originally designed to allow to quickly adjust the volume of a game and an external voice chat application like Discord quckly, but it can do so much more...  
-You can find out more about the system in the [project website](https://www.maxmixproject.com).
+You can find out more about the system in the [project website](https://maxmixproject.com).
 
 This repository contains the code for all of the software.
 
