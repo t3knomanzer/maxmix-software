@@ -17,7 +17,7 @@ rmdir /s /q %RELEASE_DIR%
 mkdir %RELEASE_DIR%
 
 rmdir /s /q %BUILD_DIR%
-arduino-cli compile -b arduino:avr:nano:cpu=atmega328 -v --build-path %BUILD_DIR% "build.extra_flags=-DVERSION_MAJOR=9 -DVERSION_MINOR=9 -DVERSION_PATCH=9" %MAIN_INO%
+arduino-cli compile -b arduino:avr:nano:cpu=atmega328 -v --build-path %BUILD_DIR% --build-properties "build.extra_flags=-DVERSION_MAJOR=9 -DVERSION_MINOR=9 -DVERSION_PATCH=9" %MAIN_INO%
 move %BUILD_DIR%\MaxMix.ino.hex %RELEASE_DIR%\MaxMix.ino.hex 
 
 rmdir /s /q  %BUILD_DIR%
