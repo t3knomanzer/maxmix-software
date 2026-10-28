@@ -5,6 +5,8 @@ extern DeviceSettings g_Settings;
 extern SessionInfo g_SessionInfo;
 extern SessionData g_Sessions[4];
 extern ModeStates g_ModeStates;
+extern ButtonSettings g_ButtonSettings;
+extern LightingSettings g_LightingSettings;
 extern uint32_t g_HeartbeatTimeout;
 extern uint32_t g_Now;
 
@@ -12,6 +14,17 @@ extern uint32_t g_Now;
 
 namespace Communications
 {
+    template <typename T>
+    bool ReadPayload(T &target)
+    {
+        // A timeout must not leave half of a settings/session structure updated.
+        T incoming;
+        if (Serial.readBytes((char *)&incoming, sizeof(T)) != sizeof(T))
+            return false;
+        target = incoming;
+        return true;
+    }
+
     void Initialize(void)
     {
         Serial.begin(BAUD_RATE);
@@ -20,28 +33,33 @@ namespace Communications
 
     Command Read(void)
     {
-        // Future Notes: Serial.readBytes returns the number of bytes actually read
-        // if necessary, we can use that compared against sizeof(T) to validate message
-        // was recieved in it's entirity. However, if this happens, we should look at Serial timeout first.
         Command command = Command::NONE;
         if (Serial.available())
         {
-            g_HeartbeatTimeout = g_Now + DEVICE_RESET_AFTER_INACTIVTY;
+            bool valid = true;
             command = (Command)Serial.read();
             if (command == Command::TEST)
                 Write(command);
             else if (command == Command::SETTINGS)
-                Serial.readBytes((char *)&g_Settings, sizeof(DeviceSettings));
+                valid = ReadPayload(g_Settings);
             else if (command == Command::SESSION_INFO)
-                Serial.readBytes((char *)&g_SessionInfo, sizeof(SessionInfo));
+                valid = ReadPayload(g_SessionInfo);
             else if (command >= Command::CURRENT_SESSION && command <= Command::NEXT_SESSION)
                 // SessionIndex follows same ordering as Command.
-                Serial.readBytes((char *)&g_Sessions[command - Command::CURRENT_SESSION], sizeof(SessionData));
+                valid = ReadPayload(g_Sessions[command - Command::CURRENT_SESSION]);
             else if (command >= Command::VOLUME_CURR_CHANGE && command <= Command::VOLUME_NEXT_CHANGE)
                 // SessionIndex follows same ordering as Command.
-                Serial.readBytes((char *)&g_Sessions[command - Command::VOLUME_CURR_CHANGE].data, sizeof(VolumeData));
+                valid = ReadPayload(g_Sessions[command - Command::VOLUME_CURR_CHANGE].data);
             else if (command == Command::MODE_STATES)
-                Serial.readBytes((char *)&g_ModeStates, sizeof(ModeStates));
+                valid = ReadPayload(g_ModeStates);
+            else if (command == Command::BUTTON_SETTINGS)
+            {
+                ButtonSettings incoming;
+                valid = ReadPayload(incoming) && incoming.doubleTapTime >= 1 && incoming.doubleTapTime <= 2000;
+                if (valid) g_ButtonSettings = incoming;
+            }
+            else if (command == Command::LIGHTING_SETTINGS)
+                valid = ReadPayload(g_LightingSettings);
             // Do nothing: DEBUG, NONE, ERROR?
 #ifdef TEST_HARNESS
             else if (command == Command::DEBUG)
@@ -58,6 +76,16 @@ namespace Communications
                 Write(Command::VOLUME_NEXT_CHANGE);
             }
 #endif
+            else if (command != Command::OK)
+                valid = false;
+            if (!valid)
+            {
+                // ERROR is a wire byte (0xff). The host reconnects and resends state.
+                Serial.write((uint8_t)Command::ERROR);
+                Serial.flush();
+                return Command::ERROR;
+            }
+            g_HeartbeatTimeout = g_Now + DEVICE_RESET_AFTER_INACTIVTY;
             Write(Command::OK);
         }
         return command;

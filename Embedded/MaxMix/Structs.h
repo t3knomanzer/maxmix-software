@@ -2,6 +2,13 @@
 
 #include "Config.h"
 
+struct __attribute__((__packed__)) ButtonSettings
+{
+    uint16_t doubleTapTime;
+    ButtonSettings() : doubleTapTime(150) {}
+};
+static_assert(sizeof(ButtonSettings) == 2, "Invalid Expected Message Size");
+
 struct __attribute__((__packed__)) SessionInfo
 {
     DisplayMode mode;    // 8 bits
@@ -46,6 +53,17 @@ struct __attribute__((__packed__)) Color
     Color(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
 }; // 24 bits - 3 bytes
 static_assert(sizeof(Color) == 3, "Invalid Expected Message Size");
+
+struct __attribute__((__packed__)) LightingSettings
+{
+    Color inputColor;
+    Color applicationColor;
+    Color muteColor;
+    Color disconnectedColor;
+    LightingSettings() : inputColor(0, 200, 160), applicationColor(150, 60, 255),
+        muteColor(255, 0, 0), disconnectedColor(255, 140, 8) {}
+};
+static_assert(sizeof(LightingSettings) == 12, "Invalid Expected Message Size");
 
 struct __attribute__((__packed__)) DeviceSettings
 {

@@ -64,7 +64,7 @@ namespace MaxMix
             string assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             window.Title = string.Format("{0} {1}", assemblyName, assemblyVersion);
 
-            var dataContext = new MainViewModel();
+            var dataContext = new MainViewModel { IsActive = !Array.Exists(e.Args, arg => arg == "--background") };
             dataContext.ExitRequested += OnExitRequested;
 
             window.DataContext = dataContext;

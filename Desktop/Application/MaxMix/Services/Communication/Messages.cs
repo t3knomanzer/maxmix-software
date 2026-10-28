@@ -21,7 +21,9 @@ namespace MaxMix.Services.Communication
         VOLUME_PREV_CHANGE,
         VOLUME_NEXT_CHANGE,
         MODE_STATES,
-        DEBUG
+        DEBUG,
+        BUTTON_SETTINGS,
+        LIGHTING_SETTINGS
     }
 
     public enum SessionIndex
@@ -340,7 +342,7 @@ namespace MaxMix.Services.Communication
         {
             r = _r;
             g = _g;
-            b = _g;
+            b = _b;
         }
 
         public static Color Default()
@@ -429,6 +431,32 @@ namespace MaxMix.Services.Communication
         {
             return $"{sleepAfterSeconds}, {accelerationPercentage}, {continuousScroll}, {volumeMinColor}, {volumeMaxColor}, {mixChannelAColor}, {mixChannelBColor} > {this.ToByteString()}";
         }
+    }
+
+    public struct LightingSettings : IMessage
+    {
+        public Color inputColor, applicationColor, muteColor, disconnectedColor;
+        public void GetBytes(MemoryStream stream)
+        {
+            inputColor.GetBytes(stream); applicationColor.GetBytes(stream);
+            muteColor.GetBytes(stream); disconnectedColor.GetBytes(stream);
+        }
+        public void SetBytes(byte[] bytes)
+        {
+            Color Read(int offset) => new Color(bytes[offset], bytes[offset + 1], bytes[offset + 2]);
+            inputColor = Read(0); applicationColor = Read(3); muteColor = Read(6); disconnectedColor = Read(9);
+        }
+    }
+
+    public struct ButtonSettings : IMessage
+    {
+        public ushort doubleTapTime;
+        public void GetBytes(MemoryStream stream)
+        {
+            stream.WriteByte((byte)doubleTapTime);
+            stream.WriteByte((byte)(doubleTapTime >> 8));
+        }
+        public void SetBytes(byte[] bytes) => doubleTapTime = (ushort)(bytes[0] | bytes[1] << 8);
     }
 
     public unsafe struct ModeStates : IMessage, IEquatable<ModeStates>

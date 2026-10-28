@@ -1,0 +1,53 @@
+MAXMIX 1.5.9 - PACCHETTO OFFLINE COMPLETO
+
+Questo installer comprende applicazione, driver USB CH340/CH341, firmware Nano
+full-step e half-step e lo strumento di aggiornamento con avrdude.
+E una build locale modificata del progetto Maxmix, non una release ufficiale.
+
+Sul portatile basta copiare ed eseguire Maxmix-1.5.9-Setup.exe.
+Non servono Python, Arduino IDE, Visual Studio o connessione Internet.
+Supporto: Windows 10 versione 2004 o successiva e Windows 11, PC Intel/AMD.
+.NET Framework 4.8 e un componente di sistema richiesto.
+
+INSTALLAZIONE
+1. Esegui l'installer e lascia selezionata l'installazione completa.
+2. Conferma la richiesta amministratore per il driver USB.
+3. Collega Maxmix e apri l'applicazione dal Desktop o dal menu Start.
+
+FIRMWARE
+Il firmware viene incluso, ma non e scritto automaticamente collegando il dispositivo.
+Per aggiornarlo premi Carica firmware nell'app: la connessione viene sospesa
+durante l'aggiornamento e ripristinata quando chiudi lo strumento.
+Puoi anche usare Aggiorna firmware Maxmix dal menu Start:
+- chiudi prima l'app Maxmix con Esci;
+- seleziona la porta COM del controller;
+- lascia Automatica dal backup per mantenere il tipo di encoder gia in uso;
+- il Nano originale con vecchio bootloader usa l'opzione preselezionata;
+- premi Aggiorna firmware e attendi scrittura e verifica.
+Lo strumento riguarda Nano ATmega328P; altri modelli richiedono firmware appropriato.
+Per un Nano nuovo con bootloader Arduino, seleziona Scheda nuova e il tipo di
+encoder montato. Non serve che sia gia presente un firmware Maxmix.
+Un chip senza bootloader non puo essere programmato con questo collegamento
+seriale: occorre prima caricare il bootloader con un programmatore ISP.
+Flash ed EEPROM originali vengono salvate in %LOCALAPPDATA%\Maxmix\backups.
+
+COMANDI E LED
+La sezione Manopola comprende accelerazione e intervallo doppio clic (1-2000 ms).
+Il doppio clic richiede firmware 1.5.8; con firmware precedente il cursore e disabilitato.
+- Uscite: indicatore circolare del volume con i colori selezionati.
+- Microfoni: indicatore in direzione inversa, con colore selezionabile.
+- Applicazioni: indicatore simmetrico, con colore selezionabile.
+- Gioco/chat: due semicerchi per il volume indipendente dei canali A e B.
+- Mute: pulsazione lenta nel colore scelto; in gioco/chat solo il semicerchio del canale in mute.
+- Disconnesso: indicatore nel colore scelto in rotazione.
+- Riposo: LED spenti, senza aumentare la luminosita massima originale.
+Dal software puoi scegliere i colori di volume, mix A/B, microfono, applicazioni, mute e disconnessione. I quattro nuovi profili richiedono firmware 1.5.9.
+I LED indicano il volume impostato, non il livello istantaneo del segnale audio.
+
+DIAGNOSTICA
+Log applicazione: %LOCALAPPDATA%\Maxmix\logs\info.log.
+Log e backup del firmware: %LOCALAPPDATA%\Maxmix\backups.
+Se il driver non e stato installato, usa Installa driver USB Maxmix dal menu Start.
+
+Le sorgenti della build sono incluse in Sources. Licenze e crediti sono inclusi.
+I branch sperimentali mod-buttons e remote-rendering non sono integrati.

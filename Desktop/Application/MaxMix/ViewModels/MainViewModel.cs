@@ -5,6 +5,10 @@ using MaxMix.Services.Communication;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using Sentry;
 
@@ -43,6 +47,59 @@ namespace MaxMix.ViewModels
         {
             get => _isConnected;
             set => SetProperty(ref _isConnected, value);
+        }
+
+        private string _connectionStatus = "Ricerca del dispositivo...";
+        public string ConnectionStatus
+        {
+            get => _connectionStatus;
+            private set => SetProperty(ref _connectionStatus, value);
+        }
+        private string _connectedPort = "Non rilevata";
+        public string ConnectedPort
+        {
+            get => _connectedPort;
+            private set => SetProperty(ref _connectedPort, value);
+        }
+        private string _firmwareVersion = "In attesa";
+        public string FirmwareVersion
+        {
+            get => _firmwareVersion;
+            private set => SetProperty(ref _firmwareVersion, value);
+        }
+        private ICommand _reconnectCommand;
+        public ICommand ReconnectCommand => _reconnectCommand ??
+            (_reconnectCommand = new DelegateCommand(() => _communicationService.Reconnect()));
+
+        private bool _firmwareToolRunning;
+        private bool _shuttingDown;
+        private ICommand _firmwareCommand;
+        public ICommand FirmwareCommand => _firmwareCommand ??
+            (_firmwareCommand = new DelegateCommand(OpenFirmwareTool, () => !_firmwareToolRunning));
+
+        private async void OpenFirmwareTool()
+        {
+            string tool = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Tools", "MaxmixTools.exe");
+            if (!File.Exists(tool))
+            {
+                MessageBox.Show("Installa il pacchetto completo Maxmix per caricare il firmware.", "Maxmix");
+                return;
+            }
+            _firmwareToolRunning = true;
+            CommandManager.InvalidateRequerySuggested();
+            _communicationService.PauseForFirmware();
+            try
+            {
+                using (var process = Process.Start(new ProcessStartInfo(tool, "--from-app") { UseShellExecute = true }))
+                    await Task.Run(() => process.WaitForExit());
+            }
+            catch (Exception e) { MessageBox.Show(e.Message, "Maxmix - firmware"); }
+            finally
+            {
+                _firmwareToolRunning = false;
+                if (!_shuttingDown) _communicationService.ResumeAfterFirmware();
+                CommandManager.InvalidateRequerySuggested();
+            }
         }
 
         /// <summary>
@@ -109,6 +166,12 @@ namespace MaxMix.ViewModels
             _communicationService.OnDeviceConnected += OnDeviceConnected;
             _communicationService.OnDeviceDisconnected += OnDeviceDisconnected;
             _communicationService.OnFirmwareIncompatible += OnFirmwareIncompatible;
+            _communicationService.OnConnectionStatusChanged += (status, port, firmware) =>
+            {
+                ConnectionStatus = status;
+                ConnectedPort = port ?? "Non rilevata";
+                FirmwareVersion = firmware ?? "In attesa";
+            };
 
             _audioSessionService = new AudioSessionService();
             _audioSessionService.DefaultDeviceChanged += OnDefaultDeviceChanged;
@@ -134,6 +197,7 @@ namespace MaxMix.ViewModels
 
         public override void Stop()
         {
+            _shuttingDown = true;
             _communicationService.Stop();
             _audioSessionService.Stop();
             _settingsViewModel.Stop();
@@ -157,12 +221,12 @@ namespace MaxMix.ViewModels
                 if (sessionId == id)
                 {
                     m_Sessions[i].data.isDefault = true;
-                    SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i]);
+                    SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i].data);
                 }
                 else if (m_Sessions[i].data.isDefault)
                 {
                     m_Sessions[i].data.isDefault = false;
-                    SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i]);
+                    SendMessage(Command.VOLUME_CURR_CHANGE + i, m_Sessions[i].data);
                 }
             }
         }
@@ -279,6 +343,10 @@ namespace MaxMix.ViewModels
         {
             DeviceSettings settings = _settingsViewModel.ToDeviceSettings();
             SendMessage(Command.SETTINGS, settings);
+            if (_communicationService.SupportsButtonSettings)
+                SendMessage(Command.BUTTON_SETTINGS, new ButtonSettings { doubleTapTime = _settingsViewModel.DoubleTapTime });
+            if (_communicationService.SupportsLightingSettings)
+                SendMessage(Command.LIGHTING_SETTINGS, _settingsViewModel.ToLightingSettings());
         }
 
         /****************************************
@@ -286,16 +354,18 @@ namespace MaxMix.ViewModels
          ****************************************/
         private void OnFirmwareIncompatible(string obj)
         {
-            // TODO: Display msg to user that firmware needs to be updated
+            ConnectionStatus = "Firmware " + obj + " non compatibile: aggiornamento necessario.";
         }
 
         private void OnDeviceDisconnected()
         {
+            _settingsViewModel.CanSetDoubleTapTime = false;
             IsConnected = false;
         }
 
         private void OnDeviceConnected()
         {
+            _settingsViewModel.CanSetDoubleTapTime = _communicationService.SupportsButtonSettings;
             IsConnected = true;
             OnSettingsChanged(null, null);
             // Send device initial screen data

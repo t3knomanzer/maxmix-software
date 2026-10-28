@@ -1,0 +1,39 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>ConnectionRegression</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <OutputPath>..\..\bin\ConnectionRegression\</OutputPath>
+    <IntermediateOutputPath>..\..\obj\ConnectionRegression\</IntermediateOutputPath>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="MahApps.Metro">
+      <HintPath>..\..\Desktop\Application\packages\MahApps.Metro.2.4.6\lib\net46\MahApps.Metro.dll</HintPath>
+    </Reference>
+    <Reference Include="Hardcodet.NotifyIcon.Wpf">
+      <HintPath>..\..\Desktop\Application\packages\Hardcodet.NotifyIcon.Wpf.1.1.0\lib\net45\Hardcodet.NotifyIcon.Wpf.dll</HintPath>
+    </Reference>
+    <Compile Include="Program.cs" />
+    <ProjectReference Include="..\..\Desktop\Application\MaxMix\MaxMix.csproj">
+      <Project>{B45D3A30-5617-494C-AB4D-44946056A5F8}</Project>
+      <Name>MaxMix</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="CopyXamlDependencies" AfterTargets="Build">
+    <ItemGroup>
+      <XamlDependency Include="..\..\Desktop\Application\MaxMix\bin\$(Configuration)\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(XamlDependency)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="..\..\Desktop\Application\MaxMix\bin\$(Configuration)\MaxMix.exe.config" DestinationFiles="$(OutputPath)ConnectionRegression.exe.config" />
+    <Copy SourceFiles="NLog.config" DestinationFolder="$(OutputPath)" />
+  </Target>
+</Project>

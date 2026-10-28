@@ -17,7 +17,9 @@ enum Command : int8_t
     VOLUME_PREV_CHANGE,
     VOLUME_NEXT_CHANGE,
     MODE_STATES,
-    DEBUG
+    DEBUG,
+    BUTTON_SETTINGS,
+    LIGHTING_SETTINGS
 };
 
 enum SessionIndex : uint8_t
@@ -28,6 +30,11 @@ enum SessionIndex : uint8_t
     INDEX_NEXT,
     INDEX_MAX
 };
+
+inline bool UpdatesDisplay(Command command)
+{
+    return command >= Command::SETTINGS && command <= Command::MODE_STATES;
+}
 
 enum DisplayMode : uint8_t
 {

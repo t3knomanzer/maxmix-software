@@ -1,4 +1,4 @@
-﻿<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='utf-8'?>
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MaxMix.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
@@ -38,5 +38,9 @@
     <Setting Name="UpgradeRequired" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="InputColor" Type="System.UInt32" Scope="User"><Value Profile="(Default)">4288727040</Value></Setting>
+    <Setting Name="ApplicationColor" Type="System.UInt32" Scope="User"><Value Profile="(Default)">4294917270</Value></Setting>
+    <Setting Name="MuteColor" Type="System.UInt32" Scope="User"><Value Profile="(Default)">4278190335</Value></Setting>
+    <Setting Name="DisconnectedColor" Type="System.UInt32" Scope="User"><Value Profile="(Default)">4278750463</Value></Setting>
   </Settings>
 </SettingsFile>

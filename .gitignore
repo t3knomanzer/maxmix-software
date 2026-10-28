@@ -1,4 +1,7 @@
 # IDE
+.tools/
+dist/
+backups/
 .vs
 .vs/
 Desktop/**/bin

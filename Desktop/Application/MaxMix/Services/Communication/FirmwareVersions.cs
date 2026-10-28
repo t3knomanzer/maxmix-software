@@ -19,12 +19,18 @@ namespace MaxMix.Services.Communication
             "1.5.3",
             "1.5.4",
             "1.5.5",
-            "1.5.6"
+            "1.5.6",
+            "1.5.7",
+            "1.5.8",
+            "1.5.9"
         };
 
         public static bool IsCompatible(string version)
         {
             return s_Valid.Contains(version);
         }
+
+        public static bool SupportsButtonSettings(string version) => version == "1.5.8" || version == "1.5.9";
+        public static bool SupportsLightingSettings(string version) => version == "1.5.9";
     }
 }

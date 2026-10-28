@@ -129,11 +129,39 @@ namespace MaxMix.ViewModels
             get => _settings.DoubleTapTime;
             set
             {
-                if (_settings.DoubleTapTime == value)
+                if (value < 1 || value > 2000 || _settings.DoubleTapTime == value)
                     return;
                 _settings.DoubleTapTime = value;
                 RaisePropertyChanged();
             }
+        }
+
+        private bool _canSetDoubleTapTime;
+        public uint InputColor { get => _settings.InputColor; set => SetLedColor(value); }
+        public uint ApplicationColor { get => _settings.ApplicationColor; set => SetLedColor(value); }
+        public uint MuteColor { get => _settings.MuteColor; set => SetLedColor(value); }
+        public uint DisconnectedColor { get => _settings.DisconnectedColor; set => SetLedColor(value); }
+
+        private void SetLedColor(uint value, [CallerMemberName] string name = null)
+        {
+            if ((uint)_settings[name] == value) return;
+            _settings[name] = value;
+            _settings.Save();
+            RaisePropertyChanged(name);
+        }
+
+        public LightingSettings ToLightingSettings()
+        {
+            Color Rgb(uint value) => new Color((byte)value, (byte)(value >> 8), (byte)(value >> 16));
+            return new LightingSettings {
+                inputColor = Rgb(InputColor), applicationColor = Rgb(ApplicationColor),
+                muteColor = Rgb(MuteColor), disconnectedColor = Rgb(DisconnectedColor)
+            };
+        }
+        public bool CanSetDoubleTapTime
+        {
+            get => _canSetDoubleTapTime;
+            set => SetProperty(ref _canSetDoubleTapTime, value);
         }
 
 
@@ -235,9 +263,12 @@ namespace MaxMix.ViewModels
         {
             try
             {
-                Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
                 Assembly curAssembly = Assembly.GetExecutingAssembly();
-                return (string)key.GetValue(curAssembly.GetName().Name) == curAssembly.Location;
+                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"))
+                {
+                    var command = key?.GetValue(curAssembly.GetName().Name) as string;
+                    return command == curAssembly.Location || command == "\"" + curAssembly.Location + "\" --background";
+                }
             }
             catch
             {
@@ -248,17 +279,15 @@ namespace MaxMix.ViewModels
         {
             try
             {
-                Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
                 Assembly curAssembly = Assembly.GetExecutingAssembly();
-
-                if (enabled)
+                using (var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"))
                 {
-                    key.SetValue(curAssembly.GetName().Name, curAssembly.Location);
+                    if (enabled)
+                        key.SetValue(curAssembly.GetName().Name, "\"" + curAssembly.Location + "\" --background");
+                    else
+                        key.DeleteValue(curAssembly.GetName().Name, false);
                 }
-                else
-                {
-                    key.DeleteValue(curAssembly.GetName().Name);
-                }
+                RaisePropertyChanged(nameof(RunAtStartup));
             }
             catch
             {

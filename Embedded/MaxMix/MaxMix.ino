@@ -34,6 +34,9 @@ DeviceSettings g_Settings;
 SessionInfo g_SessionInfo;
 SessionData g_Sessions[SessionIndex::INDEX_MAX];
 ModeStates g_ModeStates;
+ButtonSettings g_ButtonSettings;
+// Keep the last selected palette during USB timeouts; the desktop restores it on reconnect.
+LightingSettings g_LightingSettings;
 uint8_t g_DisplayDirty;
 bool g_DisplayAsleep;
 
@@ -111,10 +114,16 @@ void loop()
     g_Now = millis();
 
     Command command = Communications::Read();
+    if (command == Command::BUTTON_SETTINGS)
+    {
+        noInterrupts();
+        g_EncoderButton.doubleTapTime(g_ButtonSettings.doubleTapTime);
+        interrupts();
+    }
     // Returns the type of message we recieved, update oled if we recieved data that impacts what is currently on display
     // This should really depend on a few things, like setings of continious scroll, vs new item index vs count, etc.
     // for now lets be safe and check for any command that impacts a stored value, we can fine tune this later
-    g_DisplayDirty = (command >= Command::SETTINGS || command <= Command::VOLUME_ALT_CHANGE);
+    g_DisplayDirty = UpdatesDisplay(command);
     if (command == Command::CURRENT_SESSION || command == Command::ALTERNATE_SESSION ||
         command == Command::VOLUME_CURR_CHANGE || command == Command::VOLUME_ALT_CHANGE)
     {
@@ -171,6 +180,10 @@ void ResetState()
     g_Sessions[SessionIndex::INDEX_ALTERNATE] = SessionData();
     g_Sessions[SessionIndex::INDEX_NEXT] = SessionData();
     g_ModeStates = ModeStates();
+    g_ButtonSettings = ButtonSettings();
+    noInterrupts();
+    g_EncoderButton.doubleTapTime(g_ButtonSettings.doubleTapTime);
+    interrupts();
     g_DisplayDirty = true;
     g_DisplayAsleep = false;
 
